@@ -34,15 +34,15 @@ export default async function Home() {
         </h1>
 
         <p className="mt-8 max-w-2xl text-lg leading-8 text-zinc-300">
-          A personal project dojo for rebuilding web development skills, one
+          A personal project dojo for rebuilding web development skills (a.k.a. "The Mountain"), one
           small trail at a time.
         </p>
 
         <div className="mt-12 grid gap-5 md:grid-cols-3">
           {projects.map((project) => (
             <a
-              key={project.slug}
-              href={`/projects/${project.slug}`}
+              key={project.title}
+              href={`/projects/${project.href}`}
               className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-5 transition hover:-translate-y-1 hover:border-zinc-600 hover:bg-zinc-900"
             >
               <div className="mb-4 flex items-center justify-between gap-4">
@@ -53,7 +53,7 @@ export default async function Home() {
               </div>
 
               <p className="text-sm leading-6 text-zinc-400">
-                This project is served from the local FastAPI backend.
+                {project.description}
               </p>
             </a>
           ))}

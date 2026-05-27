@@ -31,17 +31,23 @@ def list_projects():
 	return [
  		{
  			"title": "Photo Dojo",
+ 			"href": "gallery",
  			"slug": "photo-dojo",
- 			"status": "coming-soon"
+ 			"status": "Coming Soon",
+			"description": "A place to upload, organize, and connect photos from the phone archive."
  		},
  		{
- 			"title": "Dev Notes",
+ 			"title": "Training Notes",
+ 			"href": "notes",
  			"slug": "dev-notes",
- 			"status": "planned"
+ 			"status": "Started",
+			"description": "Notes from rebuilding local web development muscle memory."
  		},
  		{
- 			"title": "Connection Map",
+ 			"title": "Connection Magic",
+ 			"href": "connect",
  			"slug": "connection-map",
- 			"status": "idea"
+ 			"status": "Idea",
+			"description": "A visual experiment for connecting projects, photos, places, and memories."
  		}
  	]
