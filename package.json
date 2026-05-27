@@ -1,0 +1,15 @@
+{
+  "name": "ninjamountain",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/web",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "npm --workspace apps/web run dev",
+    "build:web": "npm --workspace apps/web run build",
+    "start:web": "npm --workspace apps/web run start",
+    "dev:api": "cd apps/api && source .venv/bin/activate && fastapi dev main.py"
+  }
+}
