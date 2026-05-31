@@ -19,6 +19,12 @@ For each ticket, return a JSON object with exactly these fields:
     "suggested_first_response": a brief, professional response the support engineer could send,
     "needs_engineering_escalation": boolean
 }
+use the following rubric when determining severity:
+critical = production down / widespread; 
+high = broken with no workaround; 
+medium = degraded but has a workaround; 
+low = question or cosmetic
+
 Return ONLY valid JSON. No prose. No markdown fences. No commentary.`;
 
 /**
