@@ -24,7 +24,9 @@ export default function NotesPage() {
         <h1 className="mt-8 text-4xl font-bold">Dev Notes</h1>
 
         <p className="mt-4 text-zinc-400">
-          Notes from rebuilding the Ninja Mountain local development workflow.
+          <b>Day 1:</b><br />I’ve started shaping Ninja Mountain into a personal project portal: a local-first development playground where I can rebuild web dev muscle memory and eventually deploy finished pieces to <b>ninjamountain.black</b>. I settled on a monorepo-style structure with apps/web for a Next.js/TypeScript frontend, apps/api for a future FastAPI backend, plus placeholders for shared packages, deployment notes, and sample photos.
+<br /><br />
+I scaffolded the first local portal concept: a homepage with project cards for Photo Dojo, Dev Notes, and Connection Map, then clarified that those project pages should probably live under /projects/... for long-term organization, such as /projects/gallery, /projects/notes, and /projects/connect. I also clarified how Next.js serves static images: files placed in apps/web/public/sample-photos/ are referenced in React as /sample-photos/filename.jpg, which will matter for the first gallery/photo placeholder exercise.
         </p>
 
         <div className="mt-10 space-y-5">

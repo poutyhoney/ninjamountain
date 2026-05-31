@@ -49,5 +49,12 @@ def list_projects():
  			"slug": "connection-map",
  			"status": "Idea",
 			"description": "A visual experiment for connecting projects, photos, places, and memories."
+ 		},
+ 		{
+ 			"title": "APIs for TSEs",
+ 			"href": "onboard",
+ 			"slug": "api-onboard",
+ 			"status": "Idea",
+			"description": "A playground for TSEs to master API skills."
  		}
  	]

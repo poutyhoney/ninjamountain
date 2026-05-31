@@ -22,19 +22,19 @@ export default async function Home() {
   return (
     <main className="min-h-screen bg-zinc-950 text-zinc-100">
       <section className="mx-auto flex min-h-screen max-w-5xl flex-col justify-center px-6 py-20">
-        <p className="mb-4 text-sm uppercase tracking-[0.35em] text-zinc-500">
+        <h2 className="sm:text-7xl text-indigo-300">
           Ninja Mountain
-        </p>
+        </h2>
 
-        <h1 className="max-w-3xl text-5xl font-bold tracking-tight sm:text-7xl">
-          You are not a dot.
-          <span className="block text-zinc-400">
-            You connect the dots.
+        <span className="max-w-5xl text-5xl tracking-tight sm:text-5xl">
+          <span className="block text-zinc-100">You're not a dot.</span>
+          <span className="block text-indigo-300">
+            You're the one who connects the dots.
           </span>
-        </h1>
+        </span>
 
         <p className="mt-8 max-w-2xl text-lg leading-8 text-zinc-300">
-          A personal project dojo for rebuilding web development skills (a.k.a. "The Mountain"), one
+          A personal project dojo for rebuilding web development skills<br />(a.k.a. "The Mountain"), one
           small trail at a time.
         </p>
 
