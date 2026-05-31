@@ -49,6 +49,20 @@ if (outcome.ok) {
 
 Requires `ANTHROPIC_API_KEY` to be set in the environment.
 
+## CLI (fast iteration loop)
+
+A small CLI is handy for working on the pipeline (classification, RAG, tool-use…)
+without the browser. Run from anywhere in the monorepo:
+
+```bash
+npm --workspace @ninjamountain/triage run triage             # built-in sample ticket
+npm --workspace @ninjamountain/triage run triage -- --id T02 # one dataset ticket by id
+npm --workspace @ninjamountain/triage run triage -- --all    # every ticket in the dataset
+```
+
+Tickets come from [`experiments/data/tickets.json`](./experiments/data/tickets.json).
+The CLI reads `ANTHROPIC_API_KEY` from `packages/triage/.env` (gitignored) or your shell.
+
 ## Consumers
 
 - **`apps/web`** — exposes it at `/projects/triage` (UI) via the `POST /api/triage`
@@ -65,4 +79,8 @@ src/
   parse.ts      Extract JSON from model output
   validate.ts   Validate output against the TriageResult contract
   types.ts      Domain + return types
+scripts/
+  triage-cli.ts Fast terminal loop for triaging tickets
+  load-env.ts   Loads .env for the CLI
+experiments/    Frozen Python/JS reference ports (not built)
 ```
