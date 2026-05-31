@@ -10,12 +10,12 @@ const samplePhotos = [
   {
     title: "Later Today",
     src:  "/sample-photos/signal_lantern.jpg",
-    caption: "Placeholder tile for a future upload."
+    caption: "The second real image in the Photo Dojo."
   },
   {
     title: "Taunting Temptation",
     src:  "/sample-photos/hidden_trail.jpg",
-    caption: "Placeholder tile for a future upload."
+    caption: "The third real image in the Photo Dojo."
   }
 ];
 
@@ -29,7 +29,7 @@ export default function GalleryPage() {
 
         <p className="mt-4 max-w-2xl text-zinc-400">
           This is the future home of the photo upload and gallery experiment.
-          For now, it mixes one real image with placeholder tiles.
+          For now, it mixes real images with placeholder tiles.
         </p>
 
         <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
