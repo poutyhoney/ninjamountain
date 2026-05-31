@@ -63,6 +63,20 @@ npm --workspace @ninjamountain/triage run triage -- --all    # every ticket in t
 Tickets come from [`experiments/data/tickets.json`](./experiments/data/tickets.json).
 The CLI reads `ANTHROPIC_API_KEY` from `packages/triage/.env` (gitignored) or your shell.
 
+## Scored accuracy report
+
+Evaluate the pipeline against the gold labels in
+[`experiments/data/labels.json`](./experiments/data/labels.json):
+
+```bash
+npm --workspace @ninjamountain/triage run score
+```
+
+Runs every labeled ticket and reports **category** accuracy + per-class
+precision/recall/F1 + a confusion matrix, and **severity** exact / off-by-one /
+mean-absolute-error (severity is ordinal: `low < medium < high < critical`). Use it
+to catch regressions and find weak spots as you iterate on the prompt, RAG, or tools.
+
 ## Consumers
 
 - **`apps/web`** — exposes it at `/projects/triage` (UI) via the `POST /api/triage`
@@ -81,6 +95,7 @@ src/
   types.ts      Domain + return types
 scripts/
   triage-cli.ts Fast terminal loop for triaging tickets
+  score.ts      Scored accuracy report vs gold labels
   load-env.ts   Loads .env for the CLI
 experiments/    Frozen Python/JS reference ports (not built)
 ```
