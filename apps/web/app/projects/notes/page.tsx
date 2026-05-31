@@ -1,3 +1,5 @@
+import SiteHeader from "../../components/SiteHeader";
+
 const notes = [
   {
     title: "Localhost is enough at the beginning",
@@ -15,13 +17,11 @@ const notes = [
 
 export default function NotesPage() {
   return (
-    <main className="min-h-screen bg-zinc-950 px-6 py-16 text-zinc-100">
+    <div className="min-h-screen bg-zinc-950 text-zinc-100">
+      <SiteHeader />
+      <main className="px-6 py-16">
       <section className="mx-auto max-w-3xl">
-        <a href="/" className="text-sm text-zinc-400 hover:text-zinc-100">
-          ← Back to Ninja Mountain
-        </a>
-
-        <h1 className="mt-8 text-4xl font-bold">Dev Notes</h1>
+        <h1 className="text-4xl font-bold">Dev Notes</h1>
 
         <p className="mt-4 text-zinc-400">
           <b>Day 1:</b><br />I’ve started shaping Ninja Mountain into a personal project portal: a local-first development playground where I can rebuild web dev muscle memory and eventually deploy finished pieces to <b>ninjamountain.black</b>. I settled on a monorepo-style structure with apps/web for a Next.js/TypeScript frontend, apps/api for a future FastAPI backend, plus placeholders for shared packages, deployment notes, and sample photos.
@@ -41,6 +41,7 @@ I scaffolded the first local portal concept: a homepage with project cards for P
           ))}
         </div>
       </section>
-    </main>
+      </main>
+    </div>
   );
 }

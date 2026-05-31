@@ -1,7 +1,9 @@
 type Project = {
   title: string;
+  href: string;
   slug: string;
   status: string;
+  description: string;
 };
 
 async function getProjects(): Promise<Project[]> {
@@ -27,14 +29,14 @@ export default async function Home() {
         </h2>
 
         <span className="max-w-5xl text-5xl tracking-tight sm:text-5xl">
-          <span className="block text-zinc-100">You're not a dot.</span>
+          <span className="block text-zinc-100">You&apos;re not a dot.</span>
           <span className="block text-indigo-300">
-            You're the one who connects the dots.
+            You&apos;re the one who connects the dots.
           </span>
         </span>
 
         <p className="mt-8 max-w-2xl text-lg leading-8 text-zinc-300">
-          A personal project dojo for rebuilding web development skills<br />(a.k.a. "The Mountain"), one
+          A personal project dojo for rebuilding web development skills<br />(a.k.a. &ldquo;The Mountain&rdquo;), one
           small trail at a time.
         </p>
 

@@ -1,4 +1,5 @@
 import Image from "next/image";
+import SiteHeader from "../../components/SiteHeader";
 
 const samplePhotos = [
   {
@@ -20,13 +21,11 @@ const samplePhotos = [
 
 export default function GalleryPage() {
   return (
-    <main className="min-h-screen bg-zinc-950 px-6 py-16 text-zinc-100">
+    <div className="min-h-screen bg-zinc-950 text-zinc-100">
+      <SiteHeader />
+      <main className="px-6 py-16">
       <section className="mx-auto max-w-5xl">
-        <a href="/" className="text-sm text-zinc-400 hover:text-zinc-100">
-          ← Back to Ninja Mountain
-        </a>
-
-        <h1 className="mt-8 text-4xl font-bold">Photo Dojo</h1>
+        <h1 className="text-4xl font-bold">Photo Dojo</h1>
 
         <p className="mt-4 max-w-2xl text-zinc-400">
           This is the future home of the photo upload and gallery experiment.
@@ -64,6 +63,7 @@ export default function GalleryPage() {
           ))}
         </div>
       </section>
-    </main>
+      </main>
+    </div>
   );
 }
