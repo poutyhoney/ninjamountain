@@ -29,12 +29,20 @@ def health_check():
 @app.get("/projects")
 def list_projects():
 	return [
+ 		
  		{
- 			"title": "Photo Dojo",
- 			"href": "gallery",
- 			"slug": "photo-dojo",
- 			"status": "Coming Soon",
-			"description": "A place to upload, organize, and connect photos from the phone archive."
+ 			"title": "APIs for TSEs",
+ 			"href": "onboard",
+ 			"slug": "api-onboard",
+ 			"status": "Started",
+			"description": "A playground for TSEs to master API skills."
+ 		},
+ 		{
+ 			"title": "Support Triage Assistant",
+ 			"href": "triage",
+ 			"slug": "support-triage",
+ 			"status": "Started",
+			"description": "Classify and route support tickets with Claude."
  		},
  		{
  			"title": "Training Notes",
@@ -44,17 +52,17 @@ def list_projects():
 			"description": "Notes from rebuilding local web development muscle memory."
  		},
  		{
+ 			"title": "Photo Dojo",
+ 			"href": "gallery",
+ 			"slug": "photo-dojo",
+ 			"status": "Coming Soon",
+			"description": "A place to upload, organize, and connect photos from the phone archive."
+ 		},
+ 		{
  			"title": "Connection Magic",
  			"href": "connect",
  			"slug": "connection-map",
  			"status": "Idea",
 			"description": "A visual experiment for connecting projects, photos, places, and memories."
- 		},
- 		{
- 			"title": "APIs for TSEs",
- 			"href": "onboard",
- 			"slug": "api-onboard",
- 			"status": "Idea",
-			"description": "A playground for TSEs to master API skills."
  		}
  	]

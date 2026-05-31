@@ -1,0 +1,19 @@
+{
+  "name": "@ninjamountain/triage",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Support ticket triage pipeline (Claude). Single source of truth shared across apps.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.97.1"
+  },
+  "devDependencies": {
+    "typescript": "^5"
+  }
+}

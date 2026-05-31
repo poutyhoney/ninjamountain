@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Consume the shared TypeScript source of @ninjamountain/triage directly.
+  transpilePackages: ["@ninjamountain/triage"],
 };
 
 export default nextConfig;
