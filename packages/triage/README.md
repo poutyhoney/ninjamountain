@@ -25,8 +25,10 @@ modules elsewhere.
 
 It was ported from the standalone experiment repo
 [`poutyhoney/support-triage-assistant`](https://github.com/poutyhoney/support-triage-assistant),
-which also contains parallel **Python** and **JavaScript** implementations plus learning
-notes. That repo is now **archived** (kept for history); active development happens here.
+which is now **archived** (kept for history); active development happens here. The original
+parallel **Python** and **JavaScript** ports plus learning notes were pulled in under
+[`experiments/`](./experiments) as frozen reference snapshots — they are not wired into the
+build.
 
 ## Usage
 
