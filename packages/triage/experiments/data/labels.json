@@ -21,7 +21,7 @@
   "T15": { "subject": "Programmable Voice: conference recording not starting", "category": "bug", "severity": "high" },
   "T16": { "subject": "How do I migrate from Twilio Client JS SDK v1 to v2?", "category": "how_to", "severity": "low" },
   "T17": { "subject": "TaskRouter worker not going offline when browser tab closes", "category": "bug", "severity": "medium" },
-  "T18": { "subject": "Incorrect caller ID showing on outbound calls from Flex", "category": "config", "severity": "medium" },
+  "T18": { "subject": "Incorrect caller ID showing on outbound calls from Flex", "category": "bug", "severity": "medium" },
   "T19": { "subject": "Getting error 20003 on API requests after rotating API key", "category": "config", "severity": "high" },
   "T20": { "subject": "10DLC campaign registration rejected - not sure why", "category": "config", "severity": "high" }
 }

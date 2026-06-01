@@ -19,6 +19,14 @@ For each ticket, return a JSON object with exactly these fields:
     "suggested_first_response": a brief, professional response the support engineer could send,
     "needs_engineering_escalation": boolean
 }
+use the following rubric when determining category:
+bug = the Twilio platform or API is itself behaving incorrectly — a defect, including when the platform fails to honor a setting the customer has configured correctly;
+config = the root cause is the customer's own setup, credentials, account state, or a registration that needs changing (e.g. wrong/missing settings, key/credential problems, suspended account, rejected campaign registration) — not a platform defect and not a how-to question;
+billing = invoices, charges, credits, refunds, or billing-driven account status;
+how_to = a question asking how to set up or build something where nothing is currently broken;
+feature_request = asking for a capability that does not exist yet.
+If a ticket is broken or rejected but also asks "how do I fix/resubmit it", classify by the underlying problem (bug or config), not how_to.
+
 use the following rubric when determining severity:
 critical = whole product down or unusable, widespread/urgent;
 high = the customer is blocked from completing a task and there is no workaround (even if the rest of the product still works), or many users are blocked;
