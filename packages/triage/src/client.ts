@@ -19,11 +19,11 @@ For each ticket, return a JSON object with exactly these fields:
     "suggested_first_response": a brief, professional response the support engineer could send,
     "needs_engineering_escalation": boolean
 }
-use the following rubric when determining severity:
-critical = production down / widespread;
-high = broken with no workaround;
-medium = degraded but has a workaround;
-low = question or cosmetic
+use the following rubric when determining severity (judge by scope of impact):
+critical = whole product down or unusable, widespread/urgent;
+high = an entire capability or channel is broken with no workaround, or many users are blocked;
+medium = a single feature is degraded or intermittent while the rest of the product still works;
+low = a question, cosmetic issue, or roadmap/feature request
 
 Severity reflects how blocked or at-risk the customer is, not the dollar amount.
 Billing questions and routine credit/refund requests are low or medium; escalate
