@@ -10,7 +10,8 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "triage": "tsx scripts/triage-cli.ts",
-    "score": "tsx scripts/score.ts"
+    "score": "tsx scripts/score.ts",
+    "learnings:pdf": "python3 scripts/build-learnings-pdf.py LEARNINGS.md LEARNINGS.pdf"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.97.1"
