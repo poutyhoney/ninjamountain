@@ -20,10 +20,15 @@ For each ticket, return a JSON object with exactly these fields:
     "needs_engineering_escalation": boolean
 }
 use the following rubric when determining severity:
-critical = production down / widespread; 
-high = broken with no workaround; 
-medium = degraded but has a workaround; 
+critical = production down / widespread;
+high = broken with no workaround;
+medium = degraded but has a workaround;
 low = question or cosmetic
+
+Severity reflects how blocked or at-risk the customer is, not the dollar amount.
+Billing questions and routine credit/refund requests are low or medium; escalate
+them only if the account is blocked/suspended or there is suspected unauthorized
+access or fraud.
 
 Return ONLY valid JSON. No prose. No markdown fences. No commentary.`;
 
@@ -43,9 +48,10 @@ export async function callTriageModel(
   for (let attempt = 1; attempt <= maxAPIRetries; attempt++) {
     try {
       const message = await client.messages.create({
-        model:      MODEL,
-        max_tokens: 1024,
-        system:     SYSTEM_PROMPT,
+        model:       MODEL,
+        max_tokens:  1024,
+        temperature: 0, // deterministic output so eval scores reflect prompt changes, not sampling noise
+        system:      SYSTEM_PROMPT,
         messages:   [
           {
             role:    "user",
