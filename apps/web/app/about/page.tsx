@@ -6,7 +6,7 @@ import SiteFooter from '../components/SiteFooter';
 export const metadata = {
   title: 'About — Ninja Mountain',
   description:
-    'Some people collect skills. Tom connects them.',
+    'Tom De Carlo — front-end developer, API support lead, and technical communicator based in San Francisco.',
 };
 
 const SKILLS = [
