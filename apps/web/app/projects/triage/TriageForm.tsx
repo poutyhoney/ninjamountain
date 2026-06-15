@@ -27,13 +27,13 @@ const SAMPLES: { label: string; subject: string; body: string }[] = [
 ];
 
 const SEVERITY_STYLES: Record<Severity, string> = {
-  low:      'bg-zinc-300/10 text-zinc-300 ring-zinc-300/30',
+  low:      'bg-zinc-300/10 text-[#C8CCD4] ring-zinc-300/30',
   medium:   'bg-amber-300/10 text-amber-300 ring-amber-300/30',
   high:     'bg-orange-400/10 text-orange-300 ring-orange-400/30',
   critical: 'bg-red-500/10 text-red-300 ring-red-500/30',
 };
 
-const card = 'rounded-2xl border border-zinc-800 bg-zinc-900/70 p-6';
+const card = 'rounded-2xl border border-[#202431] bg-[#151821] p-6';
 
 export default function TriageForm() {
   const [subject, setSubject] = useState('');
@@ -81,13 +81,13 @@ export default function TriageForm() {
     <div className="flex flex-col gap-8">
       <form onSubmit={handleSubmit} className={`${card} flex flex-col gap-5`}>
         <div className="flex flex-wrap items-center gap-2">
-          <span className="mr-1 text-sm text-zinc-400">Try a sample:</span>
+          <span className="mr-1 text-sm text-[#6F7684]">Try a sample:</span>
           {SAMPLES.map((sample) => (
             <button
               key={sample.label}
               type="button"
               onClick={() => loadSample(sample)}
-              className="rounded-full border border-zinc-700 px-3 py-1 text-xs text-zinc-300 transition-colors hover:border-indigo-300/50 hover:text-zinc-100"
+              className="rounded-full border border-[#202431] px-3 py-1 text-xs text-[#C8CCD4] transition-colors hover:border-[#8B6CFF]/50 hover:text-[#E9ECF2]"
             >
               {sample.label}
             </button>
@@ -95,24 +95,24 @@ export default function TriageForm() {
         </div>
 
         <label className="flex flex-col gap-2">
-          <span className="text-sm font-medium text-zinc-300">Subject</span>
+          <span className="text-sm font-medium text-[#C8CCD4]">Subject</span>
           <input
             type="text"
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
             placeholder="Short summary of the ticket"
-            className="rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-zinc-100 outline-none transition-colors placeholder:text-zinc-600 focus:border-indigo-300/60"
+            className="rounded-lg border border-[#202431] bg-[#0A0B0F] px-3 py-2 text-[#E9ECF2] outline-none transition-colors placeholder:text-[#6F7684] focus:border-[#8B6CFF]/60"
           />
         </label>
 
         <label className="flex flex-col gap-2">
-          <span className="text-sm font-medium text-zinc-300">Ticket body</span>
+          <span className="text-sm font-medium text-[#C8CCD4]">Ticket body</span>
           <textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
             rows={7}
             placeholder="Paste the full customer message here…"
-            className="resize-y rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-zinc-100 outline-none transition-colors placeholder:text-zinc-600 focus:border-indigo-300/60"
+            className="resize-y rounded-lg border border-[#202431] bg-[#0A0B0F] px-3 py-2 text-[#E9ECF2] outline-none transition-colors placeholder:text-[#6F7684] focus:border-[#8B6CFF]/60"
           />
         </label>
 
@@ -120,7 +120,7 @@ export default function TriageForm() {
           <button
             type="submit"
             disabled={!canSubmit}
-            className="inline-flex items-center gap-2 rounded-full bg-indigo-300 px-5 py-3 font-semibold text-zinc-950 transition hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0"
+            className="inline-flex items-center gap-2 rounded-full bg-[#E9ECF2] px-5 py-3 font-semibold text-[#0A0B0F] transition hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0"
           >
             {loading ? 'Triaging…' : 'Triage ticket'}
           </button>
@@ -142,7 +142,7 @@ function TriageResultCard({ result }: { result: TriageResult }) {
   return (
     <div className={`${card} flex flex-col gap-5`}>
       <div className="flex flex-wrap items-center gap-2">
-        <span className="inline-flex rounded-full bg-indigo-300/10 px-3 py-1 text-xs font-medium text-indigo-300 ring-1 ring-inset ring-indigo-300/30">
+        <span className="inline-flex rounded-full bg-[#8B6CFF]/10 px-3 py-1 text-xs font-medium text-[#8B6CFF] ring-1 ring-inset ring-[#8B6CFF]/30">
           {result.category}
         </span>
         <span
@@ -159,14 +159,14 @@ function TriageResultCard({ result }: { result: TriageResult }) {
 
       <div>
         <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Summary</h3>
-        <p className="mt-1 text-zinc-100">{result.summary}</p>
+        <p className="mt-1 text-[#E9ECF2]">{result.summary}</p>
       </div>
 
       <div>
         <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
           Suggested first response
         </h3>
-        <p className="mt-1 whitespace-pre-wrap leading-relaxed text-zinc-300">
+        <p className="mt-1 whitespace-pre-wrap leading-relaxed text-[#C8CCD4]">
           {result.suggested_first_response}
         </p>
       </div>

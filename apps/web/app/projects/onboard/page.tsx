@@ -1,4 +1,6 @@
 import SiteHeader from '../../components/SiteHeader';
+import SiteFooter from '../../components/SiteFooter';
+import TrainingNotes from '../../components/TrainingNotes';
 import DiagnosticChecklist from './DiagnosticChecklist';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -156,6 +158,25 @@ const RESOURCES: Resource[] = [
   },
 ];
 
+const TRAINING_NOTES = [
+  {
+    title: "Module-level constants keep large data out of the component",
+    body: "All the skills, steps, tools, and resources live as typed arrays at the top of the file. The component body stays minimal — just iteration and layout. This pattern scales well before you reach for a CMS.",
+  },
+  {
+    title: "String constants avoid JSX angle-bracket escaping",
+    body: "Code examples that include < and > are cleaner as template literals assigned to a const, then rendered inside <pre><code>. Embedding them as JSX strings requires &lt; entities or extra escaping.",
+  },
+  {
+    title: "Anchor-based in-page nav is enough for long single-page layouts",
+    body: "Adding id attributes to each section and linking to them from a sticky header gives navigation without a router. For a reference page that doesn't change URLs, this is simpler than nested routes.",
+  },
+  {
+    title: "Small sub-components reduce JSX repetition without a separate file",
+    body: "Tag and SectionHeader are defined in the same file and used in multiple sections. Extracting them to their own files only makes sense once they're shared across pages.",
+  },
+];
+
 // String constant handles the angle brackets safely — no JSX escaping needed
 const CODE_EXAMPLE = `POST /v1/notifications HTTP/1.1
 Authorization: Bearer <redacted>
@@ -177,11 +198,11 @@ HTTP/1.1 401 Unauthorized
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-const card = 'rounded-[18px] border border-zinc-800 bg-zinc-900/70 p-6 shadow-[0_18px_55px_rgba(0,0,0,0.23)]';
+const card = 'rounded-[18px] border border-[#202431] bg-[#151821] p-6 shadow-[0_18px_55px_rgba(0,0,0,0.23)]';
 
 function Tag({ children }: { children: React.ReactNode }) {
   return (
-    <span className="mr-1 mb-1.5 inline-flex rounded-full bg-indigo-300/10 px-2.5 py-1 text-xs text-indigo-300">
+    <span className="mr-1 mb-1.5 inline-flex rounded-full bg-[#8B6CFF]/10 px-2.5 py-1 text-xs text-[#8B6CFF]">
       {children}
     </span>
   );
@@ -191,7 +212,7 @@ function SectionHeader({ title, intro }: { title: string; intro: string }) {
   return (
     <>
       <h2 className="mb-3 text-3xl font-bold tracking-tight sm:text-4xl">{title}</h2>
-      <p className="mb-8 max-w-2xl text-zinc-400">{intro}</p>
+      <p className="mb-8 max-w-2xl text-[#6F7684]">{intro}</p>
     </>
   );
 }
@@ -200,36 +221,27 @@ function SectionHeader({ title, intro }: { title: string; intro: string }) {
 
 export default function OnboardPage() {
   return (
-    <div className="min-h-screen bg-zinc-950 font-sans text-zinc-100">
+    <div className="min-h-screen bg-[#0A0B0F] font-sans text-[#E9ECF2]">
 
-      {/* ── Topbar ── */}
-      <SiteHeader>
-        <span className="hidden flex-wrap items-center gap-5 sm:flex">
-          {NAV_LINKS.map(({ href, label }) => (
-            <a key={href} href={href} className="text-zinc-400 transition-colors hover:text-zinc-100">
-              {label}
-            </a>
-          ))}
-        </span>
-      </SiteHeader>
+      <SiteHeader />
 
       {/* ── Hero ── */}
       <section
-        className="py-20 sm:py-24"
+        className="py-20"
         style={{
           background:
-            'radial-gradient(circle at 80% 12%, rgba(165,180,252,.18), transparent 31%), ' +
-            'radial-gradient(circle at 12% 20%, rgba(129,140,248,.08), transparent 22%)',
+            'radial-gradient(circle at 80% 12%, rgba(139,108,255,.15), transparent 31%), ' +
+            'radial-gradient(circle at 12% 20%, rgba(139,108,255,.07), transparent 22%)',
         }}
       >
         <div className="mx-auto max-w-[1180px] px-5">
-          <p className="text-xs font-bold uppercase tracking-[.2em] text-indigo-300">
+          <p className="text-xs font-bold uppercase tracking-[.2em] text-[#8B6CFF]">
             Technical Support Engineer onboarding
           </p>
           <h1 className="mb-5 mt-4 max-w-3xl text-5xl font-bold leading-tight tracking-tight sm:text-7xl">
             Support the builders behind API products.
           </h1>
-          <p className="max-w-xl text-lg leading-relaxed text-zinc-400 sm:text-xl">
+          <p className="max-w-xl text-lg leading-relaxed text-[#6F7684] sm:text-xl">
             A field guide for diagnosing integrations, communicating clearly during incidents,
             and becoming the engineer customers trust when their production application depends
             on an API platform.
@@ -237,13 +249,13 @@ export default function OnboardPage() {
           <div className="mt-9 flex flex-wrap gap-3">
             <a
               href="#skills"
-              className="inline-block rounded-full bg-indigo-300 px-5 py-3 font-semibold text-zinc-950 transition hover:-translate-y-px"
+              className="inline-block rounded-full bg-[#E9ECF2] px-5 py-3 font-semibold text-[#0A0B0F] transition hover:-translate-y-px"
             >
               Start learning
             </a>
             <a
               href="#lab"
-              className="inline-block rounded-full border border-zinc-800 px-5 py-3 font-semibold transition hover:-translate-y-px"
+              className="inline-block rounded-full border border-[#6F7684] px-5 py-3 font-semibold text-[#E9ECF2] transition hover:-translate-y-px hover:border-[#8B6CFF]"
             >
               Try the starter lab
             </a>
@@ -253,8 +265,8 @@ export default function OnboardPage() {
           <div className="mt-14 grid grid-cols-2 gap-3 md:grid-cols-4" aria-label="Core themes">
             {STATS.map(({ value, desc }) => (
               <div key={value} className={card}>
-                <strong className="block text-2xl text-indigo-400">{value}</strong>
-                <span className="text-sm text-zinc-400">{desc}</span>
+                <strong className="block text-2xl text-[#B7A7FF]">{value}</strong>
+                <span className="text-sm text-[#6F7684]">{desc}</span>
               </div>
             ))}
           </div>
@@ -270,12 +282,12 @@ export default function OnboardPage() {
             title="The Mission"
             intro="API platform support begins where a customer's application meets a product's behavior. A senior TSE makes that boundary observable, debuggable, and trustworthy."
           />
-          <div className="rounded-[18px] border border-indigo-300/[0.24] bg-gradient-to-br from-indigo-300/[0.13] to-indigo-400/[0.06] p-7">
+          <div className="rounded-[18px] border border-[#8B6CFF]/[0.24] bg-gradient-to-br from-[#8B6CFF]/[0.13] to-[#8B6CFF]/[0.06] p-7">
             <blockquote className="m-0 max-w-4xl text-lg leading-relaxed sm:text-xl">
               &ldquo;I debug production integrations end-to-end: customer code, HTTP requests,
               authentication, platform processing, webhooks, logs, incidents, and business impact.&rdquo;
             </blockquote>
-            <footer className="mt-4 text-zinc-400">
+            <footer className="mt-4 text-[#6F7684]">
               Portable positioning for telecom, security, AI and enterprise SaaS products
             </footer>
           </div>
@@ -291,7 +303,7 @@ export default function OnboardPage() {
             {SKILLS.map(({ title, body, tags }) => (
               <article key={title} className={card}>
                 <h3 className="mb-2 font-semibold">{title}</h3>
-                <p className="mb-3 text-sm text-zinc-400">{body}</p>
+                <p className="mb-3 text-sm text-[#6F7684]">{body}</p>
                 <div>{tags.map((tag) => <Tag key={tag}>{tag}</Tag>)}</div>
               </article>
             ))}
@@ -308,15 +320,15 @@ export default function OnboardPage() {
             {WORKFLOW_STEPS.map(({ title, body }, i) => (
               <article
                 key={title}
-                className="grid items-start gap-4 rounded-[18px] border border-zinc-800 bg-zinc-900/70 p-5"
+                className="grid items-start gap-4 rounded-[18px] border border-[#202431] bg-[#151821] p-5"
                 style={{ gridTemplateColumns: '58px 1fr' }}
               >
-                <div className="grid h-11 w-11 place-items-center rounded-full bg-indigo-300/[0.12] text-lg font-bold text-indigo-300">
+                <div className="grid h-11 w-11 place-items-center rounded-full bg-[#8B6CFF]/[0.12] text-lg font-bold text-[#8B6CFF]">
                   {i + 1}
                 </div>
                 <div>
                   <h3 className="font-semibold">{title}</h3>
-                  <p className="mt-1 text-sm text-zinc-400">{body}</p>
+                  <p className="mt-1 text-sm text-[#6F7684]">{body}</p>
                 </div>
               </article>
             ))}
@@ -335,7 +347,7 @@ export default function OnboardPage() {
                 <h3 className="mb-3 font-semibold">{title}</h3>
                 <ul className="space-y-1 pl-5">
                   {items.map((item) => (
-                    <li key={item} className="text-sm text-zinc-400">{item}</li>
+                    <li key={item} className="text-sm text-[#6F7684]">{item}</li>
                   ))}
                 </ul>
               </article>
@@ -353,7 +365,7 @@ export default function OnboardPage() {
             {DOMAINS.map(({ title, body }) => (
               <article key={title} className={card}>
                 <h3 className="mb-2 font-semibold">{title}</h3>
-                <p className="text-sm text-zinc-400">{body}</p>
+                <p className="text-sm text-[#6F7684]">{body}</p>
               </article>
             ))}
           </div>
@@ -368,7 +380,7 @@ export default function OnboardPage() {
           <div className="grid gap-4 lg:grid-cols-2">
             <pre
               aria-label="Example API response"
-              className="m-0 overflow-auto rounded-[18px] border border-zinc-800 bg-zinc-950 p-5 font-mono text-sm text-zinc-200"
+              className="m-0 overflow-auto rounded-[18px] border border-[#202431] bg-[#0A0B0F] p-5 font-mono text-sm text-[#C8CCD4]"
             >
               <code>{CODE_EXAMPLE}</code>
             </pre>
@@ -386,7 +398,7 @@ export default function OnboardPage() {
             {EVIDENCE.map(({ title, body }) => (
               <article key={title} className={card}>
                 <h3 className="mb-2 font-semibold">{title}</h3>
-                <p className="text-sm text-zinc-400">{body}</p>
+                <p className="text-sm text-[#6F7684]">{body}</p>
               </article>
             ))}
           </div>
@@ -405,24 +417,23 @@ export default function OnboardPage() {
                 href={href}
                 target="_blank"
                 rel="noreferrer"
-                className="block rounded-2xl border border-zinc-800 bg-zinc-900/70 px-5 py-4 transition-colors hover:border-indigo-300/30"
+                className="block rounded-2xl border border-[#202431] bg-[#151821] px-5 py-4 transition-colors hover:border-[#8B6CFF]/30"
               >
-                <strong className="text-zinc-100">{title}</strong>
-                <small className="mt-1 block text-zinc-400">{desc}</small>
+                <strong className="text-[#E9ECF2]">{title}</strong>
+                <small className="mt-1 block text-[#6F7684]">{desc}</small>
               </a>
             ))}
           </div>
         </section>
 
+        {/* Training Notes */}
+        <section className="py-14">
+          <TrainingNotes notes={TRAINING_NOTES} />
+        </section>
+
       </main>
 
-      {/* ── Footer ── */}
-      <footer className="border-t border-zinc-800 py-10 text-sm text-zinc-400">
-        <div className="mx-auto max-w-[1180px] px-5">
-          API Platform TSE Field Guide &nbsp;•&nbsp; A learning project from{' '}
-          <strong className="text-zinc-100">ninjamountain.black</strong>
-        </div>
-      </footer>
+      <SiteFooter />
 
     </div>
   );

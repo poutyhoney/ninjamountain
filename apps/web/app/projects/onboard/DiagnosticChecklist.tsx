@@ -58,29 +58,29 @@ export default function DiagnosticChecklist() {
   const checked = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
   return (
-    <div className="rounded-[18px] border border-zinc-800 bg-zinc-900/70 p-6 shadow-[0_18px_55px_rgba(0,0,0,0.23)]">
-      <h3 className="mb-1 text-lg font-semibold text-zinc-100">Diagnostic checklist</h3>
-      <p className="mb-4 text-sm text-zinc-400">
+    <div className="rounded-[18px] border border-[#202431] bg-[#151821] p-6 shadow-[0_18px_55px_rgba(0,0,0,0.23)]">
+      <h3 className="mb-1 text-lg font-semibold text-[#E9ECF2]">Diagnostic checklist</h3>
+      <p className="mb-4 text-sm text-[#6F7684]">
         Check each item as you investigate. Progress is saved in your browser.
       </p>
       <div>
         {CHECKS.map(({ key, label }, i) => (
           <label
             key={key}
-            className={`flex cursor-pointer gap-3 py-3 text-zinc-400 ${
-              i < CHECKS.length - 1 ? 'border-b border-zinc-800' : ''
+            className={`flex cursor-pointer gap-3 py-3 text-[#6F7684] ${
+              i < CHECKS.length - 1 ? 'border-b border-[#202431]' : ''
             }`}
           >
             <input
               type="checkbox"
               checked={checked[key]}
               onChange={() => toggle(key)}
-              className="mt-1 accent-indigo-300"
+              className="mt-1 accent-[#8B6CFF]"
             />
             <span
               className={
                 checked[key]
-                  ? 'text-zinc-100 line-through decoration-indigo-300/40'
+                  ? 'text-[#E9ECF2] line-through decoration-[#8B6CFF]/40'
                   : ''
               }
             >
