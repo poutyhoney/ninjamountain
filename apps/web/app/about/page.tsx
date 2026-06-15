@@ -28,10 +28,10 @@ export default function AboutPage() {
         <p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-[#8B6CFF]">About</p>
 
         {/* ── Two-column layout ── */}
-        <div className="grid items-start gap-8 grid-cols-[190px_1fr]">
+        <div className="grid items-start gap-8 sm:grid-cols-[190px_1fr]">
 
           {/* Photo */}
-          <div className="relative">
+          <div className="relative mx-auto w-[190px] sm:mx-0">
             {/* Subtle violet glow behind the image */}
             <div
               className="pointer-events-none absolute -inset-4 rounded-3xl opacity-30"
