@@ -53,7 +53,7 @@ export default function AboutPage() {
             </div>
             {/* Caption */}
             <p className="mt-3 text-center text-xs text-[#6F7684]">
-              Approximately accurate self-portrait.
+              Semi-accurate self-portrait.
             </p>
           </div>
 
