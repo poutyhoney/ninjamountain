@@ -11,6 +11,11 @@
     "typecheck": "tsc --noEmit",
     "triage": "tsx scripts/triage-cli.ts",
     "score": "tsx scripts/score.ts",
+    "dataset:migrate": "tsx scripts/migrate-dataset.ts",
+    "dataset:report": "tsx scripts/dataset-report.ts",
+    "dataset:validate": "tsx scripts/validate-dataset.ts",
+    "generate": "tsx scripts/generate.ts",
+    "verify": "tsx scripts/verify.ts",
     "learnings:pdf": "python3 scripts/build-learnings-pdf.py LEARNINGS.md LEARNINGS.pdf"
   },
   "dependencies": {

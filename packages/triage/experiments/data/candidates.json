@@ -1,0 +1,90 @@
+[
+  {
+    "tmp_id": "cand-2026-06-25-001",
+    "subject": "How do I stop Flex UI from losing agent activity state after accepting a task?",
+    "body": "Hi,\n\nWondering if there's something I'm missing in how activity transitions are supposed to work after task acceptance.\n\nWe're on Flex UI 2.7.1. I have a beforeAcceptTask override that does some lightweight attribute stamping on the worker before the task is accepted. Nothing heavy — just a worker.update call to set a couple of custom attributes.\n\nThe weird part: after the accept goes through, the agent's activity in the UI shows as Available but the TaskRouter side is showing them in Reserved. This only started happening after we deployed a new plugin version two nights ago. Agents are on Chrome 124.\n\nSo my question is basically — is there a recommended pattern for doing worker updates inside a beforeAcceptTask override, or is there ordering I need to respect so the UI and TaskRouter stay in sync?\n\nI've tried looking at the console but nothing obvious jumps out. Status Report doesn't show anything I can clearly tie to this.\n\nThanks",
+    "intended": {
+      "category": "bug",
+      "severity": "medium"
+    },
+    "meta": {
+      "source": "synthetic",
+      "product": "flex",
+      "sub_surface": "desktop",
+      "cell": "flex/desktop·bug·medium",
+      "twist": "question_framed",
+      "added": "2026-06-25",
+      "model": "claude-sonnet-4-6",
+      "grounding": [
+        "flex.md"
+      ]
+    },
+    "status": "accepted"
+  },
+  {
+    "tmp_id": "cand-2026-06-25-002",
+    "subject": "How do I properly configure wrap-up activity transitions so workers don't get stuck after reservation timeout?",
+    "body": "Hey Twilio support team,\n\nI'm hoping someone can help me understand if I'm setting something up wrong, or point me to documentation I might be missing, because I've been going in circles on this for a few days now and I'm not sure if it's a configuration gap on my end or something else.\n\nSome context: I'm a solo dev maintaining a Flex 2.7.1 deployment, running the standard Flex UI on Chrome 124. We have a fairly simple voice workflow — nothing too exotic. Workers sit in Available, get a reservation, and if they don't accept within our configured timeout window, the reservation times out and the task gets re-evaluated (I can see `task_re_evaluated_reason: reservation_timeout` in the TaskRouter logs, so that part is working as expected).\n\nThe thing I'm trying to understand is: after a reservation timeout fires, is there a correct way to make sure the worker automatically transitions to a specific Activity? Because what I'm observing is that the worker stays in Available (Activity SID `WA3f8b2c19d4e05a1b67890abcdef1234`) after the timeout, which is actually what we want in most cases — but then sometimes, seemingly at random, the worker gets pushed into an Unavailable state instead (Activity SID `WAc7d92e0f1a2b3456789012345678abcd`), and they have to manually click back to Available to receive tasks again.\n\nI initially thought this might be related to our `DequeuePostWorkActivitySid` setting, but the timeouts I'm describing happen before the task is ever accepted, so post-work wrap-up shouldn't even be in play here, right? Like the worker never entered wrap-up, the reservation just timed out.\n\nHere's what I've been doing to try to reproduce it consistently:\n1. Worker logs in, goes Available — Workspace is `WS4a1b2c3d4e5f6789012345678901abcd`\n2. A voice task comes in, reservation `WR9z8y7x6w5v4u3t2s1r0q9p8o7n6m5l` is created\n3. Worker does NOT accept — just lets it sit past the timeout threshold\n4. TaskRouter logs show the reservation timeout and task re-evaluation, as expected\n5. Worker's activity in the TaskRouter Worker page flips to Unavailable — worker SID is `WK2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7`\n\nStep 5 is what I don't understand. I haven't set any listener or action that should be pushing the worker to Unavailable on a reservation timeout. I've checked our plugins and we don't have any `reservation.timeout` handler calling `worker.update({ActivitySid: …})` for the Unavailable SID. Our plugin code only touches the `beforeAcceptTask` override for some logging.\n\nIs there a built-in Flex or TaskRouter behavior where a reservation timeout automatically moves the worker to a fallback activity? And if so, is there somewhere I configure which activity that should be? I've read through the TaskRouter Worker Activity docs and the Flex wrap-up docs but I can't find anything that explicitly describes this behavior happening on timeout rather than on task completion.\n\nI'd also just like to confirm: is this expected to be deterministic? Because the part that really puzzles me is that it doesn't happen every time. Maybe 30-40% of timeout events result in the worker going Unavailable. The other 60-70% the worker stays Available just fine. If this were a config option I'd set, I'd expect it to happen 100% of the time.\n\nI've looked at the Status Report download from the Flex UI and I don't see any 45600 or 45601 errors logged around the time these transitions happen, so it doesn't seem like a plugin crash is causing a side effect. Checked `Flex.Monitor.getErrors()` output too and nothing stands out.\n\nAny guidance on what's happening here and what knob I should be turning would be really appreciated. Happy to provide more logs or SIDs if needed.\n\nThanks so much",
+    "intended": {
+      "category": "bug",
+      "severity": "medium"
+    },
+    "meta": {
+      "source": "synthetic",
+      "product": "flex",
+      "sub_surface": "taskrouter",
+      "cell": "flex/taskrouter·bug·medium",
+      "twist": "question_framed",
+      "added": "2026-06-25",
+      "model": "claude-sonnet-4-6",
+      "grounding": [
+        "flex.md"
+      ]
+    },
+    "status": "accepted"
+  },
+  {
+    "tmp_id": "cand-2026-06-25-003",
+    "subject": "How do I stop plugins from crashing on second task accept?",
+    "body": "Hi — trying to figure out if we're missing some setup step or if there's a known workaround for this.\n\nWe have a small contact center (~15 agents) on Flex UI 2.7.1, Chrome 124. We deployed a new plugin version last Tuesday via a release (configuration SID FJxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx). The plugin adds a beforeAcceptTask override to pre-populate some task attributes before the agent clicks Accept.\n\nEverything looks fine on the FIRST task each session. But on the second task acceptance in the same browser session, the override throws and the task never accepts. Agents see the reservation sit there until it times out. Console shows:\n\n  Uncaught (in promise): FlexError [45601] Cannot read properties of undefined (reading 'channel')\n\nIt's coming from our beforeAcceptTask handler. The weird part: if the agent refreshes the page, the first accept on that fresh session works fine again. Second one fails. Repeat.\n\nRepro:\n1. Log in as any agent (Worker WKxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, tested across 3 workers)\n2. Accept first inbound voice task — works, task picks up correctly\n3. Complete task, go through wrap-up\n4. Second reservation is created (WRxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx) — agent clicks Accept\n5. FlexError 45601 thrown, task never accepts, reservation eventually times out\n\nWe checked Flex.Monitor.getErrors() after step 5 — the error is logged there. We also pulled a Status Report and the error appears consistently referencing our plugin's beforeAcceptTask callback.\n\nIs there a recommended pattern for safely reading task channel data inside beforeAcceptTask across multiple task lifecycles in the same session? Wondering if we need to re-initialize something between tasks. Or is there a way to check whether the channel reference is still valid before we try to read it?\n\nHappy to share the Status Report if that helps. TaskQueue is WQxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Workflow WWxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.\n\nThanks",
+    "intended": {
+      "category": "bug",
+      "severity": "medium"
+    },
+    "meta": {
+      "source": "synthetic",
+      "product": "flex",
+      "sub_surface": "plugins",
+      "cell": "flex/plugins·bug·medium",
+      "twist": "question_framed",
+      "added": "2026-06-25",
+      "model": "claude-sonnet-4-6",
+      "grounding": [
+        "flex.md"
+      ]
+    },
+    "status": "accepted"
+  },
+  {
+    "tmp_id": "cand-2026-06-25-004",
+    "subject": "How do I prevent beforeAcceptTask from silently dropping the action on second attempt?",
+    "body": "Hi Twilio Support,\n\nWe're running Flex UI 2.7.1 with a custom plugin (let's call it TaskAcceptPlugin) deployed in our current active release. I wanted to check whether there's a recommended pattern for retrying a failed beforeAcceptTask override, because we're seeing some confusing behavior that I'm not sure is expected.\n\nHere's the setup: in our plugin we register a beforeAcceptTask handler that makes a short fetch call to our internal API to log some metadata before the task is accepted. Most of the time this works fine. The issue appears when that fetch call fails with a network hiccup — our code catches the error and displays a toast to the agent, then returns without calling the `payload.reject()` callback explicitly (we assumed not calling reject would let the action fall through or allow a retry).\n\nWhat actually happens:\n1. Agent receives a reservation (WR4xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, TaskQueue WQbxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx).\n2. The agent clicks Accept.\n3. The fetch to our API fails; we catch it and show the toast.\n4. The AcceptTask action appears to silently swallow — no FlexError is surfaced, the Flex console shows no 45600/45601 code, and the reservation just sits in a pending state on the UI.\n5. If the agent clicks Accept a second time, nothing happens at all — the button becomes unresponsive. The reservation eventually times out and the task gets re-evaluated.\n\nWe verified via `Flex.Monitor.getErrors()` immediately after the second click and it returns an empty array, which is what's confusing us — we would have expected a FlexError to appear there if the action framework was rejecting internally.\n\nRepro steps (consistent across Chrome 124 and Edge 124):\n- Simulate a network failure on the fetch inside beforeAcceptTask by blocking the URL in DevTools.\n- Click Accept on an inbound voice task.\n- Observe toast fires, but action appears to hang.\n- Click Accept again.\n- Button does nothing; no error logged to Flex Monitor.\n\nWorker SID for our test agent: WK3xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx. I can also share the configuration SID for the release if that helps — just let me know.\n\nSo my questions are:\n1. Is there a supported way to 'reset' the AcceptTask action so the agent can retry after a beforeAcceptTask failure?\n2. Is it expected that a beforeAcceptTask handler that neither resolves cleanly nor calls reject would leave the action framework in a stuck state like this?\n\nIt's causing us moderate pain because affected agents have to refresh their entire Flex tab to get the reservation back, and by then the reservation has often timed out. We're happy to add explicit reject/resolve handling if that's the fix, but wanted to confirm first whether this stuck-state behavior on the second click is intentional or something we should escalate.\n\nThanks in advance for any guidance.",
+    "intended": {
+      "category": "bug",
+      "severity": "medium"
+    },
+    "meta": {
+      "source": "synthetic",
+      "product": "flex",
+      "sub_surface": "actions",
+      "cell": "flex/actions·bug·medium",
+      "twist": "question_framed",
+      "added": "2026-06-25",
+      "model": "claude-sonnet-4-6",
+      "grounding": [
+        "flex.md"
+      ]
+    },
+    "status": "accepted"
+  }
+]

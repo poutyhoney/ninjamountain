@@ -1,0 +1,28 @@
+{
+  "total": 60,
+  "flex_share": 0.6,
+  "by_category": { "bug": 26, "how_to": 12, "config": 9, "billing": 7, "feature_request": 6 },
+  "by_severity": { "low": 16, "medium": 20, "high": 18, "critical": 6 },
+  "cells": [
+    { "product": "flex", "sub_surface": "desktop", "target": 5 },
+    { "product": "flex", "sub_surface": "taskrouter", "target": 6 },
+    { "product": "flex", "sub_surface": "plugins", "target": 4 },
+    { "product": "flex", "sub_surface": "actions", "target": 4 },
+    { "product": "flex", "sub_surface": "wrapup", "target": 3 },
+    { "product": "flex", "sub_surface": "conversations", "target": 4 },
+    { "product": "flex", "sub_surface": "voice", "target": 3 },
+    { "product": "flex", "sub_surface": "sso", "target": 3 },
+    { "product": "flex", "sub_surface": "insights", "target": 2 },
+    { "product": "flex", "sub_surface": "billing", "target": 2 },
+    { "product": "messaging", "sub_surface": null, "target": 4 },
+    { "product": "voice", "sub_surface": null, "target": 4 },
+    { "product": "verify", "sub_surface": null, "target": 3 },
+    { "product": "10dlc", "sub_surface": null, "target": 3 },
+    { "product": "account", "sub_surface": null, "target": 3 },
+    { "product": "auth", "sub_surface": null, "target": 3 },
+    { "product": "lookup", "sub_surface": null, "target": 2 },
+    { "product": "sendgrid", "sub_surface": null, "target": 1 },
+    { "product": "studio", "sub_surface": null, "target": 1 }
+  ],
+  "twists": { "question_framed": 5, "billing_config": 3, "severity_edge": 3 }
+}
