@@ -8,35 +8,21 @@
  * and severity exact / off-by-one / mean-absolute-error (severity is ordinal).
  */
 import "./load-env";
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
-import { dirname, resolve } from "node:path";
 
 import { triageTicket } from "../src/index";
-import type { Ticket, Category, Severity } from "../src/index";
+import type { Category, Severity } from "../src/index";
+import { CATEGORIES, SEV_RANK, loadDataset, type DatasetTicket, type Split } from "./lib/dataset";
 
-const scriptDir = dirname(fileURLToPath(import.meta.url));
-const dataDir = resolve(scriptDir, "../experiments/data");
-
-type StoredTicket = Ticket & { id: string };
-type Gold = { category?: string; severity?: string };
-
-const CATEGORIES: Category[] = ["bug", "config", "billing", "how_to", "feature_request"];
-const SEV_RANK: Record<string, number> = { low: 0, medium: 1, high: 2, critical: 3 };
 const CONCURRENCY = 5;
 
 type Row = {
   id: string;
-  goldCat: string;
-  goldSev: string;
+  goldCat: Category;
+  goldSev: Severity;
   predCat?: Category;
   predSev?: Severity;
   failed?: string;
 };
-
-function load<T>(file: string): T {
-  return JSON.parse(readFileSync(resolve(dataDir, file), "utf8")) as T;
-}
 
 // Run async work over items with a fixed concurrency, preserving input order.
 async function mapPool<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
@@ -76,30 +62,33 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  const tickets = load<StoredTicket[]>("tickets.json");
-  const labels = load<Record<string, Gold>>("labels.json");
+  // Scope: default to the dev split so routine iteration never touches the frozen test set.
+  const scope: Split | null = process.argv.includes("--test") ? "test"
+    : process.argv.includes("--all") ? null
+    : "dev";
+  const inScope = (t: DatasetTicket) => scope === null || t.split === scope;
 
-  const hasGold = (id: string) => Boolean(labels[id]?.category && labels[id]?.severity);
-  const scored = tickets.filter((t) => hasGold(t.id));
-  const skipped = tickets.filter((t) => !hasGold(t.id));
+  const { tickets } = loadDataset();
+  const scored = tickets.filter((t) => t.gold != null && inScope(t));
+  const skipped = tickets.filter((t) => t.gold == null && inScope(t));
 
   if (scored.length === 0) {
-    console.error("No labeled tickets found. Fill in category/severity in labels.json first.");
+    console.error(`No labeled tickets in scope (${scope ?? "all"}). Run dataset:migrate / verify first.`);
     process.exit(1);
   }
 
-  console.log(`Triaging ${scored.length} labeled tickets (concurrency ${CONCURRENCY})…`);
+  console.log(`Triaging ${scored.length} labeled tickets [scope: ${scope ?? "all"}] (concurrency ${CONCURRENCY})…`);
 
   const rows: Row[] = await mapPool(scored, CONCURRENCY, async (t) => {
-    const gold = labels[t.id];
+    const gold = t.gold!;
     const outcome = await triageTicket({ subject: t.subject, body: t.body });
     if (!outcome.ok) {
-      return { id: t.id, goldCat: gold.category!, goldSev: gold.severity!, failed: outcome.reason };
+      return { id: t.id, goldCat: gold.category, goldSev: gold.severity, failed: outcome.reason };
     }
     return {
       id: t.id,
-      goldCat: gold.category!,
-      goldSev: gold.severity!,
+      goldCat: gold.category,
+      goldSev: gold.severity,
       predCat: outcome.result.category,
       predSev: outcome.result.severity,
     };
