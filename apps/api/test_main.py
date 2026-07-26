@@ -22,5 +22,5 @@ def test_list_projects():
 	assert response.status_code == 200
 	projects = response.json()
 	assert isinstance(projects, list)
-	assert len(projects) == 6
+	assert len(projects) == 5
 	assert all("title" in p and "slug" in p for p in projects)

@@ -354,6 +354,30 @@ Note all paths (`apps/api/requirements.txt`, etc.) are relative to the repo root
 
 **Done** — no typos this time; validated on the first try, all three jobs (`web`, `packages`, `api`) structured correctly.
 
+### Step 5 — commit, push, and a real red check
+
+**Detour again:** discovered PR #2 (Day 2's work) had already been merged into `main` between sessions. Pushing more commits onto the now-closed `add-cicd-pipeline` branch triggered nothing — no `pull_request` event fires for a merged/closed PR, and the workflow's other trigger only matches pushes to `main`. Fixed the same way as before: branched fresh off `origin/main`, replayed just the two Day 3 commits with `git cherry-pick <sha1> <sha2>` (cherry-pick = "take these specific commits and reapply them on a different base," as opposed to bringing over the whole branch history), pushed, opened a new PR (#3).
+
+**Then, a genuinely real CI failure — first one all week that wasn't caught locally first:**
+
+```
+I001 [*] Import block is un-sorted or un-formatted
+ --> apps/api/test_main.py:1:1
+```
+
+Confusing at first: the exact same `ruff` (same pinned version, 0.16.0) had passed clean locally moments earlier. Root cause, found by testing the *same binary* from two different working directories:
+```bash
+apps/api/.venv/bin/ruff check apps/api   # from repo root → FAILS (I001)
+apps/api/.venv/bin/ruff check .          # from inside apps/api → PASSES
+```
+Ruff's import-sorter tries to auto-detect which imports are "first-party" (your own code) vs. third-party, based on where it resolves the project root from. Run from inside `apps/api`, it correctly sees `main.py` sitting right there and classifies `from main import app` as first-party, distinct from the third-party `from fastapi.testclient import TestClient` — so the blank line between them is a valid category boundary. Run from the repo root — exactly what CI does after `checkout` — that distinction doesn't happen, both imports get treated as one group, and the same blank line now looks like disorganized formatting *within* a group.
+
+**Fix:** added `defaults: run: working-directory: apps/api` at the job level in `ci.yml`, so every `run:` step in the `api` job genuinely executes from inside `apps/api` — matching local terminal usage exactly, byte for byte, rather than trying to keep repo-root-relative paths in sync with what works locally.
+
+**A second, unrelated real bug surfaced at the same time:** `test_list_projects` asserted `len(projects) == 6`, but `git log -- apps/api/main.py` showed the actually-committed content only ever had 5 — the 6th ("Module → Gamma") was a transient uncommitted edit caught mid-Day-3 that got reverted before ever being committed, not something CI would ever see. Fixed the assertion to match reality (5), which also happens to line up with the gamma-prep archival already in progress separately.
+
+**Done** — both fixes verified locally (`ruff check .` clean, `pytest -v` → 3 passed) before re-pushing.
+
 ## Day 4 — Deploy gate via branch protection *(not started)*
 
 Goal: a GitHub branch protection rule on `main` requiring the CI jobs to pass before merge. Since Vercel deploys from `main`, this becomes a real gate on production without touching Vercel's config at all.

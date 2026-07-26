@@ -34,6 +34,9 @@ jobs:
             - run: npm run dataset:validate --workspace packages/triage  
     api:
         runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: apps/api
         steps:
             - uses: actions/checkout@v4
             
@@ -42,6 +45,6 @@ jobs:
                 python-version: "3.13"
                 cache: pip
             
-            - run: pip install -r apps/api/requirements.txt
-            - run: ruff check apps/api
-            - run: pytest apps/api
+            - run: pip install -r requirements.txt
+            - run: ruff check .
+            - run: pytest
