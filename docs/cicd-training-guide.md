@@ -241,9 +241,118 @@ Key concepts: `runs-on` picks the VM image; `uses:` pulls a pre-built reusable a
 
 **Done** — both `run` keywords added, re-validated, full two-job workflow structure confirmed correct.
 
-## Day 3 — Python CI for `apps/api` *(not started)*
+### Step 5 — commit, push, open a PR, watch a real run
+
+**Detour before committing:** discovered the old branch (`triage-dataset-v2-pipeline`) was already merged into `origin/main` via PR #1 — confirmed with `git merge-base --is-ancestor HEAD origin/main` and `git diff HEAD origin/main --stat` (empty, meaning identical trees). Branched fresh off `origin/main` instead of building on a closed branch:
+```bash
+git checkout -b add-cicd-pipeline origin/main
+```
+
+**Scoping decision:** the working tree had a lot of unrelated uncommitted work mixed in (pre-existing edits to `apps/api/main.py`, `next.config.ts`, triage dataset JSON, plus the untracked `gamma-prep` files slated for archival). Chose to stage and commit **only** what Day 1/2 actually touched, leaving everything else uncommitted:
+```bash
+git add package.json apps/web/package.json .nvmrc .env.example .github/ docs/ \
+  apps/web/app/trails/apis-integrations/ apps/web/app/trails/applied-ai-ml/ \
+  apps/web/app/trails/cloud-native-essentials/ apps/web/app/trails/data-engineering-trail/ \
+  apps/web/app/trails/modern-web-foundations/ apps/web/app/trails/tse-onboarding/
+git status --short   # checkpoint: confirm only intended files staged
+git commit -m "Add GitHub Actions CI pipeline (lint, typecheck, build)"
+git push -u origin add-cicd-pipeline
+gh pr create --title "Add GitHub Actions CI pipeline" --base main --body "..."
+```
+Along the way, clarified that `.gitignore` isn't for "not part of this commit" — it's for permanently untracked things (secrets, build output, caches). Untracked files left out of this commit stay untracked, not gitignored; they're still legitimate work for later.
+
+PR: https://github.com/poutyhoney/ninjamountain/pull/2
+
+**Watched it run for real:**
+```bash
+gh pr checks 2 --watch
+```
+```
+✓  CI/web (pull_request)       48s
+✓  CI/packages (pull_request)  22s
+```
+Both jobs green on the first real attempt, running in parallel on separate GitHub-hosted VMs, alongside Vercel's own preview-deploy checks (confirming Actions and Vercel's git-integration deploy coexist without conflict, as scoped).
+
+**Day 2 complete (2026-07-24).**
+
+## Day 3 — Python CI for `apps/api`
 
 Goal: generate a real `requirements.txt` (none exists today — only a local `.venv`), write a few `pytest` tests against the FastAPI routes (zero tests exist now), add `ruff` for linting, and wire a new `api` job into `ci.yml`.
+
+### Step 1 — a curated `requirements.txt`
+
+**Why:** `apps/api` has no manifest at all — a fresh clone has nothing to `pip install` from, only a local gitignored `.venv`. Diagnostic check first (read-only, ruff run against the file directly): `main.py` already passes ruff's default rule set clean, nothing to fix there.
+
+Installed the new tooling into the existing venv (`pytest`, `ruff` weren't there yet, only `fastapi`/`uvicorn` from whatever originally set it up):
+```bash
+cd apps/api && source .venv/bin/activate
+pip install pytest ruff
+pip freeze | grep -iE "^(fastapi|uvicorn|httpx|pytest|ruff)=="
+```
+
+Wrote `apps/api/requirements.txt` with only *direct* dependencies, pinned to exact installed versions — deliberately not a full `pip freeze` dump, since pip already resolves `fastapi`'s own transitive dependencies (pydantic, starlette, anyio, ...) correctly on its own; pinning them all just adds noise and makes future upgrades harder to reason about:
+```
+fastapi==0.136.3
+uvicorn==0.48.0
+httpx==0.28.1
+pytest==9.1.1
+ruff==0.16.0
+```
+(`httpx` is required under the hood by FastAPI's `TestClient`, used in Step 2; `uvicorn` isn't needed for tests but is needed for the existing `dev:api` script to work on a fresh clone.)
+
+**Real proof it's complete** — installed from *only* this file into a brand-new, empty venv (simulating what a CI runner starts with) and imported the app:
+```bash
+python3 -m venv /tmp/api-ci-test-venv && source /tmp/api-ci-test-venv/bin/activate
+pip install -r apps/api/requirements.txt
+cd apps/api && python3 -c "import main"   # silent = success
+deactivate && rm -rf /tmp/api-ci-test-venv
+```
+
+> **Gotcha hit along the way:** typo'd the cleanup as `rm -rf /tmp/api-ci-text-venv` (text, not test) — wrong path, and it failed *silently* with no error, because `-f` specifically suppresses "no such file" complaints. Worth remembering: `-f` means "don't ask, don't complain," which is great for scripts but means a typo in a destructive command just quietly does nothing instead of warning you — harmless here (a stray scratch folder), but the kind of thing to double-check when `-f` is pointed at something that matters.
+
+**Done** — fresh-venv install succeeded, `import main` silent (no errors).
+
+> **Gotcha hit right after this:** reactivated the leftover throwaway `/tmp/api-ci-test-venv` by mistake (the earlier `rm -rf .../api-ci-**text**-venv` typo meant it never actually got deleted) instead of the real project `.venv` — caught it by noticing the shell prompt still showed `(api-ci-test-venv)`, and confirmed the fix with `which python3` before trusting any test results. Good general habit: when a command fails in a way that doesn't make sense (`No module named pytest` right after installing it), check *which* environment you're actually in before assuming the tool is broken.
+
+### Step 2 — `pytest` tests using `TestClient`
+
+**Why:** zero tests exist for `apps/api` today. `TestClient` wraps the real FastAPI `app` object and sends it fake requests entirely in-process — no real server or socket — so it's fast and needs no network.
+
+Created `apps/api/test_main.py` with three tests, one per route (`/`, `/health`, `/projects`), asserting on each route's actual current response. `test_list_projects` checks structure (`"title" in p`) rather than the full literal list, so it doesn't become brittle against minor content edits that aren't really bugs.
+
+> **Gotcha hit while typing this by hand:** a typo (`repsonse` instead of `response`) caused `NameError: name 'response' is not defined` — pytest's traceback pointed directly at the exact line and variable name, a real "read the error and fix the actual bug" moment rather than a hypothetical one.
+
+**Done** — `python3 -m pytest -v` → `3 passed`.
+
+### Step 3 — `ruff check .` over the whole directory
+
+**Why:** `test_main.py` is new since the earlier ruff check on just `main.py` — worth re-checking the whole directory now that there's more Python to lint.
+
+**Done** — `ruff check .` → `All checks passed!`.
+
+### Step 4 — the `api` job in `ci.yml`
+
+**Why:** a third sibling job (same shape as `web`/`packages`, but Python instead of Node) — `actions/setup-python@v5` instead of `setup-node`, `cache: pip` instead of `cache: npm`. Completely independent VM; never touches Node at all.
+
+```yaml
+  api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - run: pip install -r apps/api/requirements.txt
+      - run: ruff check apps/api
+      - run: pytest apps/api
+```
+
+Note all paths (`apps/api/requirements.txt`, etc.) are relative to the repo root, since that's where `checkout` puts you on the VM — unlike the local terminal where each command was run from inside `apps/api` itself.
+
+**Done** — no typos this time; validated on the first try, all three jobs (`web`, `packages`, `api`) structured correctly.
 
 ## Day 4 — Deploy gate via branch protection *(not started)*
 
