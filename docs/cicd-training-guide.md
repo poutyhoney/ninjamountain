@@ -378,6 +378,15 @@ Ruff's import-sorter tries to auto-detect which imports are "first-party" (your 
 
 **Done** — both fixes verified locally (`ruff check .` clean, `pytest -v` → 3 passed) before re-pushing.
 
+Pushed the fixes to PR #3 and watched it go fully green:
+```
+✓  CI/api (pull_request)       15s
+✓  CI/packages (pull_request)  25s
+✓  CI/web (pull_request)       43s
+```
+
+**Day 3 complete (2026-07-26).** All three jobs (`web`, `packages`, `api`) passing together for the first time, after actually diagnosing and fixing a real, non-hypothetical CI-only failure (the ruff working-directory issue) plus a genuinely stale test assertion — not a typo, an actual logic bug caught by the CI run itself.
+
 ## Day 4 — Deploy gate via branch protection *(not started)*
 
 Goal: a GitHub branch protection rule on `main` requiring the CI jobs to pass before merge. Since Vercel deploys from `main`, this becomes a real gate on production without touching Vercel's config at all.
