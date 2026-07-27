@@ -418,9 +418,79 @@ Added a short "CI/CD" section to the root `README.md`: PRs must pass CI before m
 
 **Day 4 complete (2026-07-27).** The pipeline built on Days 1–3 is now a genuine, unbypassable gate — not just a nice-to-have that could be clicked past.
 
-## Day 5 (stretch) — Actions-driven preview deploy *(not started)*
+## Day 5 (stretch) — Actions-driven preview deploy
 
-Goal: a `deploy-preview` job on pull requests, gated on CI passing, using the Vercel CLI + a token to produce a preview URL. Deliberately scoped to *preview* deploys only — production stays on Vercel's existing git-integration path, since replacing that would mean changing Vercel's dashboard settings, which carries real risk to the currently-working deploy.
+Goal: a `deploy-preview` job on pull requests, gated on CI passing, using the Vercel CLI + a token to produce a preview URL.
+
+**Honest scoping note before starting:** Vercel's own git integration was already producing a preview deployment for every PR all week (the `Vercel` check). Building an Actions-driven preview on top of that would be redundant *unless* Vercel's native preview deploys are turned off first — otherwise there'd be two competing preview systems. Considered spinning up a second, dedicated project instead to showcase this feature more cleanly — decided against it: more setup overhead, fragments the portfolio story across two repos, and there's a real job this repo still needs to be ready for. The actual fix (disable just Vercel's *preview* auto-deploys, leave production untouched) is a much smaller, lower-risk change than either alternative.
+
+### Step 0 — make Vercel stop doing preview deploys (production untouched)
+
+In the Vercel dashboard: `ninjamountain-web` project → Settings → **Build and Deployment** → **Ignored Build Step** → Behavior dropdown → **"Only build production."** Built-in preset (no custom script needed) that skips Vercel's own build/deploy for anything that isn't a push to the production branch (`main`), while `main` keeps auto-deploying exactly as before.
+
+**Done** — saved; confirmed dropdown shows "Only build production," and the (now-inactive) placeholder command underneath matches the equivalent logic (`if [ "$VERCEL_ENV" == "production" ]; then exit 1; else exit 0; fi`) a custom script would have used.
+
+### Step 1 — Vercel token + `vercel link` for org/project IDs
+
+Created a personal Vercel token at `vercel.com/account/tokens` (kept private — the actual value never got pasted into this conversation, only typed directly into the terminal).
+
+```bash
+cd apps/web && npx vercel link
+```
+
+> **Correction mid-step:** initially assumed `.vercel/` should end up inside `apps/web/` (matching the project's actual root). It didn't — `npx vercel link`, even run from inside `apps/web`, put `.vercel/` at the **repo root** instead. Turned out this is *correct*, not a mistake: newer Vercel CLI versions (57.0.0 here) support monorepos by storing a single `.vercel/repo.json` at the repo root with a `projects` array, each entry mapping a `directory` (e.g. `"apps/web"`) to its own `id`/`orgId` — a different, newer convention than the older one-`project.json`-per-directory pattern. Confirmed via `.vercel/README.txt` (Vercel's own generated explainer) and by reading `repo.json` directly. Also confirmed `.vercel` was already present in `.gitignore` beforehand.
+
+**Done** — linked to the existing `ninjamountain-web` project; `orgId` and `projectId` retrieved from `.vercel/repo.json`.
+
+### Step 2 — add the three secrets as GitHub repo secrets
+
+`VERCEL_TOKEN` set via `gh secret set VERCEL_TOKEN` with no `--body` flag — prompts interactively for the value so it never touches shell history or this conversation. `VERCEL_ORG_ID`/`VERCEL_PROJECT_ID` set directly from the (non-sensitive) IDs already retrieved in Step 1.
+
+**Done** — `gh secret list` confirms all three present.
+
+### Step 3 — the `deploy-preview` job
+
+New concepts this job introduced, beyond the pattern from Days 2–3:
+
+- **`needs: [web, packages, api]`** — job won't start until all three pass; the actual "gated on CI" mechanic.
+- **`if: github.event_name == 'pull_request'`** — this workflow triggers on both `pull_request` and `push` to `main`; a push to `main` has no PR to comment on and shouldn't get a "preview."
+- **`permissions:`** — specifying *any* `permissions:` block resets every unlisted scope to `none`, it doesn't add to the defaults. `contents: read` had to be listed explicitly alongside `pull-requests: write`, or `actions/checkout` would lose the access it needs just to clone the repo.
+- **`env: VERCEL_ORG_ID` / `VERCEL_PROJECT_ID`** — how the Vercel CLI knows which project to target in CI without the (gitignored) `.vercel` folder being present.
+- **`vercel pull` → `vercel build` → `vercel deploy --prebuilt`** — Vercel's own documented CI pattern; the deploy command prints the resulting URL, captured via `$GITHUB_OUTPUT` for the next step to use.
+
+**Four real bugs found reading the typed-out YAML, none caught by the earlier Day 2/3 patterns:**
+1. **Block scalar indentation** — `run: |`'s content lines were at the *same* indent as `run:` itself instead of deeper, so YAML tried to read `url=$(vercel deploy...)` as a new mapping key. First real error: "could not find expected ':'".
+2. **`pull_requests: write`** (underscore) instead of **`pull-requests:`** (hyphen) — GitHub Actions permission scope names always use hyphens; the underscore version isn't a recognized key at all.
+3. **`working_directory:`** (underscore) instead of **`working-directory:`** (hyphen) — same category of typo, different key.
+4. **`secrets.GITHUB_OUTPUT`** instead of **`secrets.GITHUB_TOKEN`** — `GITHUB_OUTPUT` is the file path used for writing step outputs (referenced two steps earlier), not a secret; doesn't exist under `secrets.*`.
+5. A second, more subtle YAML rule: `run: gh pr comment ... --body "Actions-deployed preview: ${{ ... }}"` — this value isn't quoted at the YAML level (it starts with `gh`, not a quote character), so it's a *plain scalar*, and a plain scalar can't contain a bare `: ` (colon-space) anywhere in it — the inner `"..."` are just literal characters to YAML's parser, not real quoting. The `preview: ${{` inside it triggered "mapping values are not allowed here." Fixed by wrapping the *entire* `run:` value in single quotes, so the inner double quotes stay as literal characters instead of ending a scalar early.
+
+**Done** — YAML validated clean, all five fixes confirmed in the parsed output.
+
+### Step 4 — push it and watch the whole thing run
+
+Opened PR #7. First real run: `web`/`packages`/`api` passed, and — good confirmation of Step 0 — the native `Vercel` check now showed **"Canceled by Ignored Build Step,"** proving Vercel correctly stopped doing its own preview deploys. But `deploy-preview` itself failed.
+
+**Real bug #6, the best one of the week:** the actual error was
+```
+Error: The provided path "~/work/ninjamountain/ninjamountain/apps/web/apps/web" does not exist.
+```
+A doubled path. Root cause: the job had `defaults: run: working-directory: apps/web` (the same fix that solved Day 3's ruff bug), but this time it was the wrong instinct. Since `.vercel/` is gitignored, `vercel pull` in CI has nothing local to read — it fetches the project fresh from Vercel's API using just `VERCEL_PROJECT_ID`, and that lookup returns the project's own server-side Root Directory setting (`apps/web` — the same value seen locally in `repo.json`). Vercel CLI then resolves that root *relative to the current directory* — but since we'd already `cd`'d there ourselves via `working-directory`, it appended `apps/web` a second time. The exact opposite lesson from Day 3: there, the tool needed to be told where to run from; here, the tool already knows its own project root and doesn't want to be told. **Fix:** removed the `defaults:` block entirely from `deploy-preview`, letting Vercel CLI resolve its own path from the repo root.
+
+Pushed the fix, re-ran:
+```
+✓  CI/api (pull_request)             19s
+✓  CI/deploy-preview (pull_request)  1m12s
+✓  CI/packages (pull_request)        23s
+✓  CI/web (pull_request)             49s
+```
+All six checks green (including Vercel's own, now correctly skipped). Confirmed the actual PR comment:
+```
+Actions-deployed preview: https://ninjamountain-n691xkrdr-tom-de-carlo-s-projects.vercel.app
+```
+Opened it in a real logged-in browser — genuinely loads the live site, not just a login wall.
+
+**Day 5 complete (2026-07-27).** A working, gated, Actions-driven preview deploy — from a fresh Vercel token and monorepo-aware `vercel link`, through six real bugs (five YAML/syntax, one genuinely subtle path-resolution issue), to a real preview URL posted on a real PR and manually confirmed live. That's the whole week: five days, a from-scratch CI/CD pipeline, a real deploy gate, and enough real debugging along the way that the interview answer is now completely honest.
 
 ---
 
