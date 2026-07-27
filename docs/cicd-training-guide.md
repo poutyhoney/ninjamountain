@@ -387,9 +387,36 @@ Pushed the fixes to PR #3 and watched it go fully green:
 
 **Day 3 complete (2026-07-26).** All three jobs (`web`, `packages`, `api`) passing together for the first time, after actually diagnosing and fixing a real, non-hypothetical CI-only failure (the ruff working-directory issue) plus a genuinely stale test assertion — not a typo, an actual logic bug caught by the CI run itself.
 
-## Day 4 — Deploy gate via branch protection *(not started)*
+## Day 4 — Deploy gate via branch protection
 
-Goal: a GitHub branch protection rule on `main` requiring the CI jobs to pass before merge. Since Vercel deploys from `main`, this becomes a real gate on production without touching Vercel's config at all.
+Goal: a GitHub branch protection rule on `main` requiring the CI jobs to pass before merge. Since Vercel deploys from `main`, this becomes a real gate on production without touching Vercel's config at all — before this, a PR with failing checks could still be merged manually; branch protection turns "CI failed" from a suggestion into an actual block on the merge button.
+
+### Step 1-2 — configure the rule (via GitHub UI: Settings → Branches → Add rule)
+
+- **Branch name pattern:** `main`
+- **Require a pull request before merging** — checked (forces the PR workflow; without other collaborators, left "Require approvals" *unchecked* — with it checked even at 1, the repo owner is locked out of merging their own PRs, since GitHub doesn't count the author's own approval)
+- **Require status checks to pass before merging** — checked, with **Require branches to be up to date before merging** also checked, and all three jobs (`web`, `packages`, `api`) added as required checks
+- Left unchecked: conversation resolution, signed commits, linear history, required deployments, lock branch — not needed for a solo repo right now
+- **"Do not allow bypassing the above settings"** — checked, so the gate applies even to the repo admin, not just a suggestion
+- Force pushes and branch deletion — left disabled (default)
+
+**Done** — rule created, confirmed via Edit view showing all three status checks listed under "Status checks that are required."
+
+### Step 3 — prove it actually blocks something
+
+Opened a throwaway PR (#5, `test-branch-protection`) with a deliberate, guaranteed TypeScript error in a brand-new disposable file (`const x: number = "this is not a number";`) — certain to fail the `web` job's `typecheck:web` step.
+
+**Result:** `CI / web` failed (labeled **Required**), and the **"Merge pull request" button was genuinely greyed out/disabled** — not a clickable warning, an actual block. Bonus: Vercel's own real deployment failed too for the same reason (the broken TypeScript really doesn't compile), confirming this isn't just a CI-specific check but a real build failure.
+
+Fixed the file, pushed again, watched all checks go green — the merge button flipped to solid/"Ready to merge." Closed the PR without merging (`gh pr close 5 --delete-branch`, cleaning up both the PR and the branch in one step) since it was only ever meant to prove the gate works both ways (blocks red, allows green).
+
+**Done (2026-07-27)** — branch protection confirmed to be a real, working deploy gate, verified in both directions (fails closed, opens on green).
+
+### Step 4 — document it
+
+Added a short "CI/CD" section to the root `README.md`: PRs must pass CI before merging to `main`; `main` auto-deploys to production via Vercel's git integration, so a green PR is what actually reaches the live site.
+
+**Day 4 complete (2026-07-27).** The pipeline built on Days 1–3 is now a genuine, unbypassable gate — not just a nice-to-have that could be clicked past.
 
 ## Day 5 (stretch) — Actions-driven preview deploy *(not started)*
 
