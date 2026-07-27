@@ -467,6 +467,31 @@ New concepts this job introduced, beyond the pattern from Days 2–3:
 
 **Done** — YAML validated clean, all five fixes confirmed in the parsed output.
 
+### Step 4 — push it and watch the whole thing run
+
+Opened PR #7. First real run: `web`/`packages`/`api` passed, and — good confirmation of Step 0 — the native `Vercel` check now showed **"Canceled by Ignored Build Step,"** proving Vercel correctly stopped doing its own preview deploys. But `deploy-preview` itself failed.
+
+**Real bug #6, the best one of the week:** the actual error was
+```
+Error: The provided path "~/work/ninjamountain/ninjamountain/apps/web/apps/web" does not exist.
+```
+A doubled path. Root cause: the job had `defaults: run: working-directory: apps/web` (the same fix that solved Day 3's ruff bug), but this time it was the wrong instinct. Since `.vercel/` is gitignored, `vercel pull` in CI has nothing local to read — it fetches the project fresh from Vercel's API using just `VERCEL_PROJECT_ID`, and that lookup returns the project's own server-side Root Directory setting (`apps/web` — the same value seen locally in `repo.json`). Vercel CLI then resolves that root *relative to the current directory* — but since we'd already `cd`'d there ourselves via `working-directory`, it appended `apps/web` a second time. The exact opposite lesson from Day 3: there, the tool needed to be told where to run from; here, the tool already knows its own project root and doesn't want to be told. **Fix:** removed the `defaults:` block entirely from `deploy-preview`, letting Vercel CLI resolve its own path from the repo root.
+
+Pushed the fix, re-ran:
+```
+✓  CI/api (pull_request)             19s
+✓  CI/deploy-preview (pull_request)  1m12s
+✓  CI/packages (pull_request)        23s
+✓  CI/web (pull_request)             49s
+```
+All six checks green (including Vercel's own, now correctly skipped). Confirmed the actual PR comment:
+```
+Actions-deployed preview: https://ninjamountain-n691xkrdr-tom-de-carlo-s-projects.vercel.app
+```
+Opened it in a real logged-in browser — genuinely loads the live site, not just a login wall.
+
+**Day 5 complete (2026-07-27).** A working, gated, Actions-driven preview deploy — from a fresh Vercel token and monorepo-aware `vercel link`, through six real bugs (five YAML/syntax, one genuinely subtle path-resolution issue), to a real preview URL posted on a real PR and manually confirmed live. That's the whole week: five days, a from-scratch CI/CD pipeline, a real deploy gate, and enough real debugging along the way that the interview answer is now completely honest.
+
 ---
 
 ## What I should be able to say after this week
