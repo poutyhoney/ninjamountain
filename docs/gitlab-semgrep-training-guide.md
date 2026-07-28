@@ -141,4 +141,10 @@ Added a `semgrep` job to `.github/workflows/ci.yml`, deliberately testing a hypo
 
 **The concrete comparison point this gives me:** GitHub Actions' `container:` key runs a job entirely inside an image with zero extra ceremony for a tool like Semgrep that's Docker-aware; GitLab CI's `image:` key needed three real, understood fixes (satisfying `/src`, then getting git file-tracking working inside it) to reach the same result. Same tool, same rules, meaningfully different amount of CI-specific friction depending on the platform — exactly the kind of platform-specific nuance a support/solutions engineer needs to be able to speak to.
 
-**Day 3 / Lesson 2 complete (2026-07-28).**
+### Bonus — make `semgrep` an actual gate on both platforms, not just informational
+
+**GitHub:** added `semgrep` to the existing `main` branch protection rule's required status checks (Settings → Branches → Edit), alongside `web`/`packages`/`api` — same granular per-job model from Lesson 1's Day 4.
+
+**GitLab:** no equivalent per-job picker on the free tier — instead, Settings → Merge requests → Merge checks → **"Pipelines must succeed"**. Coarser than GitHub's model (gates on the whole pipeline, not individual jobs), but since our `.gitlab-ci.yml` only has two jobs (`web`, `semgrep`), functionally equivalent here — worth knowing as a real platform difference, not just a preference.
+
+**Day 3 / Lesson 2 complete (2026-07-28).** Both CI platforms now have Semgrep wired in as a genuine, unbypassable gate — not just a nice-to-have that could be clicked past.
