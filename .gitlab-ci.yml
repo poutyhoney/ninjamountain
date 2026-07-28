@@ -21,5 +21,8 @@ web:
 semgrep:
     stage: test
     image: semgrep/semgrep
-    script:
-        - semgrep scan --config auto
+    script: semgrep ci
+    rules:
+        - if: $CI_PIPELINE_SOURCE == "web"
+        - if: $CI_MERGE_REQUEST_IID
+        - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
