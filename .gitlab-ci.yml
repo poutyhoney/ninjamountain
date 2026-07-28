@@ -1,0 +1,19 @@
+image: node:22
+
+stages:
+     - test
+
+cache:
+    key:
+        files:
+            - package-lock.json
+    paths:
+        - node_modules/
+
+web:
+    stage: test
+    script:
+        - npm ci
+        - npm run lint:web
+        - npm run typecheck:web
+        - npm run build:web
