@@ -17,3 +17,9 @@ web:
         - npm run lint:web
         - npm run typecheck:web
         - npm run build:web
+        
+semgrep:
+    stage: test
+    image: semgrep/semgrep
+    script:
+        - semgrep scan --config auto
