@@ -17,3 +17,16 @@ web:
         - npm run lint:web
         - npm run typecheck:web
         - npm run build:web
+        
+semgrep:
+    stage: test
+    image: semgrep/semgrep
+    script: 
+        - mkdir -p /src
+        - cp -r "$CI_PROJECT_DIR"/. /src/
+        - cd /src
+        - semgrep scan --config auto
+    rules:
+        - if: $CI_PIPELINE_SOURCE == "web"
+        - if: $CI_MERGE_REQUEST_IID
+        - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH

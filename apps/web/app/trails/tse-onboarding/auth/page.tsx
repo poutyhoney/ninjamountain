@@ -63,8 +63,11 @@ const TRAINING_NOTES = [
   },
 ];
 
+// Synthetic example JWT for this lesson's exercises only — not a real credential (signature deliberately ends in ".xyz").
+const EXAMPLE_JWT = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhY2N0XzQ0MiIsInNjb3BlIjoicmVhZDpjb252ZXJzYXRpb25zIiwiZXhwIjoxNzEwMDAwMDAwfQ.xyz'; // nosemgrep: generic.secrets.security.detected-jwt-token.detected-jwt-token
+
 const CODE_EXAMPLE = `GET /v1/conversations/CH2a91 HTTP/1.1
-Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhY2N0XzQ0MiIsInNjb3BlIjoicmVhZDpjb252ZXJzYXRpb25zIiwiZXhwIjoxNzEwMDAwMDAwfQ.xyz
+Authorization: Bearer ${EXAMPLE_JWT}
 
 HTTP/1.1 403 Forbidden
 {
