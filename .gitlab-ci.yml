@@ -22,7 +22,9 @@ semgrep:
     stage: test
     image: semgrep/semgrep
     script: 
-        - ln -s "$CI_PROJECT_DIR"  /src
+        - mkdir -p /src
+        - cp -r "$CI_PROJECT_DIR"/. /src/
+        - cd /src
         - semgrep scan --config auto
     rules:
         - if: $CI_PIPELINE_SOURCE == "web"
