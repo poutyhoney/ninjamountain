@@ -119,6 +119,26 @@ This check is explicitly *skipped* when `env.in_gh_action` is true — GitHub Ac
 
 **Day 2 complete (2026-07-28).** Six real bugs total across the day (three getting Semgrep to actually run at all, one silently-false-passing config mistake, then two genuine triage decisions) — and both AppSec-relevant fixes (supply-chain pinning, documented false-positive suppression) landed for real, not just discussed.
 
-## Day 3 (stretch) — bring Semgrep into the GitHub Actions pipeline too *(not started)*
+## Day 3 (stretch) — bring Semgrep into the GitHub Actions pipeline too
 
 Goal: side-by-side integration experience across both providers — a specific, concrete interview detail.
+
+Added a `semgrep` job to `.github/workflows/ci.yml`, deliberately testing a hypothesis from Day 2's source-reading rather than assuming it:
+
+```yaml
+    semgrep:
+        runs-on: ubuntu-latest
+        container:
+            image: semgrep/semgrep
+        steps:
+            - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+            - run: semgrep scan --config auto
+```
+
+**Hypothesis, from reading Semgrep's own source on Day 2:** `adjust_for_docker()` skips its Docker-mount check entirely when `env.in_gh_action` is true — GitHub Actions sets that automatically. Prediction: none of the three Docker/git-tracking bugs that took three fixes to solve on GitLab should occur here.
+
+**Confirmed for real:** job passed on the *first* try, 24s, no Docker error at all — `Ran 489 rules on 168 files: 0 findings.` Zero findings also validates that Day 2's two fixes (pinned Actions, suppressed JWT) genuinely resolved what Semgrep flagged — same tool, same codebase, clean this time.
+
+**The concrete comparison point this gives me:** GitHub Actions' `container:` key runs a job entirely inside an image with zero extra ceremony for a tool like Semgrep that's Docker-aware; GitLab CI's `image:` key needed three real, understood fixes (satisfying `/src`, then getting git file-tracking working inside it) to reach the same result. Same tool, same rules, meaningfully different amount of CI-specific friction depending on the platform — exactly the kind of platform-specific nuance a support/solutions engineer needs to be able to speak to.
+
+**Day 3 / Lesson 2 complete (2026-07-28).**
