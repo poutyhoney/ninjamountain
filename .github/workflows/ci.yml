@@ -76,4 +76,11 @@ jobs:
           env:
             GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           run: 'gh pr comment ${{ github.event.pull_request.number }} --body "Actions-deployed preview: ${{ steps.deploy.outputs.url }}"'
+    semgrep:
+        runs-on: ubuntu-latest
+        container:
+            image: semgrep/semgrep
+        steps:
+        - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        - run: semgrep scan --config auto
         
