@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import SiteHeader from '../../components/SiteHeader';
 import SiteFooter from '../../components/SiteFooter';
 import TrainingNotes from '../../components/TrainingNotes';
@@ -30,6 +31,7 @@ const STATS: Stat[] = [
   { value: 'Auth',   desc: 'Tokens, scopes, identity'    },
   { value: 'Events', desc: 'Webhooks and retries'        },
   { value: 'RCA',    desc: 'Incidents and prevention'    },
+  { value: 'AI',     desc: 'Using AI as a force multiplier' },
 ];
 
 const SKILLS: Skill[] = [
@@ -262,7 +264,7 @@ export default function OnboardPage() {
           </div>
 
           {/* Stats */}
-          <div className="mt-14 grid grid-cols-2 gap-3 md:grid-cols-4" aria-label="Core themes">
+          <div className="mt-14 grid grid-cols-2 gap-3 md:grid-cols-5" aria-label="Core themes">
             {STATS.map(({ value, desc }) => (
               <div key={value} className={card}>
                 <strong className="block text-2xl text-[#B7A7FF]">{value}</strong>
@@ -423,6 +425,19 @@ export default function OnboardPage() {
                 <small className="mt-1 block text-[#6F7684]">{desc}</small>
               </a>
             ))}
+          </div>
+
+          <div className="mt-8 rounded-[18px] border border-[#8B6CFF]/[0.24] bg-gradient-to-br from-[#8B6CFF]/[0.13] to-[#8B6CFF]/[0.06] p-7">
+            <h3 className="mb-1 text-lg font-semibold text-[#E9ECF2]">Ready to go step by step?</h3>
+            <p className="mb-4 text-sm text-[#6F7684]">
+              The themes above become structured lessons — definitions, source reading, and exercises for each topic.
+            </p>
+            <Link
+              href="/trails/tse-onboarding"
+              className="inline-block rounded-full bg-[#E9ECF2] px-5 py-3 font-semibold text-[#0A0B0F] transition hover:-translate-y-px"
+            >
+              Start the structured lessons
+            </Link>
           </div>
         </section>
 

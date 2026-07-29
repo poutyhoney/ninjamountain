@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import Link from 'next/link';
 
 type Difficulty = 'Beginner' | 'Intermediate' | 'Advanced';
 
@@ -11,40 +12,54 @@ type Trail = {
   difficulty: Difficulty;
   lessons: number;
   progress: number; // 0–100
+  href?: string;
 };
 
 const TRAILS: Trail[] = [
   {
+    title: 'TSE Onboarding',
+    body: 'HTTP, auth, events, incidents, AI as a force multiplier, support tooling, live demos, and enterprise identity — the field skills for supporting API products.',
+    category: 'Support',
+    difficulty: 'Beginner',
+    lessons: 9,
+    progress: 100,
+    href: '/trails/tse-onboarding',
+  },
+  {
     title: 'Modern Web Foundations',
-    body: 'HTML, CSS, and JavaScript done right. Build solid foundations.',
+    body: 'Scripting fluency across languages, and the full-stack production bar for shipping safely.',
     category: 'Web Dev',
     difficulty: 'Beginner',
-    lessons: 8,
-    progress: 30,
+    lessons: 2,
+    progress: 100,
+    href: '/trails/modern-web-foundations',
   },
   {
     title: 'APIs & Integrations',
-    body: 'Design, build, and consume robust APIs. Connect systems with confidence.',
+    body: 'API and integration design, plus enough SQL and data modeling to read an unfamiliar schema.',
     category: 'Web Dev',
     difficulty: 'Intermediate',
-    lessons: 10,
-    progress: 30,
+    lessons: 2,
+    progress: 100,
+    href: '/trails/apis-integrations',
   },
   {
     title: 'Cloud Native Essentials',
-    body: 'Containers, orchestration, and infrastructure as code.',
+    body: 'Containers, orchestration, cloud platforms, infrastructure as code, and production deployment models.',
     category: 'DevOps',
     difficulty: 'Intermediate',
-    lessons: 9,
-    progress: 0,
+    lessons: 4,
+    progress: 100,
+    href: '/trails/cloud-native-essentials',
   },
   {
     title: 'Data Engineering Trail',
-    body: 'Pipelines, warehouses, and transformations at scale.',
+    body: 'Observability and log analysis, the modern data stack, and pipelines and transformation.',
     category: 'Data',
     difficulty: 'Advanced',
-    lessons: 12,
-    progress: 5,
+    lessons: 3,
+    progress: 100,
+    href: '/trails/data-engineering-trail',
   },
   {
     title: 'Frontend Craft',
@@ -56,15 +71,16 @@ const TRAILS: Trail[] = [
   },
   {
     title: 'Applied AI/ML',
-    body: 'Prompting, evals, and wiring models into real product surfaces.',
+    body: 'LLM APIs and prompting, agentic engineering in production, AI-assisted dev tooling, and low-code automation.',
     category: 'AI/ML',
     difficulty: 'Advanced',
-    lessons: 11,
-    progress: 0,
+    lessons: 4,
+    progress: 100,
+    href: '/trails/applied-ai-ml',
   },
 ];
 
-const CATEGORIES = ['All Trails', 'Web Dev', 'Data', 'DevOps', 'AI/ML'] as const;
+const CATEGORIES = ['All Trails', 'Support', 'Web Dev', 'Data', 'DevOps', 'AI/ML'] as const;
 
 const DIFFICULTY_STYLES: Record<Difficulty, string> = {
   Beginner:     'bg-[#202431] text-[#C8CCD4]',
@@ -123,41 +139,53 @@ export default function TrailsList() {
 
       {/* Trail rows */}
       <div className="mt-6 space-y-4">
-        {visible.map((trail) => (
-          <article
-            key={trail.title}
-            className="group flex flex-col gap-4 rounded-2xl border border-[#202431] bg-[#151821] p-5 transition hover:border-[#8B6CFF]/40 sm:flex-row sm:items-center"
-          >
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#8B6CFF]/10 ring-1 ring-inset ring-[#8B6CFF]/20">
-              {TRAIL_ICON}
-            </span>
-
-            <div className="min-w-0 flex-1">
-              <h3 className="font-semibold text-[#E9ECF2]">{trail.title}</h3>
-              <p className="mt-1 text-sm leading-relaxed text-[#6F7684]">{trail.body}</p>
-              {trail.progress > 0 && (
-                <div className="mt-3 flex items-center gap-3">
-                  <div className="h-1.5 w-full max-w-[180px] overflow-hidden rounded-full bg-[#202431]">
-                    <div className="h-full rounded-full bg-[#8B6CFF]" style={{ width: `${trail.progress}%` }} />
-                  </div>
-                  <span className="text-xs text-[#6F7684]">{trail.progress}%</span>
-                </div>
-              )}
-            </div>
-
-            <div className="flex shrink-0 items-center gap-5">
-              <div className="text-right">
-                <span className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${DIFFICULTY_STYLES[trail.difficulty]}`}>
-                  {trail.difficulty}
-                </span>
-                <p className="mt-1.5 text-xs text-[#6F7684]">{trail.lessons} Lessons</p>
-              </div>
-              <span className="text-[#6F7684] transition-colors group-hover:text-[#8B6CFF]" aria-hidden="true">
-                →
+        {visible.map((trail) => {
+          const rowContent = (
+            <>
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#8B6CFF]/10 ring-1 ring-inset ring-[#8B6CFF]/20">
+                {TRAIL_ICON}
               </span>
-            </div>
-          </article>
-        ))}
+
+              <div className="min-w-0 flex-1">
+                <h3 className="font-semibold text-[#E9ECF2]">{trail.title}</h3>
+                <p className="mt-1 text-sm leading-relaxed text-[#6F7684]">{trail.body}</p>
+                {trail.progress > 0 && (
+                  <div className="mt-3 flex items-center gap-3">
+                    <div className="h-1.5 w-full max-w-[180px] overflow-hidden rounded-full bg-[#202431]">
+                      <div className="h-full rounded-full bg-[#8B6CFF]" style={{ width: `${trail.progress}%` }} />
+                    </div>
+                    <span className="text-xs text-[#6F7684]">{trail.progress}%</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex shrink-0 items-center gap-5">
+                <div className="text-right">
+                  <span className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${DIFFICULTY_STYLES[trail.difficulty]}`}>
+                    {trail.difficulty}
+                  </span>
+                  <p className="mt-1.5 text-xs text-[#6F7684]">{trail.lessons} Lessons</p>
+                </div>
+                <span className="text-[#6F7684] transition-colors group-hover:text-[#8B6CFF]" aria-hidden="true">
+                  →
+                </span>
+              </div>
+            </>
+          );
+
+          const rowClassName =
+            'group flex flex-col gap-4 rounded-2xl border border-[#202431] bg-[#151821] p-5 transition hover:border-[#8B6CFF]/40 sm:flex-row sm:items-center';
+
+          return trail.href ? (
+            <Link key={trail.title} href={trail.href} className={rowClassName}>
+              {rowContent}
+            </Link>
+          ) : (
+            <article key={trail.title} className={rowClassName}>
+              {rowContent}
+            </article>
+          );
+        })}
       </div>
     </div>
   );
