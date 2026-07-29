@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated": "2026-06-25",
+  "updated": "2026-06-28",
   "schema": "triage-dataset",
   "tickets": [
     {
@@ -541,6 +541,80 @@
         "verified_by": "Tom De Carlo",
         "verified_on": "2026-06-25",
         "notes": "this pattern is repeatable for any agent logging in, so would have a higher business impact"
+      }
+    },
+    {
+      "id": "T025",
+      "subject": "How do I stop workers from getting stuck in Reserved activity after reservation timeout?",
+      "body": "Hi,\n\nWe're running Flex UI 2.7.1 and have noticed something odd with our TaskRouter workers after reservation timeouts. Wondering if there's a config option I'm missing.\n\nSituation: when a reservation times out (we have a 30s timeout set on the workflow), the task correctly gets re-evaluated (we see `task_re_evaluated_reason: reservation_timeout` in the event logs), but the worker remains in the Reserved activity indefinitely instead of transitioning back to Available or Unavailable. The agent's desktop shows them as Reserved with no active task, and they stop receiving new reservations. Only fix right now is the supervisor manually updating the worker's activity via the console.\n\nIs there a specific `DequeuePostWorkActivitySid` we should be setting, or a workflow config option that handles the worker activity transition on timeout specifically?\n\nRelevant details:\n- Workspace: WSxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n- Affected workers: WKa1b2c3d4e5f6... (multiple, reproducible across agents)\n- Workflow: WWxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n- Reservation SIDs at time of issue: WRxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, WRxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n- Activity SIDs: Available = WAxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, Reserved = WAxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n- No custom `reservation.timeout` handler in our plugin — we're relying on default behavior\n- Repro: 1) worker in Available, 2) task assigned (enters Reserved), 3) worker doesn't accept within 30s, 4) reservation times out, 5) worker stays stuck in Reserved\n\nWe checked the TaskRouter.js worker events and we do see `reservation.timeout` fire, but no subsequent `activity.update` event ever comes through for the worker.\n\nChrome 124, no console errors, no 45600/45601 codes. Happens on both Chrome and Edge.\n\nIs there a setting we need to enable, or a webhook we need to handle ourselves to push the worker back to a sane activity state after timeout?\n\nThanks",
+      "split": "test",
+      "meta": {
+        "source": "synthetic",
+        "product": "flex",
+        "sub_surface": "taskrouter",
+        "cell": "flex/taskrouter·bug·medium",
+        "added": "2026-06-28",
+        "twist": "question_framed",
+        "model": "claude-sonnet-4-6",
+        "grounding": [
+          "flex.md"
+        ]
+      },
+      "gold": {
+        "category": "bug",
+        "severity": "medium",
+        "verified_by": "Tom De Carlo",
+        "verified_on": "2026-06-28"
+      }
+    },
+    {
+      "id": "T026",
+      "subject": "How do I stop our plugin from crashing the desktop after deploying a new version?",
+      "body": "Hi Twilio support,\n\nWe're a small team running Flex 2.7.1 and we've been building out a custom plugin that we deploy through the Flex Plugins CLI. Things have been working pretty well overall, but we've run into a pattern we don't fully understand and wanted to ask if we're doing something wrong before assuming it's a problem on your end.\n\nWhenever we cut a new plugin version and push it out through a new Release, our agents on Chrome 124 start seeing a broken desktop — the UI loads but several panels are blank and they can't accept tasks. It clears up if we close and reopen the browser tab sometimes, but not reliably. We went ahead and rolled back to a prior configuration by releasing the older configuration SID and that fixed everyone immediately, so we know our new plugin version is involved somehow.\n\nHere's the part we're confused about: we've now reproduced this twice across two separate plugin versions that looked fine in our staging environment. Both times, the desktop breaks for all agents at once right after the release goes live. When we check the browser console there's a reference to something being undefined relating to a channel property, but we haven't been able to trace it back to a specific line in our plugin code.\n\nOur questions are basically:\n1. Is there a recommended way to test a plugin version against a production-like environment before it affects all agents?\n2. Is the Status Report tool the right place to start diagnosing what's happening during initialization, or is there something more specific we should be capturing?\n3. Could the issue be that our plugin is running some initialization logic before certain Flex SDKs are fully ready, and if so, is there a safe event or lifecycle hook we should be waiting on?\n\nWe're not in a rush but this is starting to slow down our deploys since we have to roll back every time. Happy to provide our account details or any other information if it helps.\n\nThanks so much.",
+      "split": "dev",
+      "meta": {
+        "source": "synthetic",
+        "product": "flex",
+        "sub_surface": "plugins",
+        "cell": "flex/plugins·bug·medium",
+        "added": "2026-06-28",
+        "twist": "question_framed",
+        "model": "claude-sonnet-4-6",
+        "grounding": [
+          "flex.md"
+        ]
+      },
+      "gold": {
+        "category": "bug",
+        "severity": "high",
+        "verified_by": "Tom De Carlo",
+        "verified_on": "2026-06-28",
+        "notes": "mistake... I see they say customer says they are not in a rush"
+      }
+    },
+    {
+      "id": "T027",
+      "subject": "How do we prevent beforeAcceptTask from occasionally blocking agents?",
+      "body": "Hi,\n\nWe're running Flex UI 2.7.1 across a large agent population (Chrome 124). We added a beforeAcceptTask override in our plugin a few weeks ago to do some pre-acceptance attribute stamping before a task is accepted.\n\nGeneral question: is there a recommended pattern for invoking a follow-up action inside a beforeAcceptTask override? We're currently calling Flex.Actions.invokeAction inside the override and returning the result.\n\nThe reason we're asking: intermittently, maybe 5-10 times a day out of hundreds of acceptances, the task acceptance just silently stops. The agent sees the reservation ring, nothing happens when they click Accept, and the task eventually times out and goes back into the queue. It doesn't happen to any specific agent or queue. No visible error in the UI on the agent's screen, and it's not consistent enough that we can reliably reproduce it on demand.\n\nWe noticed if we temporarily remove our beforeAcceptTask override entirely, we stop seeing the stuck acceptances. So we suspect something about how we have it wired up is occasionally causing the action chain to not complete, but we're not sure what the correct way to structure this is.\n\nWorkspace is WS redacted, TaskQueue in question is WQ redacted. Happy to pull a Status Report from an affected agent session if that helps.\n\nWhat's the right approach here?",
+      "split": "dev",
+      "meta": {
+        "source": "synthetic",
+        "product": "flex",
+        "sub_surface": "actions",
+        "cell": "flex/actions·bug·medium",
+        "added": "2026-06-28",
+        "twist": "question_framed",
+        "model": "claude-sonnet-4-6",
+        "grounding": [
+          "flex.md"
+        ]
+      },
+      "gold": {
+        "category": "config",
+        "severity": "medium",
+        "verified_by": "Tom De Carlo",
+        "verified_on": "2026-06-28",
+        "notes": "the fact that it is intermittent points to a config setting needing to be increased"
       }
     }
   ]

@@ -22,6 +22,7 @@ import {
 
 const GEN_MODEL = "claude-sonnet-4-6";
 const GEN_TEMPERATURE = 1; // high, for diversity — opposite of triage's pinned 0
+const GEN_MAX_TOKENS = 2048; // headroom so long ticket bodies don't truncate into invalid JSON
 const DEDUP_THRESHOLD = 0.8;
 const MAX_REGEN = 3;
 
@@ -189,11 +190,13 @@ const client = new Anthropic();
 async function generateOne(slot: Slot): Promise<{ subject: string; body: string; groundingRef: string }> {
   const { system, user, groundingRef } = buildPrompt(slot);
   const message = await client.messages.create({
-    model: GEN_MODEL, max_tokens: 1024, temperature: GEN_TEMPERATURE,
+    model: GEN_MODEL, max_tokens: GEN_MAX_TOKENS, temperature: GEN_TEMPERATURE,
     system, messages: [{ role: "user", content: user }],
   });
   const block = message.content[0];
   if (block.type !== "text") throw new Error(`unexpected content block "${block.type}"`);
+  // A truncated response yields invalid JSON — flag it clearly instead of a vague parse error.
+  if (message.stop_reason === "max_tokens") throw new Error("generation truncated at max_tokens");
   const parsed = extractJson(block.text) as { subject?: string; body?: string };
   if (!parsed.subject || !parsed.body) throw new Error("model output missing subject/body");
   return { subject: parsed.subject, body: parsed.body, groundingRef };
@@ -244,11 +247,17 @@ async function main(): Promise<void> {
     const slot = plan[i];
     let made: { subject: string; body: string; groundingRef: string } | null = null;
     for (let attempt = 0; attempt < MAX_REGEN; attempt++) {
-      const out = await generateOne(slot);
-      if (!isDup(out.body)) { made = out; break; }
-      console.warn(`  slot ${i + 1}: near-duplicate, regenerating (${attempt + 1}/${MAX_REGEN})`);
+      try {
+        const out = await generateOne(slot);
+        if (!isDup(out.body)) { made = out; break; }
+        console.warn(`  slot ${i + 1}: near-duplicate, regenerating (${attempt + 1}/${MAX_REGEN})`);
+      } catch (err) {
+        // A single bad generation (truncation, transient API error, bad JSON) must not abort
+        // the whole batch — log, retry, and skip the slot if it keeps failing.
+        console.warn(`  slot ${i + 1}: ${err instanceof Error ? err.message : err}, retrying (${attempt + 1}/${MAX_REGEN})`);
+      }
     }
-    if (!made) { console.warn(`  slot ${i + 1}: skipped (could not produce a distinct ticket)`); continue; }
+    if (!made) { console.warn(`  slot ${i + 1}: skipped (could not produce a usable ticket)`); continue; }
 
     corpus.push(tokenize(made.body));
     fresh.push({
