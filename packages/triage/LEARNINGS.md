@@ -218,11 +218,47 @@ nominal target (category).
 
 ---
 
-## 9. Where to go next
+## 9. Day 7 — Knowledge base assembly (v2 / RAG, in progress)
+
+Picking the 14-day plan back up at Day 7 after a long gap (Days 1–6 covered above). Goal:
+10–20 KB articles to ground retrieval for `suggested_first_response`.
+
+**Embedding model:** Voyage `voyage-3` — Anthropic's recommended embeddings partner, keeps a
+clean "Claude classifies, Voyage retrieves" story. Got an API key, confirmed it works with a
+real call (1024-dimension embedding returned for a test string) before writing any KB content.
+
+**Grounding, not invention.** Rather than writing 15 plausible-sounding articles from scratch,
+drafted them directly from `experiments/data/grounding/*.md` — real Twilio product specifics
+(error codes, terms, failure modes) already assembled for synthetic ticket generation
+(DATASET_GENERATION.md §4) and already matching the dataset's actual ticket categories (Flex,
+TaskRouter, Voice/TwiML, Messaging, Verify, Lookup, 10DLC, Auth, Account/billing, SendGrid).
+
+**The review pass caught three real factual errors**, not just style — see
+[`KB_REVIEW_NOTES.md`](./KB_REVIEW_NOTES.md) for the full reasoning behind every change:
+
+1. TaskRouter's task-cancellation threshold — drafted as 10 rejections, actually 1,000 per
+   current docs (10 is explicitly flagged outdated).
+2. Verify's Silent Network Auth codes 60534 vs. 60540 need *different* fallback handling, not
+   identical treatment — drafted them the same.
+3. Studio's 81026 (widget limit) — drafted as a publish-time warning; it's actually an
+   execution failure blocking every run until fixed.
+
+**The lesson, stated plainly:** AI-drafted domain content is a fast first draft, not a
+trustworthy final answer — even when it's grounded in real reference material, it can still
+assert something confidently wrong. The review-and-verify step is what actually makes the KB
+usable, the same discipline as Day 3's "label blind" rule: don't trust a number (or a claim)
+until it's been checked against ground truth.
+
+---
+
+## 10. Where to go next
 
 - **Grow the dataset** to 40–60 tickets — the single highest-leverage move, since it stops
   the metrics from swinging on one ticket.
-- **Advance the curriculum** — RAG (retrieve similar past tickets) and tool-use, now that
-  there is a regression harness to prove they actually help.
+- **Finish RAG (Days 8–9)** — embed the KB, wire retrieval into `triage.ts`, add
+  `kb_citations` to the schema, and measure whether retrieval actually improves
+  `suggested_first_response` quality.
+- **Advance the curriculum further** — tool-use agent (Days 10–11) and an MCP server
+  (Days 12–13), now that there's a regression harness to prove each step actually helps.
 - **One surgical prompt fix** for the question-framed-bug confusion — but verify it does not
   ripple into other tickets.
