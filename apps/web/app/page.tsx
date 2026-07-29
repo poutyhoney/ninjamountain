@@ -101,7 +101,8 @@ export default function Home() {
             <span className="block text-[#E9ECF2]">You&apos;re not a dot.</span>
             <span className="block text-[#E9ECF2]">You&apos;re the one who</span>
             <span className="block">
-              <span className="text-[#8B6CFF]">connects</span> the dots.
+              <span className="text-[#8B6CFF]">connects</span> the dots...
+              <sup className="ml-0.5 text-[0.35em] font-semibold align-super">&trade;</sup>
             </span>
           </h1>
 
