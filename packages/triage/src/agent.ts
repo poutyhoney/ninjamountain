@@ -1,8 +1,9 @@
 import Anthropic, { APIError } from "@anthropic-ai/sdk";
 import type { Ticket, AgentOutcome, ToolCallLogEntry } from "./types";
-import { extractJson }        from "./parse";
-import { validateTriage }     from "./validate";
-import { TOOLS, executeTool } from "./tools";
+import { extractJson }               from "./parse";
+import { validateTriage }            from "./validate";
+import { SEARCH_KB_TOOL, executeSearchKb } from "./tools";
+import { McpToolClient }             from "./mcp-client";
 
 const client = new Anthropic();
 const MODEL  = "claude-sonnet-4-6";
@@ -53,6 +54,11 @@ speculatively — only after you've concluded the issue is a confirmed bug or ou
  * repeat until the model returns a final JSON answer or MAX_ITERATIONS is
  * hit. Every tool call is recorded in toolLog regardless of outcome.
  *
+ * search_kb runs in-process; get_customer_account / check_recent_tickets /
+ * escalate_to_engineering are discovered from and called through a real MCP
+ * server (src/mcp-server.ts), spawned as a subprocess for the duration of
+ * this run — see src/mcp-client.ts.
+ *
  * Never throws — always returns a typed AgentOutcome, same discriminated-
  * union pattern as triageTicket() in triage.ts.
  */
@@ -62,63 +68,75 @@ export async function runTriageAgent(ticket: Ticket): Promise<AgentOutcome> {
     { role: "user", content: `Subject: ${ticket.subject}\n\nBody: ${ticket.body}` },
   ];
 
-  for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
-    let message: Anthropic.Message;
-    try {
-      message = await client.messages.create({
-        model:       MODEL,
-        max_tokens:  1024,
-        temperature: 0,
-        system:      AGENT_SYSTEM_PROMPT,
-        tools:       TOOLS,
-        messages,
-      });
-    } catch (err) {
-      const msg = err instanceof APIError ? err.message : String(err);
-      return { ok: false, reason: "api_failure", lastErrors: [msg], toolLog };
-    }
+  const mcp = new McpToolClient();
+  await mcp.connect();
 
-    messages.push({ role: "assistant", content: message.content });
+  try {
+    const mcpTools = await mcp.listTools();
+    const tools: Anthropic.Tool[] = [SEARCH_KB_TOOL, ...mcpTools];
 
-    if (message.stop_reason === "tool_use") {
-      const toolResults: Anthropic.ToolResultBlockParam[] = [];
-      for (const block of message.content) {
-        if (block.type !== "tool_use") continue;
-        const input = block.input as Record<string, unknown>;
-        const output = await executeTool(block.name, input);
-        toolLog.push({ iteration, tool: block.name, input, output });
-        console.log(`[agent] iter ${iteration}: ${block.name}(${JSON.stringify(input)}) -> ${output.slice(0, 120)}`);
-        toolResults.push({ type: "tool_result", tool_use_id: block.id, content: output });
+    for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
+      let message: Anthropic.Message;
+      try {
+        message = await client.messages.create({
+          model:       MODEL,
+          max_tokens:  1024,
+          temperature: 0,
+          system:      AGENT_SYSTEM_PROMPT,
+          tools,
+          messages,
+        });
+      } catch (err) {
+        const msg = err instanceof APIError ? err.message : String(err);
+        return { ok: false, reason: "api_failure", lastErrors: [msg], toolLog };
       }
-      messages.push({ role: "user", content: toolResults });
-      continue;
+
+      messages.push({ role: "assistant", content: message.content });
+
+      if (message.stop_reason === "tool_use") {
+        const toolResults: Anthropic.ToolResultBlockParam[] = [];
+        for (const block of message.content) {
+          if (block.type !== "tool_use") continue;
+          const input = block.input as Record<string, unknown>;
+          const output = block.name === "search_kb"
+            ? await executeSearchKb(input)
+            : await mcp.callTool(block.name, input);
+          toolLog.push({ iteration, tool: block.name, input, output });
+          console.log(`[agent] iter ${iteration}: ${block.name}(${JSON.stringify(input)}) -> ${output.slice(0, 120)}`);
+          toolResults.push({ type: "tool_result", tool_use_id: block.id, content: output });
+        }
+        messages.push({ role: "user", content: toolResults });
+        continue;
+      }
+
+      const textBlock = message.content.find((b) => b.type === "text");
+      if (!textBlock || textBlock.type !== "text") {
+        return { ok: false, reason: "unparseable", lastErrors: ["final response had no text block"], toolLog };
+      }
+
+      let parsed: unknown;
+      try {
+        parsed = extractJson(textBlock.text);
+      } catch (parseErr) {
+        const msg = parseErr instanceof Error ? parseErr.message : String(parseErr);
+        return { ok: false, reason: "unparseable", lastErrors: [msg], toolLog };
+      }
+
+      const validation = validateTriage(parsed);
+      if (!validation.valid) {
+        return { ok: false, reason: "invalid_schema", lastErrors: validation.errors, toolLog };
+      }
+
+      return { ok: true, result: validation.value, iterations: iteration, toolLog };
     }
 
-    const textBlock = message.content.find((b) => b.type === "text");
-    if (!textBlock || textBlock.type !== "text") {
-      return { ok: false, reason: "unparseable", lastErrors: ["final response had no text block"], toolLog };
-    }
-
-    let parsed: unknown;
-    try {
-      parsed = extractJson(textBlock.text);
-    } catch (parseErr) {
-      const msg = parseErr instanceof Error ? parseErr.message : String(parseErr);
-      return { ok: false, reason: "unparseable", lastErrors: [msg], toolLog };
-    }
-
-    const validation = validateTriage(parsed);
-    if (!validation.valid) {
-      return { ok: false, reason: "invalid_schema", lastErrors: validation.errors, toolLog };
-    }
-
-    return { ok: true, result: validation.value, iterations: iteration, toolLog };
+    return {
+      ok: false,
+      reason: "max_iterations",
+      lastErrors: [`agent did not produce a final answer within ${MAX_ITERATIONS} iterations`],
+      toolLog,
+    };
+  } finally {
+    await mcp.close();
   }
-
-  return {
-    ok: false,
-    reason: "max_iterations",
-    lastErrors: [`agent did not produce a final answer within ${MAX_ITERATIONS} iterations`],
-    toolLog,
-  };
 }
