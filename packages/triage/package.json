@@ -19,10 +19,13 @@
     "verify": "tsx scripts/verify.ts",
     "kb:embed": "tsx scripts/embed.ts",
     "rag:eval": "tsx scripts/rag-eval.ts",
+    "mcp:server": "tsx src/mcp-server.ts",
     "learnings:pdf": "python3 scripts/build-learnings-pdf.py LEARNINGS.md LEARNINGS.pdf"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.97.1"
+    "@anthropic-ai/sdk": "^0.97.1",
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "^20",

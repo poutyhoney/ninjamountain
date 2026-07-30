@@ -359,13 +359,66 @@ typed `AgentOutcome` reason, not an afterthought.
 
 ---
 
-## 12. Where to go next
+## 12. Days 12–13 — MCP server (v4 complete)
+
+**Day 12 — a real server, not a bigger mock.** `src/mcp-server.ts` re-exposes the three
+mocked tools from Day 10 (`get_customer_account`, `check_recent_tickets`,
+`escalate_to_engineering`) as an actual MCP server over stdio, using
+`@modelcontextprotocol/sdk`'s `McpServer`/`registerTool` — same mock data
+(`mock-data.ts`), but now reachable only through the protocol, not a direct function
+call. Verified with the MCP Inspector before writing a single line of client code: ran
+`npx @modelcontextprotocol/inspector tsx src/mcp-server.ts`, connected, saw all three
+tools listed with schemas pulled from the server itself, and called
+`get_customer_account` directly — confirming the server worked in isolation before
+trusting it inside the agent loop.
+
+**Day 13 — wiring the agent to consume it for real.** `src/mcp-client.ts` spawns
+`mcp-server.ts` as a subprocess per agent run (`StdioClientTransport`), and `agent.ts`
+now builds its tool list as `[SEARCH_KB_TOOL, ...await mcp.listTools()]` — the three
+MCP tools are no longer hardcoded anywhere in `agent.ts`; they're discovered from the
+server's own `tools/list` response every time. `tools.ts` shrank down to just
+`search_kb` (which stays in-process — it needs the Voyage pipeline's own env vars),
+closing the "two places have to agree on the schema" gap the Day 10 version had, since
+now there's exactly one place each tool's schema is defined.
+
+Re-ran the same T01 scenario end-to-end through the real server and got a materially
+different — and better — result than any earlier run: the model called
+`escalate_to_engineering` for the first time in the whole project (`ESC-4110`,
+severity `high`), consistent with `needs_engineering_escalation: true` in the final
+JSON, and referenced the escalation id directly in its reply. That tool had existed
+since Day 10 but never actually fired in a live run until it went through MCP — a
+reminder that a tool being schema-correct and a tool being exercised are two different
+claims.
+
+**What actually changed, concretely, going from in-process to MCP:**
+- **Discovery replaced duplication.** Day 10's `TOOLS` array in `tools.ts` and the
+  `switch` in `executeTool` had to independently agree with each other. Day 13's
+  `agent.ts` has zero knowledge of what the three MCP tools even look like — it asks
+  the server at connect time. Changing a tool's input schema now means editing
+  `mcp-server.ts` only.
+- **A second failure domain appeared.** An in-process tool throwing was one call stack;
+  a subprocess means a spawn failure, a crashed server, or a malformed protocol
+  response are now separate things to reason about from "the tool logic itself was
+  wrong." The `finally { await mcp.close(); }` around the whole loop exists specifically
+  so a mid-run failure still tears the subprocess down instead of leaking it.
+- **Real, measurable overhead.** Each `runTriageAgent()` call now pays subprocess
+  startup plus a JSON-RPC round trip per tool call, instead of a function call. Fine for
+  triaging one ticket; the honest answer to "how would this scale" is a connection
+  pooled across tickets, not spawn-per-ticket — the kind of follow-up question this
+  exact setup makes concrete instead of hypothetical.
+
+---
+
+## 13. Where to go next
 
 - **Grow the dataset** to 40–60 tickets — the single highest-leverage move, since it stops
   the metrics from swinging on one ticket.
-- **MCP server (Days 12–13)** — wrap the mock account/ticket-history tools (or a real
-  Zendesk/Airtable source) as an MCP server and have `agent.ts` consume them over real MCP
-  tool calls instead of the in-process `executeTool` dispatcher.
+- **Day 14: wrap-up** — final README/LEARNINGS pass and git version tags (v1–v4) on the
+  real commits that closed out each stage of the plan.
+- **Pool the MCP connection** instead of spawning `mcp-server.ts` per ticket, if this ever
+  needs to run `--all` across a whole dataset rather than one ticket at a time.
+- **A real (or a second, non-Zendesk) MCP data source** — the current server still serves
+  mock data; the protocol wiring is real, the backing data isn't yet.
 - **Re-run `score.ts` with retrieval on** — Days 1–6's baseline (90% category / 90% severity)
   predates RAG; worth confirming retrieval didn't regress classification accuracy while
   improving `suggested_first_response`, not just assuming it didn't.
