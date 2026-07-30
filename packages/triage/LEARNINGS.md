@@ -409,7 +409,33 @@ claims.
 
 ---
 
-## 13. Where to go next
+## 13. Day 14 — Wrap-up
+
+The 14-day plan is complete. Four working, independently-runnable versions, each tagged
+on the real commit where it shipped — `triage-v1` through `triage-v4` (see
+[README.md](./README.md) for the version table and how to run each one):
+
+| Tag | Commit | What it is |
+|---|---|---|
+| `triage-v1` | `1137e78` | Baseline: one model call, retry+correction, scored eval harness |
+| `triage-v2` | `7f55380` | + RAG: Voyage-embedded KB, cosine retrieval, `kb_citations` |
+| `triage-v3` | `0463fad` | + Tool-use agent loop, capped iterations, full tool-call log |
+| `triage-v4` | `c5cc42e` | + Real MCP server; agent discovers tools over the protocol |
+
+**The throughline across all four stages, stated plainly:** every version returns a typed
+outcome that never throws (`TriageOutcome`, then `AgentOutcome`), and every new capability
+was only trusted once it had been proven against something outside the code itself — gold
+labels for v1 (Days 1-6, not covered in this doc but the foundation everything else sits
+on), a hand-checked retrieval query for v2, a live forced `max_iterations` failure for v3,
+the MCP Inspector before the agent ever touched the server for v4. None of the four stages
+was accepted on "the types compile and it looks right" alone — each had a real run, with
+real output pasted back, before moving on. That discipline mattered more than any single
+technique (RAG, tool-use, MCP) — it's the actual answer to "how do you know your agent
+works," which is the harder and more interview-relevant question than "what's an agent."
+
+---
+
+## 14. Where to go next
 
 - **Grow the dataset** to 40–60 tickets — the single highest-leverage move, since it stops
   the metrics from swinging on one ticket.
