@@ -17,7 +17,12 @@ For each ticket, return a JSON object with exactly these fields:
     "severity": one of "low" | "medium" | "high" | "critical",
     "summary": a one-sentence summary of the issue,
     "suggested_first_response": a brief, professional response the support engineer could send,
-    "needs_engineering_escalation": boolean
+    "needs_engineering_escalation": boolean,
+    "kb_citations": an array of KB article ids you actually drew on for suggested_first_response.
+      You may be given candidate KB articles below the ticket. Only cite an article's id if its
+      content genuinely informed your response — an irrelevant retrieved article should simply
+      not appear in this array. Return [] if none of the provided articles were relevant, or if
+      none were provided.
 }
 use the following rubric when determining category:
 bug = the Twilio platform or API is itself behaving incorrectly — a defect, including when the platform fails to honor a setting the customer has configured correctly;
@@ -51,9 +56,14 @@ Return ONLY valid JSON. No prose. No markdown fences. No commentary.`;
  */
 export async function callTriageModel(
   ticket: Ticket,
-  { maxAPIRetries = 3 }: CallTriageModelOptions = {}
+  { maxAPIRetries = 3, kbContext = "" }: CallTriageModelOptions = {}
 ): Promise<string> {
   let lastError: APIError | undefined;
+
+  const userContent = kbContext
+    ? `Subject: ${ticket.subject}\n\nBody: ${ticket.body}\n\n` +
+      `--- Candidate KB articles (cite only what you actually use) ---\n\n${kbContext}`
+    : `Subject: ${ticket.subject}\n\nBody: ${ticket.body}`;
 
   for (let attempt = 1; attempt <= maxAPIRetries; attempt++) {
     try {
@@ -65,7 +75,7 @@ export async function callTriageModel(
         messages:   [
           {
             role:    "user",
-            content: `Subject: ${ticket.subject}\n\nBody: ${ticket.body}`,
+            content: userContent,
           },
         ],
       });

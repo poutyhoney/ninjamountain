@@ -251,14 +251,71 @@ until it's been checked against ground truth.
 
 ---
 
-## 10. Where to go next
+## 10. Days 8–9 — Embedding, retrieval, and a real RAG eval (v2 complete)
+
+**Day 8 — wiring it up.** `scripts/embed.ts` embeds every `kb/*.md` body via Voyage and writes
+`kb/embeddings.json` (checked into git like a lockfile — regenerated manually via `npm run
+kb:embed` when KB content changes, rather than calling Voyage on every deploy). `src/retrieve.ts`
+embeds the incoming ticket and does cosine-similarity search against those embeddings, returning
+the top-3 matches. `triage.ts` retrieves once per ticket (reused across output-retries, since a
+retry means the model's *output* was malformed, not that the ticket or its relevant KB context
+changed), prepends the snippets to the prompt, and the model returns `kb_citations: string[]` —
+only the article ids it actually drew on, not everything it was shown.
+
+**A genuine retrieval-ranking nuance, caught by hand-checking a real query before wiring
+anything further:** querying "inbound SMS webhook stopped firing" scored `kb-006` (Webhook/TwiML
+errors — very webhook-dense text) *above* `kb-004` (SMS delivery, which only mentions "inbound
+webhook not firing" in one paragraph), even though `kb-004` is arguably the more topically correct
+article for an SMS-specific issue. Cosine similarity scores the *whole* article's semantic
+content — a short, topically-focused article can outscore a longer, more topically-diverse one
+that only touches the exact match briefly. Not a bug: both landed in the top-3, so the model still
+saw both and picked correctly (confirmed later in the real pipeline run — see below).
+
+**A real bug, not just a design nuance:** `scripts/rag-eval.ts` (below) hit Voyage's free-tier
+rate limit (3 requests/minute without a payment method on file) and crashed outright on the first
+run. Fixed by factoring the Voyage call into a shared `src/embeddings-client.ts` used by both
+`embed.ts` and `retrieve.ts`, with retry-on-429 exponential backoff — the same category of fix
+`client.ts` already has for Anthropic's API, just tuned for a much stricter limit (20s/40s/60s
+backoff instead of 1s/2s/4s). Confirmed working for real on the actual eval run, not just in
+theory: it hit 429 twice, backed off, and completed successfully instead of crashing.
+
+**Day 9 — does retrieval actually help?** Ran `scripts/rag-eval.ts` — the same 5 tickets, with and
+without retrieval, read side by side (a qualitative comparison, not a scored metric; category/
+severity don't depend on RAG). Picked a deliberate mix: three tickets expected to have an
+on-topic KB article, two expected not to.
+
+| Ticket | Result | What actually happened |
+|---|---|---|
+| T04 — SSO/Okta | **Retrieval prevented a real factual error.** | Without retrieval: "the OAuth option... not typically used for agent login" — wrong; Enhanced SSO *is* the OAuth-based flow Twilio recommends for Flex 2.5.x+. With retrieval (`kb-009`): correctly distinguished Enhanced (OAuth) vs. Legacy (SAML) SSO. Traces directly back to a Day 7 fact-check catching this exact nuance. |
+| T13 — Verify OTP | **Retrieval fixed a domain mixup.** | Without retrieval: cited SMS/Messaging error codes (30003, 30006, 30034) for a *Verify*-specific issue — wrong domain. With retrieval (`kb-010`, `kb-004`, `kb-012`): correct Verify codes (60205, 60207, 60203) plus the 10DLC angle. |
+| T19 — 20003 after key rotation | **Neutral.** | Both versions comparably solid — a common enough error that the model's own training already covers it well. |
+| T07 — feature request (pause/resume routing) | **Helped somewhere unexpected.** | Predicted a clean miss (it's a feature request, not troubleshooting) — the model cited `kb-008` anyway and used it to suggest a concrete workaround (a custom Worker Activity mapped separately in WFM) the without-retrieval version didn't offer. |
+| T16 — SDK v1→v2 migration | **Correctly abstained.** | `kb_citations: []` — no relevant article exists, and the model didn't force a citation. Comparable quality either way — exactly the desired "miss" behavior, not a failure. |
+
+**Honest verdict:** retrieval meaningfully helped 3/5 (two of them by preventing a real,
+specific factual error, not just "sounding more informed"), was neutral 2/5, and never made a
+response worse in this sample. Worth being honest that a larger eval could surface a harmful
+case this one didn't — five tickets is a qualitative spot-check, not a statistically powered
+claim.
+
+**The lesson underneath all of it:** the two cases where retrieval clearly won weren't generic
+"more context is better" wins — they were cases where the model's *un-grounded* answer was
+subtly, confidently wrong (dismissing OAuth as irrelevant; citing the wrong product's error
+codes), and the retrieved article corrected exactly that. That's a more specific, more
+defensible RAG story than "it made the answers better" — and it's the same discipline as Day 7's
+KB review: verify against ground truth, don't trust confident-sounding output at face value.
+
+---
+
+## 11. Where to go next
 
 - **Grow the dataset** to 40–60 tickets — the single highest-leverage move, since it stops
   the metrics from swinging on one ticket.
-- **Finish RAG (Days 8–9)** — embed the KB, wire retrieval into `triage.ts`, add
-  `kb_citations` to the schema, and measure whether retrieval actually improves
-  `suggested_first_response` quality.
 - **Advance the curriculum further** — tool-use agent (Days 10–11) and an MCP server
-  (Days 12–13), now that there's a regression harness to prove each step actually helps.
+  (Days 12–13), now that RAG is real and there's a regression harness to prove each step
+  actually helps.
+- **Re-run `score.ts` with retrieval on** — Days 1–6's baseline (90% category / 90% severity)
+  predates RAG; worth confirming retrieval didn't regress classification accuracy while
+  improving `suggested_first_response`, not just assuming it didn't.
 - **One surgical prompt fix** for the question-framed-bug confusion — but verify it does not
   ripple into other tickets.

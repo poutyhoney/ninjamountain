@@ -53,6 +53,15 @@ export function validateTriage(obj: unknown): ValidationResult {
     );
   }
 
+  if (
+    !Array.isArray(record.kb_citations) ||
+    !record.kb_citations.every((c) => typeof c === "string")
+  ) {
+    errors.push(
+      `kb_citations: expected string[], got ${JSON.stringify(record.kb_citations)}`
+    );
+  }
+
   return errors.length === 0
     ? { valid: true, value: obj as TriageResult }
     : { valid: false, errors };

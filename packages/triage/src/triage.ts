@@ -1,7 +1,8 @@
 import type { Ticket, TriageOutcome, TriageTicketOptions } from "./types";
-import { callTriageModel } from "./client";
-import { extractJson }     from "./parse";
-import { validateTriage }  from "./validate";
+import { callTriageModel }          from "./client";
+import { extractJson }              from "./parse";
+import { validateTriage }           from "./validate";
+import { retrieveRelevantArticles } from "./retrieve";
 
 /**
  * Full triage pipeline for a single ticket.
@@ -13,12 +14,22 @@ import { validateTriage }  from "./validate";
  * Always returns a typed TriageOutcome — never throws.
  *
  * Ported from support-triage-assistant/ts/triage.ts
+ * kb_citations / retrieval added in v2 (RAG).
  */
 export async function triageTicket(
   ticket: Ticket,
-  { maxOutputRetries = 2 }: TriageTicketOptions = {}
+  { maxOutputRetries = 2, useRetrieval = true }: TriageTicketOptions = {}
 ): Promise<TriageOutcome> {
   let correctionHint = "";
+
+  // Retrieved once per ticket, reused across retries — a retry means the model's
+  // OUTPUT was malformed, not that the ticket itself or its relevant KB context changed.
+  const kbMatches = useRetrieval
+    ? await retrieveRelevantArticles(`${ticket.subject}\n\n${ticket.body}`, 3)
+    : [];
+  const kbContext = kbMatches
+    .map((m) => `[${m.id}] ${m.title}\n${m.body}`)
+    .join("\n\n---\n\n");
 
   for (let attempt = 1; attempt <= maxOutputRetries + 1; attempt++) {
     const ticketForModel: Ticket = correctionHint
@@ -27,7 +38,7 @@ export async function triageTicket(
 
     let rawText: string;
     try {
-      rawText = await callTriageModel(ticketForModel);
+      rawText = await callTriageModel(ticketForModel, { kbContext });
     } catch (apiErr) {
       const message = apiErr instanceof Error ? apiErr.message : String(apiErr);
       return { ok: false, reason: "api_failure", lastErrors: [message] };

@@ -15,6 +15,10 @@ export interface TriageResult {
   summary:                      string;
   suggested_first_response:     string;
   needs_engineering_escalation: boolean;
+  // KB article ids (see kb/*.md) the model actually drew on for
+  // suggested_first_response — empty array if none of the retrieved
+  // articles were relevant. Added in v2 (RAG).
+  kb_citations:                 string[];
 }
 
 // ─── Return types (discriminated unions) ──────────────────────────────────────
@@ -31,8 +35,14 @@ export type ValidationResult =
 
 export interface CallTriageModelOptions {
   maxAPIRetries?: number;
+  // Pre-formatted KB article snippets to prepend to the prompt (see retrieve.ts).
+  // Empty/omitted means "no retrieval" — the model still returns kb_citations: [].
+  kbContext?: string;
 }
 
 export interface TriageTicketOptions {
   maxOutputRetries?: number;
+  // Set false to skip KB retrieval entirely (used by scripts/rag-eval.ts to
+  // compare with/without retrieval on the same tickets). Defaults to true.
+  useRetrieval?: boolean;
 }
