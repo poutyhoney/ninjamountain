@@ -6,6 +6,7 @@ export { callTriageModel } from "./client";
 export { extractJson } from "./parse";
 export { validateTriage } from "./validate";
 export { retrieveRelevantArticles } from "./retrieve";
+export { runTriageAgent } from "./agent";
 
 export type {
   Category,
@@ -16,5 +17,7 @@ export type {
   ValidationResult,
   CallTriageModelOptions,
   TriageTicketOptions,
+  AgentOutcome,
+  ToolCallLogEntry,
 } from "./types";
 export type { KbMatch } from "./retrieve";

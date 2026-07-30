@@ -307,15 +307,71 @@ KB review: verify against ground truth, don't trust confident-sounding output at
 
 ---
 
-## 11. Where to go next
+## 11. Days 10–11 — Tool-use agent (v3 complete)
+
+**Day 10 — the shift from pipeline to agent.** Everything through v2 (RAG) is a *fixed*
+sequence: retrieve, then call the model once, then validate. `src/agent.ts` is the first
+place the sequence itself becomes the model's decision — four tools (`search_kb` real,
+wrapping Day 8's retrieval; `get_customer_account`, `check_recent_tickets`,
+`escalate_to_engineering` mocked, since the agent *pattern* is the interview story, not
+the data source) and a loop: send the ticket, and if the model responds with
+`stop_reason: "tool_use"`, execute whatever it asked for, feed the results back, and
+repeat — capped at 6 iterations — until it returns final JSON in the same `TriageResult`
+shape v1/v2 already use.
+
+First real run, on T01 (the SMS webhook ticket, whose body includes a phone number that
+matches a mock account): the model called all three of `get_customer_account`,
+`check_recent_tickets`, and `search_kb` *in parallel* within iteration 1, then produced
+a correct final answer in iteration 2 — citing the customer's enterprise plan and a
+recent related ticket (`T-8821`) directly in its suggested reply. That's a materially
+better answer than v2 could produce, because v2 has no channel for "does this account
+have relevant history" at all.
+
+**Day 11 — proving the exit paths, not just the happy path.** Two things that had never
+actually fired before this:
+
+1. **The mocked "not found" branch.** Ran T04 (an SSO question with no phone/email/SID
+   anywhere in the body) expecting to see `get_customer_account` return the "no account
+   found" string. Instead the model didn't call it at all — it recognized there was
+   nothing to look up and skipped straight to `search_kb`. Not a bug, but a real
+   observation: **an agent's tool-skipping means some of your code paths are only
+   exercised on demand.** The "not found" branch in `mock-data.ts` is still only proven
+   correct by types and a manual read, not a live run — a gap a fixed pipeline wouldn't
+   have, because a fixed pipeline runs every step every time.
+2. **`max_iterations`.** Temporarily set the cap to 1 and re-ran T01, which we already
+   knew needs 2 iterations for a real answer. It hit the cap cleanly: `{ ok: false,
+   reason: "max_iterations", toolLog: [...] }` — no hang, no crash, and the 3 tool calls
+   already made were still in the log. Reverted the cap to 6 immediately after.
+
+**What's actually different about debugging an agent vs. a pipeline.** For `triage.ts`,
+a failure has a small, known set of causes tied to a specific step — the API call failed,
+the JSON didn't parse, the schema didn't validate — and the fix is local to that step.
+For `agent.ts`, the question is no longer just "did this step fail" but **"was the
+model's decision at each step reasonable"** — T04 not calling `get_customer_account`
+wasn't a failure to diagnose, it was correct behavior that happened to look, from the
+outside, like a step being skipped. That means the `toolLog` isn't just for the demo —
+it's the primary debugging artifact: without it, a wrong final answer is impossible to
+attribute to "skipped a tool it needed" vs. "had the right information and drew the
+wrong conclusion from it." It also means the failure surface itself is bigger: a
+pipeline can only fail at "API call" or "output validation," but an agent adds a new
+first-class failure mode — not converging at all — which is why `max_iterations` is a
+typed `AgentOutcome` reason, not an afterthought.
+
+---
+
+## 12. Where to go next
 
 - **Grow the dataset** to 40–60 tickets — the single highest-leverage move, since it stops
   the metrics from swinging on one ticket.
-- **Advance the curriculum further** — tool-use agent (Days 10–11) and an MCP server
-  (Days 12–13), now that RAG is real and there's a regression harness to prove each step
-  actually helps.
+- **MCP server (Days 12–13)** — wrap the mock account/ticket-history tools (or a real
+  Zendesk/Airtable source) as an MCP server and have `agent.ts` consume them over real MCP
+  tool calls instead of the in-process `executeTool` dispatcher.
 - **Re-run `score.ts` with retrieval on** — Days 1–6's baseline (90% category / 90% severity)
   predates RAG; worth confirming retrieval didn't regress classification accuracy while
   improving `suggested_first_response`, not just assuming it didn't.
 - **One surgical prompt fix** for the question-framed-bug confusion — but verify it does not
   ripple into other tickets.
+- **A live-fired "not found" case** for `get_customer_account`/`check_recent_tickets` — craft
+  a ticket with a plausible-looking but non-matching identifier (rather than none at all) to
+  force the agent to actually call the tool and get a real miss, closing the coverage gap
+  noted in Day 11.
