@@ -16,6 +16,8 @@
     "dataset:validate": "tsx scripts/validate-dataset.ts",
     "generate": "tsx scripts/generate.ts",
     "verify": "tsx scripts/verify.ts",
+    "kb:embed": "tsx scripts/embed.ts",
+    "rag:eval": "tsx scripts/rag-eval.ts",
     "learnings:pdf": "python3 scripts/build-learnings-pdf.py LEARNINGS.md LEARNINGS.pdf"
   },
   "dependencies": {
