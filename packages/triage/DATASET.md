@@ -115,8 +115,12 @@ Synthetic tickets are usually too clean, which inflates scores. Harden them:
 | `sso` | SSO / admin config | Okta/SSO, roles, permissions | T04 |
 | `insights` | Insights / reporting | dashboards, data export | — |
 | `billing` | Flex seat billing | seat counts, active-user charges | — |
+| `sdk` | Flex SDK (client-side) | AcceptTask failures, worker stuck Reserved/WrapUp, token expiration, degraded SDK clients, Conversations task orphaning | — |
 
-Empty sub-surfaces are where the +28 should concentrate first (coverage gaps).
+Empty sub-surfaces are where the +28 should concentrate first (coverage gaps). `sdk` is a newer
+addition, split out from the SDK-consumer edges of `taskrouter`/`voice`/`conversations` — those
+sub-surfaces stay focused on Flex-admin config; `sdk` is the client-integration/troubleshooting
+angle a developer embedding the SDK would hit.
 
 ### Non-Flex products (target 24; current 12 → add 12)
 

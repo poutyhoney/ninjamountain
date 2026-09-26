@@ -25,7 +25,7 @@ export const PRODUCTS: Product[] = [
 // Canonical Flex sub_surface tokens (DATASET.md §4 / DATASET_SCHEMA.md §3).
 export const FLEX_SUBSURFACES = [
   "desktop", "plugins", "actions", "taskrouter", "wrapup",
-  "conversations", "voice", "sso", "insights", "billing",
+  "conversations", "voice", "sso", "insights", "billing", "sdk",
 ] as const;
 
 export const CATEGORIES: Category[] = ["bug", "config", "billing", "how_to", "feature_request"];

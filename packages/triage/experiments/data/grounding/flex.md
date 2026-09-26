@@ -67,3 +67,42 @@ Sourced from Twilio docs via the twilio-docs MCP. Use naturally; do not list ver
 
 ## billing (Flex seat billing)
 - Billed by active users / named users (seats); charges for active-user hours.
+
+## sdk (Flex SDK — client integration)
+- The client-integration angle: a developer embedding `@twilio/flex-sdk` in their own app,
+  as distinct from `taskrouter`/`voice`/`conversations` (Flex-admin config) or `desktop`
+  (the stock Flex UI). Init: `const client = await createClient("SDK_TOKEN")`.
+- **AcceptTask failures**: `AcceptTask` for a voice task requires registering a
+  `VoiceClientEvent` listener *before* calling accept — skipping this makes acceptance fail
+  or return a reservation with missing call context (silent no-audio / no-controls bugs).
+  `client.execute(new AcceptTask("WT…"))` resolves `{ task, reservation }`.
+- **Worker stuck in Reserved/WrapUp**: reservation lifecycle is driven by
+  `client.execute(new CompleteTask("WT…"))` → triggers `wrapUpTask` if wrap-up is configured;
+  a worker that never calls `CompleteTask`/`WrapUpTask` (or whose call to it errors silently)
+  stays parked in Reserved or WrapUp past the expected timer.
+- **Token expiration / refresh**: Flex user tokens are JWE, default `ttl` 3600s. Error
+  **45775 "Failed to refresh token. Invalid token provided"** — malformed/expired refresh
+  token, or clock skew between the issuing backend and Twilio. Fix: `refreshToken({
+  refreshToken, ssoProfileSid })`, `validateToken(accountSid, token)` before retrying, then
+  `client.updateToken(newToken, newRefreshToken)` so the live session and connected services
+  pick up the new credentials — a client that only updates local state without calling
+  `updateToken` silently keeps using the stale token until the next SDK call fails. Related:
+  Voice error **31207 "JWT token expiration interval is too long"** (Access Token `ttl`/`exp`
+  exceeding Twilio's 24h max) — a different token (Voice Access Token, not the Flex user
+  token) but the same "keep it short-lived, refresh via an event" pattern
+  (`tokenWillExpire` → `device.updateToken`). Backend must keep `AuthToken` server-side —
+  never ship it to the frontend.
+- **Degraded SDK clients**: session log shows `SessionState: setting degraded to true` when
+  an underlying SDK client (TaskRouter, Conversations, Voice, Sync) fails to initialize;
+  Flex still loads but with reduced capability and a persistent `DegradedModeActive`
+  notification. A degraded Voice client with a healthy TaskRouter client looks like "agent
+  can see tasks but calls never connect" — easy to misdiagnose as a routing bug.
+- **Conversations task orphaning**: several distinct causes, not one bug — (1) a worker
+  declines/park an Interaction-invited reservation: the task cancels but the conversation
+  stays active with no agent; (2) the invited participant is already in another
+  non-closed conversation: the add silently fails and the agent ends up in a task with
+  nobody else in it (check via the Participant Conversation Resource before inviting); (3)
+  terminal TaskRouter events (`workflow.timeout`, `task.canceled`, `task.deleted`) go
+  unhandled, leaving the conversation open with no task tracking it. Mitigation: set a
+  Conversations close timer for non-long-lived channels, and always use known-agent routing
+  instead of blind worker-SID invites.
