@@ -107,7 +107,7 @@
         "flex.md"
       ]
     },
-    "status": "rejected"
+    "status": "pending"
   },
   {
     "tmp_id": "cand-2026-06-28-002",
@@ -168,6 +168,94 @@
       "cell": "flex/actions·bug·medium",
       "twist": "question_framed",
       "added": "2026-06-28",
+      "model": "claude-sonnet-4-6",
+      "grounding": [
+        "flex.md"
+      ]
+    },
+    "status": "accepted"
+  },
+  {
+    "tmp_id": "cand-2026-07-30-001",
+    "subject": "Flex SDK AcceptTask silently drops call context on voice tasks — agents stuck with no audio or controls",
+    "body": "We are running into a serious production issue affecting our agents and I need urgent help tracking this down.\n\nWe embed the Flex SDK (@twilio/flex-sdk) in our own custom agent desktop rather than using the stock Flex UI. Our Flex UI version is 2.7.1. Agents are on Chrome 124.\n\nHere is what is happening: when an inbound voice task is routed to an agent, we call `client.execute(new AcceptTask(\"WT...\"))` and the promise resolves — we get back `{ task, reservation }` — but there is no call context attached to the reservation. The agent sees the task accepted in the UI, the reservation moves to accepted state, but there is no audio at all and none of the call controls render because the voice/call object is missing from the resolved payload. From the agent's perspective the call just silently dies. The caller on the other end is still on the line waiting.\n\nThis is affecting roughly 40–50% of inbound voice tasks, not all of them, which is what makes it so hard to pin down. The other 50% accept normally with full call context.\n\nSome example SIDs from affected reservations in the last few hours:\n- Task: WTa3f8e1b2c94d7e6f0a1b2c3d4e5f6a7b\n- Reservation: WRd9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a\n- Worker: WKb7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e\n- Workspace: WSe5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b\n\nReproduction steps:\n1. Inbound voice call routes to a worker, `reservation.created` fires\n2. We call `client.execute(new AcceptTask(\"WT...\"))` immediately in the reservation handler\n3. Promise resolves with `{ task, reservation }` — no error thrown, no FlexError, no 45600/45601 in the console\n4. Inspecting the reservation object: no call SID, no conference details, voice controls unavailable\n5. Agent is stuck — task is in accepted/reserved state, worker activity is Reserved, and the only way out is a supervisor force-completing the task\n\nWe've been pulling logs via `Flex.Monitor.getErrors()` and `getLogs()` and there are no errors surfacing there either, which is the really maddening part. The accept appears to succeed from the SDK's perspective.\n\nAfter a lot of digging I'm wondering if this is related to the VoiceClientEvent listener registration order — specifically whether the listener needs to be registered before AcceptTask is called rather than after. But the docs are not clear on whether this is a strict ordering requirement or not, and it doesn't explain why it's intermittent.\n\nThe downstream impact is significant: workers are getting parked in Reserved state and we have to manually call `CompleteTask` to unstick them, which burns wrap-up cycles and messes up our Insights reporting. We've already had several customer complaints about dropped calls today.\n\nCan someone from the SDK team look at this? I can share full session logs and a stripped-down repro if needed. We need to understand whether this is a known ordering bug in AcceptTask and what the guaranteed-safe pattern is.",
+    "intended": {
+      "category": "bug",
+      "severity": "high"
+    },
+    "meta": {
+      "source": "synthetic",
+      "product": "flex",
+      "sub_surface": "sdk",
+      "cell": "flex/sdk·bug·high",
+      "twist": null,
+      "added": "2026-07-30",
+      "model": "claude-sonnet-4-6",
+      "grounding": [
+        "flex.md"
+      ]
+    },
+    "status": "accepted"
+  },
+  {
+    "tmp_id": "cand-2026-07-30-001",
+    "subject": "AcceptTask resolves but call audio/controls completely missing — VoiceClientEvent listener timing issue maybe?",
+    "body": "Hey Twilio support team, I've been banging my head against this for the better part of two days now and I'm not entirely sure if I'm doing something wrong or if there's actually a problem in the SDK itself, so I'll try to dump everything I know here.\n\nBackground: I'm a solo dev building a custom embedded softphone on top of @twilio/flex-sdk (not using the stock Flex UI at all, just the SDK directly). I initialize the client like this:\n\n  const client = await createClient(sdkToken);\n\nThen I wire up my task handling. The agent can see incoming reservations just fine — reservation.created fires, the task shows up in my UI, everything looks great up to that point.\n\nThe problem is when I call accept. I'm doing:\n\n  const result = await client.execute(new AcceptTask(\"WT3f8a...\"));\n\nThe promise resolves, I get back an object with task and reservation properties, no error thrown, no rejection, nothing. But the call never actually connects. The agent sees the task as accepted (it moves to Reserved in TaskRouter), but there's zero audio, and the call controls I'm rendering (mute, hold, etc.) have no underlying call context to bind to — they're essentially dead. It's like the voice leg of the task just doesn't exist as far as my code can tell, even though from the Twilio side a reservation WR... is definitely accepted.\n\nI went back through the docs more carefully and I think I might have found the root cause: I was not registering a VoiceClientEvent listener before calling AcceptTask. My current code flow is basically:\n  1. reservation.created fires\n  2. agent clicks accept in UI\n  3. client.execute(new AcceptTask(...)) called\n  4. I *then* try to set up voice event listeners after the promise resolves\n\nFrom what I can gather the VoiceClientEvent listener needs to be in place *before* the accept call, otherwise the call context just gets lost silently. The SDK doesn't throw or warn about this at all — it just happily resolves the AcceptTask with a reservation that has no usable call state attached. That's the part that feels like it shouldn't be silent.\n\nRepro steps I've been using:\n1. Initialize SDK client with a valid JWE token (ttl 3600s, well within expiry, I've validated it)\n2. Wait for reservation.created on a voice task\n3. Call client.execute(new AcceptTask(\"WT...\")) WITHOUT a VoiceClientEvent listener registered\n4. Observe: promise resolves cleanly, task/reservation returned, but no audio path, call controls unresponsive\n5. Repeat with listener registered BEFORE the execute call — call connects normally\n\nSo I can work around it by reordering my code, which I'm doing now. But my concern is that the SDK silently succeeds in step 3/4 above — there's no error, no rejected promise, no warning logged to console, no 45600/45601 error code, nothing. A developer doing this for the first time has absolutely no signal that they've done it wrong. The call just looks accepted but is dead.\n\nAccount details for reference:\n- Workspace: WSb2f4e8... (can provide full SID if needed)\n- I've got worker SIDs WK... and task SIDs WT... from several failed acceptance attempts in my logs if that helps\n- Chrome 124, also reproduced on Edge 124\n- @twilio/flex-sdk version pulled last week, I can get the exact version string if needed\n\nMy questions are:\n1. Is the \"register VoiceClientEvent listener before AcceptTask\" requirement documented somewhere I missed? I couldn't find a clear callout of this ordering requirement.\n2. Is there any plan to have the SDK surface a warning or error when AcceptTask is called for a voice task without that listener in place? Silently returning a result that looks valid but is functionally broken seems like it could waste a lot of developer time.\n3. Is there anything else I should check — like whether my client's Voice SDK component might be initializing in a degraded state? I don't see any DegradedModeActive notifications but I want to rule it out.\n\nAppreciate any help here, this one was really hard to diagnose without any error signal to latch onto.",
+    "intended": {
+      "category": "bug",
+      "severity": "medium"
+    },
+    "meta": {
+      "source": "synthetic",
+      "product": "flex",
+      "sub_surface": "sdk",
+      "cell": "flex/sdk·bug·medium",
+      "twist": null,
+      "added": "2026-07-30",
+      "model": "claude-sonnet-4-6",
+      "grounding": [
+        "flex.md"
+      ]
+    },
+    "status": "accepted"
+  },
+  {
+    "tmp_id": "cand-2026-07-30-001",
+    "subject": "Flex SDK token refresh not updating connected services — agents getting kicked out after an hour",
+    "body": "Hi Twilio support team,\n\nI've been going back and forth on this for a couple of days now and I'm at the point where I need to open a ticket because I'm not 100% sure if this is a configuration problem on our end or something about how the SDK token refresh is supposed to work that I'm misunderstanding from the docs.\n\nBackground: we're a mid-size SaaS company, we have about 80 agents using a custom-embedded Flex integration (we're using @twilio/flex-sdk rather than the stock Flex UI — we built our own agent desktop wrapper). Flex UI version is 2.7.1, agents are almost all on Chrome 124.\n\nThe problem: roughly 60 minutes into a session, agents start seeing errors and in some cases get fully disconnected from TaskRouter. When I dig into the console logs, I can see error 45775 — \"Failed to refresh token. Invalid token provided\" — showing up right around the time the original token would expire (we set ttl to 3600s on our backend, which I understand is the default). What's weird is that our backend IS generating a new token and returning it. The call to refreshToken() is completing without throwing. But then the next SDK operation — usually something like accepting a reservation or updating an activity — fails.\n\nAfter a lot of console logging I think I've found what's happening: in our token refresh handler, we were updating our local application state with the new token and refresh token, and we were calling validateToken() to confirm the new token looked good (that returns fine), but we were NOT calling client.updateToken(newToken, newRefreshToken) afterward. So the live SDK client and all of its underlying connected services — TaskRouter, Voice, Conversations — were still holding onto the stale token. The next time any of those services tried to use it, it had already expired and we'd get the 45775. I think this is the root of it.\n\nHere is roughly what our current (broken) refresh flow looks like:\n\n1. We listen for the token expiry signal\n2. We POST to our backend, get back newToken + newRefreshToken\n3. We call validateToken(accountSid, newToken) — this succeeds\n4. We store newToken in our React state / Redux store\n5. We do NOT call client.updateToken()\n\nSo my plan is to add the client.updateToken(newToken, newRefreshToken) call as step 5, so the live session actually picks up the new credentials.\n\nBefore I deploy that fix, I wanted to confirm a few things with you:\n\n— Is that the correct call signature? The docs show client.updateToken(newToken, newRefreshToken) and I want to make sure both arguments are required and that passing the new refresh token is what propagates credentials to TaskRouter and the Voice SDK client as well, not just the top-level Flex client.\n\n— We have Workspace WS1a2b3c4d5e6f... and the workers are all under that workspace (WK prefix SIDs). Should the token passed to updateToken be the same Flex user token (JWE) that was originally passed to createClient(), or is there a separate Access Token involved? I want to make sure I'm not confusing this with the Voice Access Token situation (we also had a separate run-in with error 31207 a few weeks ago on the Voice side which I think was a different token entirely).\n\n— After updateToken completes, do we need to do anything to re-establish the TaskRouter Worker connection, or does the SDK handle that internally? We have a reservation.created listener and I want to make sure it keeps firing after the token swap without us having to re-register it.\n\nOur repro steps if it helps:\n1. Initialize SDK client with createClient() using a token with ttl=3600\n2. Wait ~55-60 minutes without triggering a task\n3. At expiry, observe the refreshToken() call completing but client.updateToken() NOT being called\n4. Invoke client.execute(new AcceptTask(\"WT...\")) on the next incoming reservation — fails with 45775\n5. Agent sees disconnection; worker SID stays in Reserved state (WK...)\n\nAccount SID is AC... (I'll provide full SIDs in a follow-up if needed, didn't want to paste them in plain text here). No ongoing incident on the status page as far as I can see.\n\nAppreciate any confirmation that my diagnosis is right and that adding client.updateToken() is the correct fix here. Also open to a call with a solutions engineer if there's a more nuanced setup we should be doing around token lifecycle.\n\nThanks,\nDev lead, [company name]",
+    "intended": {
+      "category": "config",
+      "severity": "medium"
+    },
+    "meta": {
+      "source": "synthetic",
+      "product": "flex",
+      "sub_surface": "sdk",
+      "cell": "flex/sdk·config·medium",
+      "twist": null,
+      "added": "2026-07-30",
+      "model": "claude-sonnet-4-6",
+      "grounding": [
+        "flex.md"
+      ]
+    },
+    "status": "accepted"
+  },
+  {
+    "tmp_id": "cand-2026-07-30-001",
+    "subject": "How do we properly handle token refresh in our custom Flex SDK integration so the session stays alive past the initial TTL?",
+    "body": "Hi Twilio support team,\n\nI hope this finds someone who can help because I've been going around in circles reading the docs and I'm not 100% sure I have the full picture here. We're a mid-size SaaS company and we've been building a custom agent desktop that embeds the @twilio/flex-sdk (not using the stock Flex UI at all, just the SDK directly in our own React app). Things are generally working fine for the first hour or so of an agent's shift, but once that initial token TTL window closes we start seeing some weird behavior and I want to make sure we're handling the refresh flow correctly before we go to production.\n\nHere's what we're doing right now, roughly:\n\n1. Agent logs in, our backend mints a Flex user token (JWE) and hands it to the frontend.\n2. Frontend calls `const client = await createClient(\"SDK_TOKEN\")` with that token.\n3. Everything works great — agents can see tasks, accept voice tasks, messaging tasks come through, etc.\n4. After about 3600 seconds (the default TTL I assume) we start seeing error 45775 \"Failed to refresh token. Invalid token provided\" show up in the console and then SDK calls start failing silently or throwing.\n\nSo my first question is just: what is the correct sequence of steps to do a clean token refresh so the live client session picks up the new credentials without the agent having to log out and back in? I've seen references to `refreshToken({ refreshToken, ssoProfileSid })` and `validateToken(accountSid, token)` and then `client.updateToken(newToken, newRefreshToken)` but I'm not sure if those are all required in that order, or if some of them are optional, or if there's a timing consideration I'm missing.\n\nRight now our frontend is calling our backend to get a new token when we detect the expiry, then we're updating some local state with the new token value, but I don't think we're calling `client.updateToken(...)` at all, which based on some things I read might mean the underlying SDK clients (TaskRouter, Voice, Conversations, Sync) are still holding onto the old stale token even though our app thinks it refreshed. Is that right? Like, do all the connected services automatically pick up the new token if we call `client.updateToken(newToken, newRefreshToken)`, or do we need to do something additional for each one?\n\nSecond question: is there an event we should be listening for that fires *before* the token actually expires so we can do a proactive refresh rather than reacting to failures? I've seen mention of a `tokenWillExpire` type of event pattern in some Voice SDK docs — is there an equivalent on the Flex SDK client side?\n\nThird, somewhat related question: we had one agent yesterday where after the token issue started happening, the session log showed something like `SessionState: setting degraded to true` and they could still see their task queue but inbound voice calls weren't connecting at all. The agent was convinced it was a routing problem and opened a ticket with our internal team, but it sounds to me like that degraded mode is actually a symptom of the Voice SDK client failing to reinitialize after the token problem rather than anything wrong with our TaskRouter config (Workspace WS04f7a2b1c3d8e9f0a1b2c3d4e5f6a7b8, Workflow WWab12cd34ef56ab12cd34ef56ab12cd34 if that matters). Can you confirm that's the right interpretation? And if so, does calling `client.updateToken(...)` with a fresh token recover the Voice client from degraded state automatically, or do we need to fully reinitialize the client?\n\nFourth question and then I'll stop: we noticed error 31207 \"JWT token expiration interval is too long\" on a few Voice tasks. We have a separate Voice Access Token we're generating for the Voice SDK piece — is that a totally separate token from the Flex user JWE token, and does it have its own TTL constraints independent of the 3600s Flex token? I want to make sure we're not conflating two different token types here.\n\nSorry for the wall of text — I just wanted to give you the full picture rather than go back and forth. We're on Chrome 124 mostly, a few agents on Edge 124. No specific TaskQueue or Worker SIDs are relevant to this since it's a general auth flow question, but happy to provide more if needed.\n\nThanks so much,\nDaniel",
+    "intended": {
+      "category": "how_to",
+      "severity": "low"
+    },
+    "meta": {
+      "source": "synthetic",
+      "product": "flex",
+      "sub_surface": "sdk",
+      "cell": "flex/sdk·how_to·low",
+      "twist": null,
+      "added": "2026-07-30",
       "model": "claude-sonnet-4-6",
       "grounding": [
         "flex.md"

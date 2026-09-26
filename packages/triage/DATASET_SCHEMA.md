@@ -79,7 +79,7 @@ type Product =
   single source of truth for those enums; do not redefine them here.
 - **`sub_surface`** values for `product:"flex"` come from the §4 matrix in `DATASET.md`
   (`desktop`, `plugins`, `actions`, `taskrouter`, `wrapup`, `conversations`, `voice`,
-  `sso`, `insights`, `billing`). Must be non-null when `product` is `flex`.
+  `sso`, `insights`, `billing`, `sdk`). Must be non-null when `product` is `flex`.
 
 ---
 
