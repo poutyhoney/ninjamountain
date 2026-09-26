@@ -53,6 +53,11 @@ const TOPICS: Topic[] = [
     href: '/trails/tse-onboarding/live-demo-storytelling',
   },
   {
+    title: 'Flex SDK Troubleshooting',
+    body: 'Same fundamentals, richer state machine: workers, tasks, and reservations that can each fail independently in a contact center.',
+    href: '/trails/tse-onboarding/flex-sdk-troubleshooting',
+  },
+  {
     title: 'SSO & Identity Edge Cases',
     body: 'What breaks when a whole company logs in through their own identity provider instead of your user table.',
     href: '/trails/tse-onboarding/sso-identity-edge-cases',
@@ -100,7 +105,7 @@ export default function TseOnboardingPage() {
           TSE Onboarding
         </h1>
         <p className="max-w-xl text-lg leading-relaxed text-[#6F7684]">
-          Nine topics, one lesson each: a short primer, links to primary documentation, and
+          Ten topics, one lesson each: a short primer, links to primary documentation, and
           exercises to prove the concept has stuck. Start with HTTP.
         </p>
 
