@@ -7,6 +7,7 @@ import NinjaMark from './NinjaMark';
 const NAV = [
   { href: '/projects/onboard', label: 'Dojo'      },
   { href: '/trails',           label: 'Trails'    },
+  { href: '/knowledge',        label: 'Knowledge' },
   { href: '/projects/gallery', label: 'Artifacts' },
   { href: '/about',            label: 'About'     },
 ];

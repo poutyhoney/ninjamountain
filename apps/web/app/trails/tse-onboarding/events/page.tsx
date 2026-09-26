@@ -120,7 +120,7 @@ export default function EventsLessonPage() {
 
         {/* Hero */}
         <p className="mb-3 mt-8 text-xs font-bold uppercase tracking-[.2em] text-[#8B6CFF]">
-          Lesson 3 of 9
+          Lesson 3 of 10
         </p>
         <h1 className="mb-5 max-w-3xl text-4xl font-bold leading-tight tracking-tight sm:text-5xl">
           Events

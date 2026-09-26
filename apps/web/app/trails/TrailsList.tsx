@@ -18,10 +18,10 @@ type Trail = {
 const TRAILS: Trail[] = [
   {
     title: 'TSE Onboarding',
-    body: 'HTTP, auth, events, incidents, AI as a force multiplier, support tooling, live demos, and enterprise identity — the field skills for supporting API products.',
+    body: 'HTTP, auth, events, incidents, AI as a force multiplier, support tooling, live demos, contact-center SDK troubleshooting, and enterprise identity — the field skills for supporting API products.',
     category: 'Support',
     difficulty: 'Beginner',
-    lessons: 9,
+    lessons: 10,
     progress: 100,
     href: '/trails/tse-onboarding',
   },
