@@ -9,3 +9,7 @@ __pycache__
 
 .DS_Store
 .vercel
+
+# Claude Code: personal settings and scratch output
+.claude/settings.local.json
+Claude outputs/
