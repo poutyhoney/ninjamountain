@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "workspaces": [
     "apps/web",
+    "apps/store",
     "packages/*"
   ],
   "engines": {
@@ -13,9 +14,14 @@
     "dev:web": "npm --workspace apps/web run dev",
     "build:web": "npm --workspace apps/web run build",
     "start:web": "npm --workspace apps/web run start",
+    "dev:store": "npm --workspace apps/store run dev",
+    "build:store": "npm --workspace apps/store run build",
+    "start:store": "npm --workspace apps/store run start",
     "dev:api": "cd apps/api && source .venv/bin/activate && fastapi dev main.py",
     "lint:web": "npm run lint --workspace apps/web",
+    "lint:store": "npm run lint --workspace apps/store",
     "typecheck:web": "npm run typecheck --workspace apps/web",
+    "typecheck:store": "npm run typecheck --workspace apps/store",
     "typecheck:triage": "npm run typecheck --workspace packages/triage"
   }
 }
