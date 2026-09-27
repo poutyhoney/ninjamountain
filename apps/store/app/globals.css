@@ -1,29 +1,48 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --nm-honey:	  #E8B04A;
-  --nm-straw: 	  #F2DC9B;
-  
+  --background: #0A0B0F;
+  --foreground: #E9ECF2;
+
+  /* Ninja Mountain brand palette. Copied from apps/web; moves to packages/ui in week 2. */
+  --nm-obsidian:  #0A0B0F;
+  --nm-charcoal:  #151821;
+  --nm-slate:     #202431;
+  --nm-steel:     #6F7684;
+  --nm-silver:    #C8CCD4;
+  --nm-softwhite: #E9ECF2;
+  --nm-violet:    #8B6CFF;
+  --nm-lavender:  #B7A7FF;
+  --nm-honey:     #E8B04A;
+  --nm-straw:     #F2DC9B;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-nm-obsidian:  var(--nm-obsidian);
+  --color-nm-charcoal:  var(--nm-charcoal);
+  --color-nm-slate:     var(--nm-slate);
+  --color-nm-steel:     var(--nm-steel);
+  --color-nm-silver:    var(--nm-silver);
+  --color-nm-softwhite: var(--nm-softwhite);
+  --color-nm-violet:    var(--nm-violet);
+  --color-nm-lavender:  var(--nm-lavender);
+  --color-nm-honey:     var(--nm-honey);
+  --color-nm-straw:     var(--nm-straw);
+
+  --font-sans:    var(--font-inter);
+  --font-heading: var(--font-space-grotesk);
+  --font-mono:    var(--font-geist-mono);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-space-grotesk), var(--font-inter), system-ui, sans-serif;
 }
