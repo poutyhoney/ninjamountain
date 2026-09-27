@@ -1,35 +1,46 @@
 export type BillingPeriod = "month" | "year";
 
 export type Offer = {
-	id: string;
-	name: string;
-	priceCents: number;
-	billingPeriod: BillingPeriod;
-	perks: string[];
-	badge?: string;
+  id: string;
+  name: string;
+  priceCents: number;
+  billingPeriod: BillingPeriod;
+  perks: string[];
+  badge?: string;
+  premium?: boolean;
 };
 
 export const offers: Offer[] = [
   {
-    id: "starter",
-    name: "Starter",
-    priceCents: 900,
+    id: "white-belt",
+    name: "White Belt",
+    priceCents: 0,
     billingPeriod: "month",
-    perks: ["1 project", "Community support", "Basic analytics"],
+    perks: ["1 training ground", "Daily challenge", "Global leaderboard"],
   },
   {
-    id: "pro",
-    name: "Pro",
-    priceCents: 2900,
+    id: "brown-belt",
+    name: "Brown Belt",
+    priceCents: 699,
     billingPeriod: "month",
-    perks: ["Unlimited projects", "Email support", "Advanced analytics", "Custom domain"],
+    perks: [
+      "All core training grounds",
+      "Unlimited challenges",
+      "Progress tracking",
+    ],
     badge: "Most popular",
   },
   {
-    id: "team",
-    name: "Team",
-    priceCents: 29000,
-    billingPeriod: "year",
-    perks: ["Everything in Pro", "5 seats", "SSO", "Priority support"],
+    id: "black-belt",
+    name: "Black Belt",
+    priceCents: 1299,
+    billingPeriod: "month",
+    perks: [
+      "Everything in Brown Belt",
+      "New training grounds first",
+      "Exclusive gear drops",
+      "Custom dojo profile",
+    ],
+    premium: true,
   },
 ];
