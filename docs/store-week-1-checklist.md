@@ -4,6 +4,26 @@ Goal for the week: `apps/store` exists as its own Next.js app in the monorepo,
 has a live URL on its own Vercel project, CI checks it on every PR, and the first
 components (offer card, page layout) are built with typed props.
 
+## What we're building: Ninja Mountain Arcade
+
+A subscription game platform set in the Ninja Mountain world. The games are
+training challenges grouped into training grounds.
+
+- Tiers: White Belt (free), Brown Belt ($6.99/mo or $69.99/yr),
+  Black Belt ($12.99/mo or $129.99/yr). Prices are placeholders.
+- Add-ons (later weeks): training ground expansions, cosmetic gear packs.
+- Entitlements (later weeks): My Account page shows belt, unlocked grounds,
+  owned add-ons; locked content shows an upgrade prompt.
+- Look: same palette and fonts as `apps/web` (obsidian, violet, Space Grotesk,
+  Inter, dot constellations). For week 1, copy the `--nm-*` tokens from
+  `apps/web/app/globals.css`; they move to a shared `packages/ui` in week 2.
+- Two-color brand: violet (`--nm-violet` #8B6CFF) for "Pouty" stays the main
+  accent. Honey for "Honey" is the warm second accent, used sparingly (about
+  80/20 violet to honey): `--nm-honey` #E8B04A for badges, highlights, premium
+  and unlockable content; `--nm-straw` #F2DC9B for light text and subtle fills.
+  Both pass WCAG AA on obsidian and charcoal (10.1:1 and 14.5:1 on obsidian);
+  obsidian text on a honey fill is 10.1:1.
+
 Work through this with Claude Code in teaching mode (see `/CLAUDE.md`). Check
 items off as you go.
 
@@ -67,14 +87,24 @@ Pin the same Next.js version as `apps/web` so the workspace shares one copy.
 
 ## 5. First components
 
-Hardcoded data this week. The FastAPI offers endpoints come in week 2.
+Hardcoded data this week. The FastAPI endpoints come in week 2.
 
-- [ ] `apps/store/lib/offers.ts`: an `Offer` type (id, name, price, billing
-  period, perks, badge?) and a typed array of 3 sample offers.
+- [x] `apps/store/lib/offers.ts`: `Offer` type (id, name, priceCents,
+  billingPeriod, perks, badge?) and a typed array. Done with placeholder data.
+- [ ] Swap the placeholder data for the belt tiers: White Belt (free),
+  Brown Belt ($6.99/mo, badge "Most popular"), Black Belt ($12.99/mo).
+  Keep the `Offer` type; add-ons will be offers too. Annual prices come
+  with the monthly/annual toggle later.
 - [ ] `apps/store/app/components/OfferCard.tsx`: typed props, renders one offer.
-- [ ] `apps/store/app/page.tsx`: page layout that maps offers to cards.
+- [ ] `apps/store/app/page.tsx`: pricing page that maps offers to cards.
   Responsive: one column on mobile, three on desktop.
-- [ ] Fictional brand name and original art only.
+- [ ] Add `--nm-honey: #E8B04A;` and `--nm-straw: #F2DC9B;` next to the
+  existing tokens in `apps/web/app/globals.css`.
+- [ ] Copy the `--nm-*` brand tokens (including honey and straw) and fonts from
+  `apps/web` so the store looks like Ninja Mountain. Original art only.
+- [ ] Use honey for the "Most popular" badge and the Black Belt card. Keep
+  violet as the main accent everywhere else.
+- [ ] Later: update `apps/web/public/nmb-style-guide.png` to show the new colors.
 - [ ] Ask Claude Code for the "comment it" pass once each file works.
 
 ## 6. CI
@@ -87,8 +117,8 @@ Hardcoded data this week. The FastAPI offers endpoints come in week 2.
 ## 7. Vercel project for the store
 
 - [ ] Vercel dashboard: Add New > Project > import `poutyhoney/ninjamountain`.
-- [ ] Root Directory: `apps/store`. Framework: Next.js. Name it after the
-  fictional brand.
+- [ ] Root Directory: `apps/store`. Framework: Next.js. Name it
+  `ninjamountain-arcade`.
 - [ ] On both Vercel projects, turn on skipping deployments when their root
   directory hasn't changed, so store PRs don't rebuild the dojo site and vice
   versa. (Check the current setting name in Vercel's monorepo docs.)

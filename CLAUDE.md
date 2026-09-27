@@ -41,7 +41,9 @@ After Tom says a file works, and he asks for it, add teaching comments to that f
 ## Repo facts
 
 - Monorepo, npm workspaces. Apps: `apps/web` (Next.js 16 dojo site),
-  `apps/store` (Next.js 16 storefront, the web UI ramp-up project),
+  `apps/store` (Next.js 16, "Ninja Mountain Arcade": belt-tier subscription
+  storefront, the web UI ramp-up project; product details in
+  `docs/store-week-1-checklist.md`),
   `apps/api` (FastAPI). Shared package: `packages/triage`.
 - Next.js 16 has breaking changes versus older training data. Before writing
   Next.js code, check the docs in `node_modules/next/dist/docs/` (see
