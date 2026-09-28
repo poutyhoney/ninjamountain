@@ -1,6 +1,14 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from entitlements import (
+	DEMO_ADDONS,
+	DEMO_BELT,
+	DEMO_USER_ID,
+	Entitlements,
+	entitlements_for,
+)
+
 app = FastAPI(title="Ninja Mountain API")
 
 app.add_middleware(
@@ -66,3 +74,8 @@ def list_projects():
 			"description": "A visual experiment for connecting projects, photos, places, and memories."
  		}
  	]
+
+
+@app.get("/entitlements/me")
+def my_entitlements() -> Entitlements:
+	return entitlements_for(DEMO_USER_ID, DEMO_BELT, DEMO_ADDONS)
