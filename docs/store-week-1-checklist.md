@@ -104,32 +104,32 @@ Hardcoded data this week. The FastAPI endpoints come in week 2.
   `apps/web` so the store looks like Ninja Mountain. Original art only.
 - [x] Use honey for the "Most popular" badge and the Black Belt card. Keep
   violet as the main accent everywhere else.
-- [ ] Later: update `apps/web/public/nmb-style-guide.png` to show the new colors.
-- [ ] Ask Claude Code for the "comment it" pass once each file works.
+- [x] Later: update `apps/web/public/nmb-style-guide.png` to show the new colors.
+- [x] Ask Claude Code for the "comment it" pass once each file works.
 
 ## 6. CI
 
-- [ ] `.github/workflows/ci.yml`: add a `store` job (copy `web`, swap the scripts).
-- [ ] `.gitlab-ci.yml`: add the matching `store` job.
-- [ ] Leave `deploy-preview` alone for now. It targets the `apps/web` Vercel
+- [x] `.github/workflows/ci.yml`: add a `store` job (copy `web`, swap the scripts).
+- [x] `.gitlab-ci.yml`: add the matching `store` job.
+- [x] Leave `deploy-preview` alone for now. It targets the `apps/web` Vercel
   project; Vercel's own git integration will build store previews.
 
 ## 7. Vercel project for the store
 
-- [ ] Vercel dashboard: Add New > Project > import `poutyhoney/ninjamountain`.
-- [ ] Root Directory: `apps/store`. Framework: Next.js. Name it
-  `ninjamountain-arcade`.
-- [ ] On both Vercel projects, turn on skipping deployments when their root
+- [x] Vercel dashboard: Add New > Project > import `poutyhoney/ninjamountain`.
+- [x] Root Directory: `apps/store`. Framework: Next.js. Name it
+  `x-store`.
+- [x] On both Vercel projects, turn on skipping deployments when their root
   directory hasn't changed, so store PRs don't rebuild the dojo site and vice
   versa. (Check the current setting name in Vercel's monorepo docs.)
 
 ## 8. Ship it
 
-- [ ] `git push -u origin store/week-1-scaffold` and `gh pr create --fill`
-- [ ] CI green, Vercel preview works
-- [ ] GitHub repo settings: add `store` as a required status check on `main`
-- [ ] Merge. Confirm the production store URL loads.
-- [ ] Start `apps/store/README.md`: what it is, live URL, how to run it locally.
+- [x] `git push -u origin store/week-1-scaffold` and `gh pr create --fill`
+- [x] CI green, Vercel preview works
+- [x] GitHub repo settings: add `store` as a required status check on `main`
+- [x] Merge. Confirm the production store URL loads.
+- [x] Start `apps/store/README.md`: what it is, live URL, how to run it locally.
 
 ## Done when
 
@@ -140,4 +140,20 @@ Hardcoded data this week. The FastAPI endpoints come in week 2.
 ## Notes to self (fill in as you go)
 
 - Commands I had to look up:
+  - `npx create-next-app@16.2.6 --help` to see the real flags for that version.
+    `--disable-git` stops a nested `.git` in `apps/store`. `--yes` accepts defaults
+    for any prompt I didn't answer with a flag (`--reset` clears saved answers).
+  - `git branch -D <branch>` after a squash merge. Squash makes a new commit on
+    main, so `-d` thinks the branch isn't merged. `gh pr merge --delete-branch`
+    does the cleanup for me.
 - Errors I hit and what fixed them:
+  - Ran `npm install` inside `apps/store`. npm found the workspace root and did
+    the right thing anyway. `npm run dev:store` failed there because `:store`
+    scripts only exist in the root `package.json`. Run everything from the root.
+  - Starter page stayed white after adding obsidian. The starter `page.tsx` had
+    its own `bg-zinc-50` / `bg-white` layers covering the body.
+  - CI change never made it into PR #21 because the commit didn't happen. Fixed
+    with follow-up PR #22. Habit: `git log --oneline -1` after every commit,
+    before pushing.
+  - README code blocks got cut off when copying. A fence closes at the first
+    fence of equal length, so wrap nested blocks in four backticks.
