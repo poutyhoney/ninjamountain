@@ -17,7 +17,15 @@ web:
         - npm run lint:web
         - npm run typecheck:web
         - npm run build:web
-        
+
+store:
+    stage: test
+    script:
+        - npm ci
+        - npm run lint:store
+        - npm run typecheck:store
+        - npm run build:store
+       
 semgrep:
     stage: test
     image: semgrep/semgrep
