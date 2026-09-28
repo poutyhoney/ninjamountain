@@ -44,14 +44,14 @@ python --version
 
 Branch: `ui/shared-tokens`
 
-- [ ] Create `packages/ui` with a `package.json` named `@ninjamountain/ui` and a
+- [x] Create `packages/ui` with a `package.json` named `@ninjamountain/ui` and a
   `tokens.css` holding the `--nm-*` palette.
-- [ ] Both apps depend on it (`"@ninjamountain/ui": "*"`), so Vercel knows a
+- [x] Both apps depend on it (`"@ninjamountain/ui": "*"`), so Vercel knows a
   change to `packages/ui` affects both.
-- [ ] `apps/store/app/globals.css` and `apps/web/app/globals.css` import the
+- [x] `apps/store/app/globals.css` and `apps/web/app/globals.css` import the
   tokens instead of defining them.
-- [ ] `npm install` from the root. Lint, typecheck, and build both apps.
-- [ ] Both sites look exactly the same as before.
+- [x] `npm install` from the root. Lint, typecheck, and build both apps.
+- [x] Both sites look exactly the same as before.
 
 ## 2. FastAPI: entitlements endpoint
 

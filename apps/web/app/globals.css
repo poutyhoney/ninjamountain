@@ -1,20 +1,9 @@
 @import "tailwindcss";
+@import "@ninjamountain/ui/tokens.css";
 
 :root {
   --background: #0A0B0F;
   --foreground: #E9ECF2;
-
-  /* Ninja Mountain brand palette */
-  --nm-obsidian:  #0A0B0F;
-  --nm-charcoal:  #151821;
-  --nm-slate:     #202431;
-  --nm-steel:     #6F7684;
-  --nm-silver:    #C8CCD4;
-  --nm-softwhite: #E9ECF2;
-  --nm-violet:    #8B6CFF;
-  --nm-lavender:  #B7A7FF;
-  --nm-honey:	  #E8B04A;
-  --nm-straw: 	  #F2DC9B;
 }
 
 @theme inline {

@@ -1,0 +1,21 @@
+/*
+ * Ninja Mountain brand palette. Shared by apps/web and apps/store.
+ * Each app imports this file in its globals.css and maps the colors
+ * it needs into Tailwind with @theme.
+ */
+:root {
+  --nm-obsidian:  #0A0B0F;
+  --nm-charcoal:  #151821;
+  --nm-slate:     #202431;
+  --nm-steel:     #6F7684;
+  --nm-silver:    #C8CCD4;
+  --nm-softwhite: #E9ECF2;
+  /* Violet is the main accent ("Pouty"). */
+  --nm-violet:    #8B6CFF;
+  --nm-lavender:  #B7A7FF;
+  /* Honey is the warm second accent ("Honey"), used sparingly for badges and
+     premium content (about 80/20 violet to honey). Straw is for light text
+     and subtle fills. */
+  --nm-honey:     #E8B04A;
+  --nm-straw:     #F2DC9B;
+}
