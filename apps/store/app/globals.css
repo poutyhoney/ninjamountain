@@ -1,3 +1,14 @@
+/*
+ * Global styles for the store app. Imported once, in app/layout.tsx.
+ *
+ * Three layers:
+ *   1. :root       plain CSS custom properties: the Ninja Mountain palette.
+ *   2. @theme      registers those colors and fonts with Tailwind v4 so they
+ *                  become utility classes (bg-nm-violet, font-heading, ...).
+ *   3. base rules  body and heading defaults.
+ */
+
+/* Tailwind v4 setup is a single import. No tailwind.config.js needed. */
 @import "tailwindcss";
 
 :root {
@@ -11,12 +22,24 @@
   --nm-steel:     #6F7684;
   --nm-silver:    #C8CCD4;
   --nm-softwhite: #E9ECF2;
+  /* Violet is the main accent ("Pouty"). */
   --nm-violet:    #8B6CFF;
   --nm-lavender:  #B7A7FF;
+  /* Honey is the warm second accent ("Honey"), used sparingly for badges and
+     premium content. Straw is for light text and subtle fills. */
   --nm-honey:     #E8B04A;
   --nm-straw:     #F2DC9B;
 }
 
+/*
+ * Tailwind v4 theme variables. Each --color-* entry creates a whole family of
+ * utilities: --color-nm-violet gives bg-nm-violet, text-nm-violet,
+ * border-nm-violet, ring-nm-violet, and so on. --font-heading gives font-heading.
+ *
+ * `inline` tells Tailwind to use the var(...) reference as-is instead of
+ * copying the hex value, so :root stays the single source of truth.
+ * (apps/web skips this step, which is why it writes bg-[#0A0B0F].)
+ */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -32,17 +55,20 @@
   --color-nm-honey:     var(--nm-honey);
   --color-nm-straw:     var(--nm-straw);
 
+  /* The --font-* values on the right are defined by next/font in layout.tsx. */
   --font-sans:    var(--font-inter);
   --font-heading: var(--font-space-grotesk);
   --font-mono:    var(--font-geist-mono);
 }
 
+/* Dark only, like apps/web: no prefers-color-scheme switch. */
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-inter), system-ui, sans-serif;
 }
 
+/* Headings use Space Grotesk, falling back to Inter, then system fonts. */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-space-grotesk), var(--font-inter), system-ui, sans-serif;
 }
