@@ -117,7 +117,7 @@ Hardcoded data this week. The FastAPI endpoints come in week 2.
 ## 7. Vercel project for the store
 
 - [x] Vercel dashboard: Add New > Project > import `poutyhoney/ninjamountain`.
-- [ ] Root Directory: `apps/store`. Framework: Next.js. Name it
+- [x] Root Directory: `apps/store`. Framework: Next.js. Name it
   `x-store`.
 - [x] On both Vercel projects, turn on skipping deployments when their root
   directory hasn't changed, so store PRs don't rebuild the dojo site and vice
@@ -125,11 +125,11 @@ Hardcoded data this week. The FastAPI endpoints come in week 2.
 
 ## 8. Ship it
 
-- [ ] `git push -u origin store/week-1-scaffold` and `gh pr create --fill`
-- [ ] CI green, Vercel preview works
-- [ ] GitHub repo settings: add `store` as a required status check on `main`
-- [ ] Merge. Confirm the production store URL loads.
-- [ ] Start `apps/store/README.md`: what it is, live URL, how to run it locally.
+- [x] `git push -u origin store/week-1-scaffold` and `gh pr create --fill`
+- [x] CI green, Vercel preview works
+- [x] GitHub repo settings: add `store` as a required status check on `main`
+- [x] Merge. Confirm the production store URL loads.
+- [x] Start `apps/store/README.md`: what it is, live URL, how to run it locally.
 
 ## Done when
 
