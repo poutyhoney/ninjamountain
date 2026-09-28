@@ -95,14 +95,14 @@ Hardcoded data this week. The FastAPI endpoints come in week 2.
   Brown Belt ($6.99/mo, badge "Most popular"), Black Belt ($12.99/mo).
   Keep the `Offer` type; add-ons will be offers too. Annual prices come
   with the monthly/annual toggle later.
-- [ ] `apps/store/app/components/OfferCard.tsx`: typed props, renders one offer.
-- [ ] `apps/store/app/page.tsx`: pricing page that maps offers to cards.
+- [x] `apps/store/app/components/OfferCard.tsx`: typed props, renders one offer.
+- [x] `apps/store/app/page.tsx`: pricing page that maps offers to cards.
   Responsive: one column on mobile, three on desktop.
 - [x] Add `--nm-honey: #E8B04A;` and `--nm-straw: #F2DC9B;` next to the
   existing tokens in `apps/web/app/globals.css`.
-- [ ] Copy the `--nm-*` brand tokens (including honey and straw) and fonts from
+- [x] Copy the `--nm-*` brand tokens (including honey and straw) and fonts from
   `apps/web` so the store looks like Ninja Mountain. Original art only.
-- [ ] Use honey for the "Most popular" badge and the Black Belt card. Keep
+- [x] Use honey for the "Most popular" badge and the Black Belt card. Keep
   violet as the main accent everywhere else.
 - [ ] Later: update `apps/web/public/nmb-style-guide.png` to show the new colors.
 - [ ] Ask Claude Code for the "comment it" pass once each file works.
