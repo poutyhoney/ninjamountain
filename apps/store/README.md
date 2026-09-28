@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Ninja Mountain Arcade
 
-## Getting Started
+A subscription storefront for Ninja Mountain Arcade: training challenges
+grouped into training grounds, sold as belt tiers. This is the web UI
+ramp-up project in the Ninja Mountain monorepo.
 
-First, run the development server:
+Live: https://ninjamountain-store.vercel.app/
+
+## Run it locally
+
+From the repo root, not this folder:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+nvm use
+npm install
+npm run dev:store
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then open http://localhost:3001. (The dojo site, `apps/web`, uses port 3000.)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Checks
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+These run in CI on every PR:
 
-## Learn More
+```bash
+npm run lint:store
+npm run typecheck:store
+npm run build:store
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Where things are
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `lib/offers.ts`: the `Offer` type and the belt-tier data (hardcoded for now)
+- `app/components/OfferCard.tsx`: renders one offer
+- `app/page.tsx`: the pricing page
+- `app/globals.css`: Ninja Mountain color tokens and fonts
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deploys
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Vercel project `ninjamountain-store`, root directory `apps/store`. Merging to
+`main` deploys production. Vercel skips the build when nothing in this app
+changed.
