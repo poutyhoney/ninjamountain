@@ -57,11 +57,11 @@ Branch: `ui/shared-tokens`
 
 Branch: `api/entitlements`
 
-- [ ] Pydantic models for an entitlement response (belt, unlocked grounds,
+- [x] Pydantic models for an entitlement response (belt, unlocked grounds,
   owned add-ons).
-- [ ] `GET /entitlements/me` returns the demo user's entitlements.
-- [ ] pytest: status code, response shape, and one test per belt rule.
-- [ ] `ruff check .` and `pytest` pass. CI's `api` job runs both.
+- [x] `GET /entitlements/me` returns the demo user's entitlements.
+- [x] pytest: status code, response shape, and one test per belt rule.
+- [x] `ruff check .` and `pytest` pass. CI's `api` job runs both.
 
 ## 3. Store: typed fetching with loading and error states
 
