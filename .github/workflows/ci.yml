@@ -33,6 +33,9 @@ jobs:
             - run: npm run lint:store
             - run: npm run typecheck:store
             - run: npm run build:store
+              env:
+                  CONTENTFUL_SPACE_ID: ${{ secrets.CONTENTFUL_SPACE_ID }}
+                  CONTENTFUL_ACCESS_TOKEN: ${{ secrets.CONTENTFUL_ACCESS_TOKEN }}
     packages:
         runs-on: ubuntu-latest
         steps:
