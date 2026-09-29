@@ -4,17 +4,18 @@
 // its default export is the page component. Next wraps it in app/layout.tsx,
 // which supplies <html>, <body>, fonts, and global styles.
 //
-// Data flows one way: `offers` (lib/offers.ts) -> this page -> OfferCard.
+// Data flows one way: Contentful (lib/contentful.ts) -> this page -> OfferCard.
 // No dynamic data, so `next build` prerenders this page as static HTML.
 
 import { Suspense } from "react";
 
 import EntitlementsPanel, { EntitlementsSkeleton } from "@/app/components/EntitlementsPanel";
 import OfferCard from "@/app/components/OfferCard";
-import { offers } from "@/lib/offers";
+import { getTierOffers } from "@/lib/contentful";
 
-export default function Home() {
+export default async function Home() {
   const apiUrl = process.env.API_URL;
+  const offers = await getTierOffers();
   return (
     // `mx-auto` + `max-w-6xl` centers the content with a max width.
     // `px-4` keeps a 16px gutter on phones; `sm:` and `lg:` add more room on

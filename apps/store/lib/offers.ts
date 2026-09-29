@@ -1,10 +1,8 @@
-// Offer data for the Ninja Mountain Arcade storefront.
+// The Offer type for the Ninja Mountain Arcade storefront.
 //
-// This file is plain TypeScript: no React, no Next.js. It defines the shape of
-// an offer (the `Offer` type) and a hardcoded list of the belt tiers.
-// `app/page.tsx` imports `offers` and renders one `OfferCard` per item.
-// In week 2 the list moves behind the FastAPI offers endpoints; the `Offer`
-// type stays and describes what the API returns.
+// This file is plain TypeScript: no React, no Next.js. It defines the shape
+// the UI works with. The data itself lives in Contentful; lib/contentful.ts
+// fetches it and maps Contentful's fields into this type.
 
 // A union of string literals: a BillingPeriod can only be "month" or "year".
 // A typo like "monthly" is a compile error instead of a runtime bug.
@@ -30,40 +28,3 @@ export type Offer = {
   premium?: boolean;
 };
 
-// The `: Offer[]` annotation makes TypeScript check every object in the array
-// against the Offer type (missing fields, wrong types, unknown keys).
-export const offers: Offer[] = [
-  {
-    id: "white-belt",
-    name: "White Belt",
-    // Free is still a price: zero. OfferCard decides to display it as "Free".
-    priceCents: 0,
-    billingPeriod: "month",
-    perks: ["1 training ground", "Daily challenge", "Global leaderboard"],
-  },
-  {
-    id: "brown-belt",
-    name: "Brown Belt",
-    priceCents: 699,
-    billingPeriod: "month",
-    perks: [
-      "All core training grounds",
-      "Unlimited challenges",
-      "Progress tracking",
-    ],
-    badge: "Most popular",
-  },
-  {
-    id: "black-belt",
-    name: "Black Belt",
-    priceCents: 1299,
-    billingPeriod: "month",
-    perks: [
-      "Everything in Brown Belt",
-      "New training grounds first",
-      "Exclusive gear drops",
-      "Custom dojo profile",
-    ],
-    premium: true,
-  },
-];
