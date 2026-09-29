@@ -67,13 +67,13 @@ Branch: `api/entitlements`
 
 Branch: `store/entitlements-fetch`
 
-- [ ] Read the Next 16 docs on data fetching, `loading.tsx`, and `error.tsx`
+- [x] Read the Next 16 docs on data fetching, `loading.tsx`, and `error.tsx`
   before writing code.
-- [ ] `API_URL` in `apps/store/.env.local` (and a committed `.env.example`).
-- [ ] A typed fetch function for `/entitlements/me`.
-- [ ] An entitlements panel with a loading state and an error state. Stop the
+- [x] `API_URL` in `apps/store/.env.local` (and a committed `.env.example`).
+- [x] A typed fetch function for `/entitlements/me`.
+- [x] An entitlements panel with a loading state and an error state. Stop the
   API and confirm the error state shows.
-- [ ] With `API_URL` unset, the panel doesn't render and the build still passes.
+- [x] With `API_URL` unset, the panel doesn't render and the build still passes.
 
 ## 4. Contentful: offers and training grounds
 
