@@ -7,10 +7,14 @@
 // Data flows one way: `offers` (lib/offers.ts) -> this page -> OfferCard.
 // No dynamic data, so `next build` prerenders this page as static HTML.
 
+import { Suspense } from "react";
+
+import EntitlementsPanel, { EntitlementsSkeleton } from "@/app/components/EntitlementsPanel";
 import OfferCard from "@/app/components/OfferCard";
 import { offers } from "@/lib/offers";
 
 export default function Home() {
+  const apiUrl = process.env.API_URL;
   return (
     // `mx-auto` + `max-w-6xl` centers the content with a max width.
     // `px-4` keeps a 16px gutter on phones; `sm:` and `lg:` add more room on
@@ -29,6 +33,12 @@ export default function Home() {
           level up when you are ready.
         </p>
       </header>
+      
+      {apiUrl && (
+        <Suspense fallback={<EntitlementsSkeleton />}>
+          <EntitlementsPanel apiUrl={apiUrl} />
+        </Suspense>
+      )}
 
       {/* Responsive grid, mobile first. `grid-cols-1` applies at every width;
           `lg:grid-cols-3` switches to three columns at 1024px and up.
