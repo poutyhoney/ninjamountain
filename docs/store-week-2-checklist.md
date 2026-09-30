@@ -79,18 +79,18 @@ Branch: `store/entitlements-fetch`
 
 Branch: `store/contentful`
 
-- [ ] Create a free Contentful account and space (you do this; Claude can't
+- [x] Create a free Contentful account and space (you do this; Claude can't
   create accounts).
-- [ ] Content types: `offer` (slug, name, priceCents, billingPeriod, perks,
+- [x] Content types: `offer` (slug, name, priceCents, billingPeriod, perks,
   badge, premium, kind: tier or add-on) and `trainingGround` (slug, name,
   description, required belt).
-- [ ] Enter the three belt tiers and at least two training grounds.
-- [ ] Create a Content Delivery API key. Put `CONTENTFUL_SPACE_ID` and
+- [x] Enter the three belt tiers and at least two training grounds.
+- [x] Create a Content Delivery API key. Put `CONTENTFUL_SPACE_ID` and
   `CONTENTFUL_ACCESS_TOKEN` in `.env.local`. Never commit them.
-- [ ] Typed Content Delivery API fetch that returns `Offer[]`.
-- [ ] Delete the hardcoded array from `lib/offers.ts`. Keep the `Offer` type.
-- [ ] Add both env vars to the `ninjamountain-store` Vercel project.
-- [ ] The live store shows the Contentful data.
+- [x] Typed Content Delivery API fetch that returns `Offer[]`.
+- [x] Delete the hardcoded array from `lib/offers.ts`. Keep the `Offer` type.
+- [x] Add both env vars to the `ninjamountain-store` Vercel project.
+- [x] The live store shows the Contentful data.
 
 ## 5. Storybook
 
