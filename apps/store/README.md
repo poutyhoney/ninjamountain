@@ -4,9 +4,10 @@ A subscription storefront for Ninja Mountain Arcade: training challenges
 grouped into training grounds, sold as belt tiers. This is the web UI
 ramp-up project in the Ninja Mountain monorepo.
 
-Live: 
-- https://ninjamountain-store.vercel.app/
-- https://ninjamountain-storybook.vercel.app
+Live:
+
+- Store: https://ninjamountain-store.vercel.app/
+- Storybook: https://ninjamountain-storybook.vercel.app
 
 ## Run it locally
 

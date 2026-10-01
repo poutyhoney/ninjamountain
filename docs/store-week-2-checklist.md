@@ -105,8 +105,8 @@ Branch: `store/storybook`
 
 ## 6. Cloud: IAM basics
 
-- [ ] Read up on users, roles, groups, policies, and least privilege.
-- [ ] Write five lines in "Notes to self" on how you'd scope a read-only
+- [x] Read up on users, roles, groups, policies, and least privilege.
+- [x] Write five lines in "Notes to self" on how you'd scope a read-only
   Contentful token or a CI deploy key using the same idea.
 
 ## Done when
