@@ -32,6 +32,7 @@ jobs:
             - run: npm ci
             - run: npm run lint:store
             - run: npm run typecheck:store
+            - run: npm run test:coverage:store
             - run: npm run build:store
               env:
                   CONTENTFUL_SPACE_ID: ${{ secrets.CONTENTFUL_SPACE_ID }}

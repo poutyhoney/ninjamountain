@@ -23,7 +23,7 @@
     "typecheck:web": "npm run typecheck --workspace apps/web",
     "typecheck:store": "npm run typecheck --workspace apps/store",
     "typecheck:triage": "npm run typecheck --workspace packages/triage",
-    "storybook:store": "npm --workspace apps/store run storybook",
-    "build-storybook:store": "npm --workspace apps/store run build-storybook"
+    "test:store": "npm --workspace apps/store run test",
+    "test:coverage:store": "npm --workspace apps/store run test:coverage"
   }
 }
