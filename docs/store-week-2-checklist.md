@@ -96,11 +96,11 @@ Branch: `store/contentful`
 
 Branch: `store/storybook`
 
-- [ ] Check Storybook's Next.js 16 support before installing.
-- [ ] Stories for 5 components. Split `OfferCard` to get there: `OfferCard`,
+- [x] Check Storybook's Next.js 16 support before installing.
+- [x] Stories for 5 components. Split `OfferCard` to get there: `OfferCard`,
   `PriceTag`, `PerkList`, `Badge`, plus the entitlements panel. (If the week
   runs long, 3 is fine.)
-- [ ] Decide where to publish it (Chromatic, GitHub Pages, or a static Vercel
+- [x] Decide where to publish it (Chromatic, GitHub Pages, or a static Vercel
   project) and publish.
 
 ## 6. Cloud: IAM basics
@@ -118,6 +118,126 @@ Branch: `store/storybook`
 - Storybook is published
 
 ## Notes to self (fill in as you go)
+1. What makes the Contentful Delivery token "least privilege" compared to the Preview token or a Management token?
 
-- Commands I had to look up:
-- Errors I hit and what fixed them:
+In the simplest terms, the Contentful Delivery token is "least privilege" because it can only read published content, while the Preview token can read unpublished content and a Management token can potentially modify content.
+
+2. Why do only the build:store step's env: lines get the secrets, and what would go wrong if every step had them?
+
+Only the build:store step's env: lines get the secrets because it is the only step that needs to access Contentful.
+Unrelated commands never receive the secrets in their process environments, reducing exposure. This Step-level scoping applies least privilege to what the token can do in Contentful as well as to which CI processes are allowed to possess it.
+
+3. If the Delivery token leaked, what could an attacker do, and what couldn't they do? How would you rotate it?
+
+As mentioned, if the Delivery token were to be leaked, an attacker would only be able to read published content, with no access to unpublished content or the ability to make any changes. To rotate a Contentful Content Delivery API (CDA) token, I'd have to manually create a new API key, update my application, and delete the old key, because Contentful does not feature a single-click "rotate" button for delivery tokens.
+
+4. For a CI deploy key (like VERCEL_TOKEN), how would you limit it: scope, lifetime, or which branches can use it?
+
+A Vercel token allows my GitHub Actions workflow to authenticate with Vercel and perform a deployment. The Vercel project configuration determines the project and associated domains.
+
+I would limit a CI deploy credential in three ways.
+Scope: give the CI identity access only to the Vercel projects and deployment capabilities it needs. don't use a broadly privileged personal credential.
+
+Lifetime: prefer short-lived credentials when supported. otherwise, expire and rotate stored tokens.
+
+Branch/environment access: store deployment credentials in protected GitHub Environments so, for example, PRs can access only preview deployment credentials while only main can access production credentials. I would also only expose the token to the individual deployment steps that require it. 
+
+GitHub Environment protection rules provide an additional boundary before those secrets become available to a job.
+
+5. What would replace a long-lived deploy key with short-lived credentials?
+
+OIDC/federated authentication would replace a long-lived deploy key. In that case, the CI workflow proves its identity to the deployment provider and receives a short-lived credential for that run. The temporary credential expires automatically, reducing the risk if exposed.
+
+### Commands I had to look up
+
+- NA
+
+### Errors I hit and what fixed them
+
+**1. `"." is not exported under the condition "style"`** (section 1)
+
+- **What happened:** `npm run build:web` failed after adding the shared tokens.
+- **Why:** the web app's `globals.css` imported `@ninjamountain/ui` with no
+  subpath. A bare package name asks for the package root (`"."`), but the
+  `exports` map in `packages/ui/package.json` only lists `"./tokens.css"`.
+
+**Fix:** import `@ninjamountain/ui/tokens.css`.
+
+**Lesson:** `exports` blocks anything it doesn't list. That's the point of it.
+
+**2. pytest only collected 3 tests** (section 2)
+
+- **What happened:** `pytest -v` passed, but showed 3 tests instead of 7.
+- **Why:** the new file was named `text_entitlements.py`. pytest only picks up
+  `test_*.py` and `*_test.py`, so it skipped the file with no warning.
+
+**Fix:** rename it to `test_entitlements.py`.
+
+**Lesson:** check the test count, not just "passed."
+
+**3. Tabs vs spaces in Python, twice** (sections 2 and 3)
+
+- **What happened, first time:** ruff's `I001` flagged an import block. Four
+  lines had spaces and one had a tab, so the diff looked identical.
+
+**Fix:** `ruff check --fix` converted them to tabs.
+
+- **What happened, second time:** a temporary `time.sleep(2)` typed with spaces
+  in a tab-indented route caused a `TabError`. `fastapi dev` failed to reload
+  but kept port 8000 open, so requests hung and the store showed the loading
+  skeleton forever.
+
+**Fix:** re-indent the lines with tabs.
+- **Prevention:** turn on Show invisible characters in BBEdit, and add an
+  `.editorconfig` to the repo.
+
+**Side lesson:** the hang showed the store's fetch had no timeout, so I added
+  `AbortSignal.timeout(5000)`.
+
+**4. `CONTENFUL_` secret typo** (section 4)
+
+- **What happened:** CI's `store` job failed with "CONTENTFUL_SPACE_ID and
+  CONTENTFUL_ACCESS_TOKEN must be set."
+- **Why:** I created the GitHub secrets as `CONTENFUL_SPACE_ID` and
+  `CONTENFUL_ACCESS_TOKEN` (missing the second T). `ci.yml` asked for
+  `secrets.CONTENTFUL_SPACE_ID`, and a secret that doesn't exist expands to an
+  empty string, not an error. The guard clause in `getTierOffers` caught it.
+
+**Fix:** `gh secret set` with the right names, then `gh secret delete` the
+  wrong ones. Check with `gh secret list`.
+
+**5. Vercel preview build had no Contentful vars** (section 4)
+
+- **What happened:** the store preview kept failing with the same "must be set"
+  error after GitHub was fixed.
+- **Why:** in Vercel, Preview env vars can be limited to one Git branch.
+
+**Fix:** set both vars for Production and all Preview branches (no branch
+  filter), then Redeploy.
+
+**Lesson:** Vercel copies env vars into a build when it starts. Changing them
+  never fixes a build that already ran.
+
+**6. Empty commit didn't rebuild the store on Vercel** (section 4)
+
+- **What happened:** I pushed `git commit --allow-empty` to re-run everything.
+  GitHub Actions re-ran, but Vercel reported "Skipped - Not affected."
+- **Why:** Vercel's monorepo skip saw no changed files. The PR check showed
+  green while no store build had succeeded.
+
+**Fix:** Vercel dashboard, Deployments, the failed deploy, Redeploy.
+
+**Lesson:** a green Vercel check can point to a skipped deployment. Open the
+  preview URL to confirm.
+
+**7. Part 5 commit never happened** (section 5)
+
+- **What happened:** production Storybook showed 4 components instead of 5.
+- **Why:** I pasted several git commands at once, and the `git add` and
+  `git commit` for the EntitlementsSummary work didn't run. PR #28 merged
+  without it. The same thing happened in week 1 with the CI change.
+
+**Fix:** new branch (uncommitted changes carry over), commit, PR #29.
+
+**Habit:** run commands one at a time, and read `git status` and
+  `git log --oneline -1` before every push.
