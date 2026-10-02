@@ -76,22 +76,22 @@ Branch: `store/stripe-checkout`
 
 Branch: `store/playwright`
 
-- [ ] Read `node_modules/next/dist/docs/01-app/02-guides/testing/playwright.md`.
-- [ ] Install Playwright and one browser (Chromium).
-- [ ] Test: the pricing page shows three belts.
-- [ ] Test: "Choose Brown Belt" redirects to `checkout.stripe.com`.
-- [ ] Test: the success and cancel pages render.
-- [ ] CI job for Playwright, with the Contentful and Stripe secrets on the
+- [x] Read `node_modules/next/dist/docs/01-app/02-guides/testing/playwright.md`.
+- [x] Install Playwright and one browser (Chromium).
+- [x] Test: the pricing page shows three belts.
+- [x] Test: "Choose Brown Belt" redirects to `checkout.stripe.com`.
+- [x] Test: the success and cancel pages render.
+- [x] CI job for Playwright, with the Contentful and Stripe secrets on the
   steps that need them.
 
 ## 4. Accessibility checks in CI
 
 Branch: `store/axe`
 
-- [ ] `@axe-core/playwright` scans the pricing, success, and cancel pages.
-- [ ] Fix every violation it finds until the count is zero.
-- [ ] The scans run in the Playwright CI job.
-- [ ] Optional: Storybook's a11y addon, so each story shows its violations.
+- [x] `@axe-core/playwright` scans the pricing, success, and cancel pages.
+- [x] Fix every violation it finds until the count is zero.
+- [x] The scans run in the Playwright CI job.
+- [x] Optional: Storybook's a11y addon, so each story shows its violations.
 
 ## 5. Manual keyboard and VoiceOver pass
 
