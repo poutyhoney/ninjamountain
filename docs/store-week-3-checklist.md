@@ -97,12 +97,12 @@ Branch: `store/axe`
 
 Branch: `store/a11y-notes`
 
-- [ ] Keyboard only: Tab through the whole flow. Every control is reachable,
+- [x] Keyboard only: Tab through the whole flow. Every control is reachable,
   focus is always visible, and order makes sense.
-- [ ] VoiceOver (Cmd+F5): headings, buttons, prices, and the entitlements
+- [x] VoiceOver (Cmd+F5): headings, buttons, prices, and the entitlements
   states are announced sensibly.
-- [ ] Fix what you find.
-- [ ] Write an "Accessibility" section in `apps/store/README.md`: what was
+- [x] Fix what you find.
+- [x] Write an "Accessibility" section in `apps/store/README.md`: what was
   tested, how, and known gaps.
 
 ## 6. Tests gate merges
