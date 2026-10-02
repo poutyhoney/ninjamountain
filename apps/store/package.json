@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "@ninjamountain/ui": "*",
@@ -23,6 +24,7 @@
     "stripe": "^23.0.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@storybook/nextjs-vite": "^10.6.0",
     "@tailwindcss/postcss": "^4",
     "@testing-library/dom": "^10.4.2",

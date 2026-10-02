@@ -15,6 +15,8 @@ const eslintConfig = defineConfig([
     // Storybook's static build output (npm run build-storybook).
     "storybook-static/**",
     "coverage/**",
+    "test-results/**",
+    "playwright-report/**",
   ]),
 ]);
 

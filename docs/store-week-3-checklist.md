@@ -41,35 +41,35 @@ git status
 
 Branch: `store/vitest`
 
-- [ ] Read `node_modules/next/dist/docs/01-app/02-guides/testing/vitest.md`.
-- [ ] Install Vitest, React Testing Library, and jsdom in the store workspace.
-- [ ] `vitest.config.mts`, plus `test` and `test:coverage` scripts (store and
+- [x] Read `node_modules/next/dist/docs/01-app/02-guides/testing/vitest.md`.
+- [x] Install Vitest, React Testing Library, and jsdom in the store workspace.
+- [x] `vitest.config.mts`, plus `test` and `test:coverage` scripts (store and
   root).
-- [ ] Tests for `PriceTag` (free, monthly, yearly), `PerkList`, `Badge`,
+- [x] Tests for `PriceTag` (free, monthly, yearly), `PerkList`, `Badge`,
   `OfferCard`, and every `EntitlementsSummary` state.
-- [ ] Tests for `getEntitlements` with a mocked `fetch`: success, HTTP error,
+- [x] Tests for `getEntitlements` with a mocked `fetch`: success, HTTP error,
   network error.
-- [ ] Coverage report runs locally.
-- [ ] CI `store` job runs the tests. (CI config change: approve it.)
+- [x] Coverage report runs locally.
+- [x] CI `store` job runs the tests. (CI config change: approve it.)
 
 ## 2. Stripe test-mode checkout
 
 Branch: `store/stripe-checkout`
 
-- [ ] Create a Stripe account and stay in **test mode** (you do this; Claude
+- [x] Create a Stripe account and stay in **test mode** (you do this; Claude
   can't create accounts).
-- [ ] Copy the **test** secret key (`sk_test_...`) into
+- [x] Copy the **test** secret key (`sk_test_...`) into
   `apps/store/.env.local` as `STRIPE_SECRET_KEY`. Never commit it, never paste
   it in chat.
-- [ ] Install the `stripe` package in the store workspace.
-- [ ] Server action: takes a slug, looks up the offer from Contentful, creates
+- [x] Install the `stripe` package in the store workspace.
+- [x] Server action: takes a slug, looks up the offer from Contentful, creates
   a Checkout Session, redirects.
-- [ ] "Choose" button on paid belts, "Start free" on White Belt.
-- [ ] `/checkout/success` reads the session and confirms. Cancel returns to
+- [x] "Choose" button on paid belts, "Start free" on White Belt.
+- [x] `/checkout/success` reads the session and confirms. Cancel returns to
   the pricing page.
-- [ ] Pay with Stripe's test card `4242 4242 4242 4242` and see the success
+- [x] Pay with Stripe's test card `4242 4242 4242 4242` and see the success
   page.
-- [ ] Add `STRIPE_SECRET_KEY` (test key) to Vercel, GitHub secrets, and GitLab
+- [x] Add `STRIPE_SECRET_KEY` (test key) to Vercel, GitHub secrets, and GitLab
   variables.
 
 ## 3. Playwright end-to-end tests
