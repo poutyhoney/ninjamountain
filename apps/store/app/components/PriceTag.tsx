@@ -20,7 +20,12 @@ export default function PriceTag({ priceCents, billingPeriod }: PriceTagProps) {
     <p>
       <span className="text-4xl font-bold">{formatPrice(priceCents)}</span>
       {priceCents > 0 && (
-        <span className="text-nm-silver"> / {billingPeriod}</span>
+        <>
+          <span aria-hidden="true" className="text-nm-silver">
+            {" "}/ {billingPeriod}
+          </span>
+          <span className="sr-only"> per {billingPeriod}</span>
+        </>
       )}
     </p>
   );

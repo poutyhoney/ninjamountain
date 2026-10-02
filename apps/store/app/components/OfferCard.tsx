@@ -18,15 +18,15 @@ export default function OfferCard({ offer, action }: OfferCardProps) {
         premium ? "border-nm-honey" : "border-nm-slate"
       }`}
     >
+      <h2 className={`text-xl font-semibold ${premium ? "text-nm-honey" : ""}`}>
+        {name}
+      </h2>
+
       {badge && (
         <div className="absolute -top-3 left-8">
           <Badge>{badge}</Badge>
         </div>
       )}
-
-      <h2 className={`text-xl font-semibold ${premium ? "text-nm-honey" : ""}`}>
-        {name}
-      </h2>
 
       <PriceTag priceCents={priceCents} billingPeriod={billingPeriod} />
 
