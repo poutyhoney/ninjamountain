@@ -12,7 +12,7 @@ test("pricing page shows the three belts", async ({ page }) => {
 test("choosing a paid belt goes to Stripe Checkout", async ({ page }) => {
   await page.goto("/");
 
-  await page.getByRole("button", { name: "Choose Brown Belt" }).click();
+  await page.getByRole("button", { name: "Choose Brown Sword" }).click();
 
   await page.waitForURL(/checkout\.stripe\.com/);
 });
