@@ -26,7 +26,15 @@ store:
         - npm run typecheck:store
         - npm run test:coverage:store
         - npm run build:store
-       
+
+e2e:
+    stage: test
+    script:
+        - npm ci
+        - npx playwright install --with-deps chromium
+        - npm run build:store
+        - npm run e2e:store
+
 semgrep:
     stage: test
     image: semgrep/semgrep
