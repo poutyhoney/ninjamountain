@@ -6,9 +6,10 @@ import PriceTag from "./PriceTag";
 
 type OfferCardProps = {
   offer: Offer;
+  action?: React.ReactNode;
 };
 
-export default function OfferCard({ offer }: OfferCardProps) {
+export default function OfferCard({ offer, action }: OfferCardProps) {
   const { name, priceCents, billingPeriod, perks, badge, premium } = offer;
 
   return (
@@ -30,6 +31,8 @@ export default function OfferCard({ offer }: OfferCardProps) {
       <PriceTag priceCents={priceCents} billingPeriod={billingPeriod} />
 
       <PerkList perks={perks} premium={premium} />
+
+      {action && <div className="mt-auto pt-2">{action}</div>}
     </article>
   );
 }

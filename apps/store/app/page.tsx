@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 
+import CheckoutButton from "@/app/components/CheckoutButton";
 import EntitlementsPanel from "@/app/components/EntitlementsPanel";
 import { EntitlementsSkeleton } from "@/app/components/EntitlementsSummary";
 import OfferCard from "@/app/components/OfferCard";
@@ -33,7 +34,11 @@ export default async function Home() {
         className="grid grid-cols-1 gap-8 lg:grid-cols-3"
       >
         {offers.map((offer) => (
-          <OfferCard key={offer.id} offer={offer} />
+          <OfferCard
+            key={offer.id}
+            offer={offer}
+            action={<CheckoutButton offer={offer} />}
+          />
         ))}
       </section>
     </main>
