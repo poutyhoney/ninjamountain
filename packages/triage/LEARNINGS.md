@@ -142,6 +142,15 @@ had nothing to do with the model:
   files; a pre-publish scan confirmed nothing leaked before the repo went public.
 - **A real test loop is worth building.** Two harnesses — the web UI (`/projects/triage`)
   and a CLI (`npm run triage`) — make iterating far faster than a hardcoded script.
+- **Errors in files you didn't touch point to the environment.** While adding the OpenAI
+  provider, `npm run typecheck:web` failed with `Cannot find name 'process'` (TS2580) and
+  `Cannot find module 'node:url'` (TS2307), including in files the change never touched.
+  The cause was the local install, not the code: `package-lock.json` pins a separate
+  `@types/node` under `apps/web/node_modules/`, and that folder was missing on disk. The
+  lockfile was correct, so CI would have passed. `npm ci` from the repo root rebuilt
+  `node_modules` to match the lockfile exactly (the same command CI runs) and fixed it.
+  Rule of thumb: when type errors show up in unchanged files, check the install before
+  the code, and use `npm ci` as the "make my machine match CI" reset.
 
 ---
 
