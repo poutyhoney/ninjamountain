@@ -1,23 +1,29 @@
 /**
  * Quick CLI for iterating on the triage pipeline without the web UI.
  *
- *   npm run triage                 # triage a built-in sample ticket
- *   npm run triage -- --id T01     # triage one ticket from the dataset by id
- *   npm run triage -- --all        # triage every ticket in the dataset
+ *   npm run triage                          # triage a built-in sample ticket
+ *   npm run triage -- --id T01              # triage one ticket from the dataset by id
+ *   npm run triage -- --all                 # triage every ticket in the dataset
+ *   npm run triage -- --provider openai     # use OpenAI instead of Anthropic
  *
- * Reads tickets from experiments/data/tickets.json. Requires ANTHROPIC_API_KEY
- * (loaded from packages/triage/.env via dotenv, or already set in your shell).
+ * Reads tickets from experiments/data/tickets.json. Requires the API key for the
+ * chosen provider (loaded from packages/triage/.env via dotenv, or already set in your shell).
  */
 import "./load-env";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 
-import { triageTicket } from "../src/index";
-import type { Ticket, TriageOutcome } from "../src/index";
+import { getProvider, triageTicket } from "../src/index";
+import type { ProviderName, Ticket, TriageOutcome } from "../src/index";
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const DATA_PATH = resolve(scriptDir, "../experiments/data/tickets.json");
+
+const API_KEY_ENV: Record<ProviderName, string> = {
+  anthropic: "ANTHROPIC_API_KEY",
+  openai:    "OPENAI_API_KEY",
+};
 
 type StoredTicket = Ticket & { id?: string };
 
@@ -39,6 +45,15 @@ function loadDataset(): StoredTicket[] {
   }
 }
 
+function parseProviderFlag(args: string[]): ProviderName | undefined {
+  const idx = args.indexOf("--provider");
+  if (idx === -1) return undefined;
+  const value = args[idx + 1];
+  if (value === "anthropic" || value === "openai") return value;
+  console.error(`--provider must be "anthropic" or "openai" (got "${value ?? ""}")`);
+  process.exit(1);
+}
+
 function printOutcome(ticket: StoredTicket, outcome: TriageOutcome): void {
   const tag = ticket.id ? `[${ticket.id}] ` : "";
   console.log("\n" + "─".repeat(72));
@@ -57,18 +72,26 @@ function printOutcome(ticket: StoredTicket, outcome: TriageOutcome): void {
   console.log(`escalate : ${r.needs_engineering_escalation ? "yes" : "no"}`);
   console.log(`summary  : ${r.summary}`);
   console.log(`reply    : ${r.suggested_first_response}`);
-  console.log(`(triaged in ${outcome.attempts} attempt[s])`);
+  console.log(`cites    : ${r.kb_citations.length ? r.kb_citations.join(", ") : "(none)"}`);
+  console.log(
+    `(${outcome.provider} · ${outcome.model} · ` +
+    `${outcome.usage.inputTokens} in / ${outcome.usage.outputTokens} out tokens · ` +
+    `${(outcome.latencyMs / 1000).toFixed(1)}s · ${outcome.attempts} attempt[s])`
+  );
 }
 
 async function main(): Promise<void> {
-  if (!process.env.ANTHROPIC_API_KEY) {
-    console.error(
-      "ANTHROPIC_API_KEY is not set. Add it to packages/triage/.env or export it in your shell."
-    );
+  const args = process.argv.slice(2);
+  const provider = parseProviderFlag(args);
+
+  const { name, model } = getProvider(provider);
+  const keyVar = API_KEY_ENV[name];
+  if (!process.env[keyVar]) {
+    console.error(`${keyVar} is not set. Add it to packages/triage/.env or export it in your shell.`);
     process.exit(1);
   }
+  console.log(`Using ${name} (${model})`);
 
-  const args = process.argv.slice(2);
   let tickets: StoredTicket[];
 
   if (args.includes("--all")) {
@@ -93,7 +116,7 @@ async function main(): Promise<void> {
   }
 
   for (const ticket of tickets) {
-    const outcome = await triageTicket({ subject: ticket.subject, body: ticket.body });
+    const outcome = await triageTicket({ subject: ticket.subject, body: ticket.body }, { provider });
     printOutcome(ticket, outcome);
   }
   console.log();
