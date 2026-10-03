@@ -27,12 +27,18 @@ export async function triageTicket(
 
   // Retrieved once per ticket, reused across retries — a retry means the model's
   // OUTPUT was malformed, not that the ticket itself or its relevant KB context changed.
-  const kbMatches = useRetrieval
-    ? await retrieveRelevantArticles(`${ticket.subject}\n\n${ticket.body}`, 3)
-    : [];
-  const kbContext = kbMatches
-    .map((m) => `[${m.id}] ${m.title}\n${m.body}`)
-    .join("\n\n---\n\n");
+  let kbContext = "";
+  if (useRetrieval) {
+    try {
+      const kbMatches = await retrieveRelevantArticles(`${ticket.subject}\n\n${ticket.body}`, 3);
+      kbContext = kbMatches
+        .map((m) => `[${m.id}] ${m.title}\n${m.body}`)
+        .join("\n\n---\n\n");
+    } catch (retrievalErr) {
+      const message = retrievalErr instanceof Error ? retrievalErr.message : String(retrievalErr);
+      return { ok: false, reason: "api_failure", lastErrors: [`retrieval: ${message}`] };
+    }
+  }
 
   for (let attempt = 1; attempt <= maxOutputRetries + 1; attempt++) {
     const ticketForModel: Ticket = correctionHint
