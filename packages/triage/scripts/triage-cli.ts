@@ -14,16 +14,12 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 
-import { getProvider, triageTicket } from "../src/index";
-import type { ProviderName, Ticket, TriageOutcome } from "../src/index";
+import { triageTicket } from "../src/index";
+import type { Ticket, TriageOutcome } from "../src/index";
+import { chooseProvider } from "./lib/cli";
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const DATA_PATH = resolve(scriptDir, "../experiments/data/tickets.json");
-
-const API_KEY_ENV: Record<ProviderName, string> = {
-  anthropic: "ANTHROPIC_API_KEY",
-  openai:    "OPENAI_API_KEY",
-};
 
 type StoredTicket = Ticket & { id?: string };
 
@@ -43,15 +39,6 @@ function loadDataset(): StoredTicket[] {
   } catch {
     return [];
   }
-}
-
-function parseProviderFlag(args: string[]): ProviderName | undefined {
-  const idx = args.indexOf("--provider");
-  if (idx === -1) return undefined;
-  const value = args[idx + 1];
-  if (value === "anthropic" || value === "openai") return value;
-  console.error(`--provider must be "anthropic" or "openai" (got "${value ?? ""}")`);
-  process.exit(1);
 }
 
 function printOutcome(ticket: StoredTicket, outcome: TriageOutcome): void {
@@ -82,14 +69,7 @@ function printOutcome(ticket: StoredTicket, outcome: TriageOutcome): void {
 
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
-  const provider = parseProviderFlag(args);
-
-  const { name, model } = getProvider(provider);
-  const keyVar = API_KEY_ENV[name];
-  if (!process.env[keyVar]) {
-    console.error(`${keyVar} is not set. Add it to packages/triage/.env or export it in your shell.`);
-    process.exit(1);
-  }
+  const { name, model } = chooseProvider(args);
   console.log(`Using ${name} (${model})`);
 
   let tickets: StoredTicket[];
@@ -116,7 +96,10 @@ async function main(): Promise<void> {
   }
 
   for (const ticket of tickets) {
-    const outcome = await triageTicket({ subject: ticket.subject, body: ticket.body }, { provider });
+    const outcome = await triageTicket(
+      { subject: ticket.subject, body: ticket.body },
+      { provider: name, model }
+    );
     printOutcome(ticket, outcome);
   }
   console.log();
