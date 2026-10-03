@@ -1,4 +1,5 @@
-import type { Ticket, TriageOutcome, TriageTicketOptions } from "./types";
+import type { ModelCall, Ticket, TriageOutcome, TriageTicketOptions } from "./types";
+import type { Usage }               from "./providers";
 import { callTriageModel }          from "./client";
 import { extractJson }              from "./parse";
 import { validateTriage }           from "./validate";
@@ -18,9 +19,11 @@ import { retrieveRelevantArticles } from "./retrieve";
  */
 export async function triageTicket(
   ticket: Ticket,
-  { maxOutputRetries = 2, useRetrieval = true }: TriageTicketOptions = {}
+  { maxOutputRetries = 2, useRetrieval = true, provider, model }: TriageTicketOptions = {}
 ): Promise<TriageOutcome> {
   let correctionHint = "";
+  const usage: Usage = { inputTokens: 0, outputTokens: 0 };
+  let latencyMs = 0;
 
   // Retrieved once per ticket, reused across retries — a retry means the model's
   // OUTPUT was malformed, not that the ticket itself or its relevant KB context changed.
@@ -36,17 +39,21 @@ export async function triageTicket(
       ? { ...ticket, body: `${ticket.body}\n\n[SYSTEM CORRECTION]: ${correctionHint}` }
       : ticket;
 
-    let rawText: string;
+    let call: ModelCall;
     try {
-      rawText = await callTriageModel(ticketForModel, { kbContext });
+      call = await callTriageModel(ticketForModel, { kbContext, provider, model });
     } catch (apiErr) {
       const message = apiErr instanceof Error ? apiErr.message : String(apiErr);
       return { ok: false, reason: "api_failure", lastErrors: [message] };
     }
 
+    usage.inputTokens  += call.usage.inputTokens;
+    usage.outputTokens += call.usage.outputTokens;
+    latencyMs          += call.latencyMs;
+
     let parsed: unknown;
     try {
-      parsed = extractJson(rawText);
+      parsed = extractJson(call.text);
     } catch (parseErr) {
       correctionHint =
         "Your previous response could not be parsed as JSON. Return ONLY a valid JSON object, no fences, no prose.";
@@ -59,7 +66,15 @@ export async function triageTicket(
 
     const validation = validateTriage(parsed);
     if (validation.valid) {
-      return { ok: true, result: validation.value, attempts: attempt };
+      return {
+        ok:       true,
+        result:   validation.value,
+        attempts: attempt,
+        provider: call.provider,
+        model:    call.model,
+        usage,
+        latencyMs,
+      };
     }
 
     correctionHint = `Your previous response had these problems: ${validation.errors.join("; ")}. Fix them and return ONLY valid JSON.`;

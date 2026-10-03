@@ -1,3 +1,5 @@
+import type { Completion, ProviderName, Usage } from "./providers/types";
+
 // ─── Domain types ─────────────────────────────────────────────────────────────
 // Ported from support-triage-assistant/ts/types.ts
 
@@ -21,10 +23,23 @@ export interface TriageResult {
   kb_citations:                 string[];
 }
 
+export interface ModelCall extends Completion {
+  provider: ProviderName;
+  model:    string;
+}
+
 // ─── Return types (discriminated unions) ──────────────────────────────────────
 
 export type TriageOutcome =
-  | { ok: true;  result: TriageResult; attempts: number }
+  | {
+      ok:        true;
+      result:    TriageResult;
+      attempts:  number;
+      provider:  ProviderName;
+      model:     string;
+      usage:     Usage;
+      latencyMs: number;
+    }
   | { ok: false; reason: "api_failure" | "unparseable" | "invalid_schema"; lastErrors: string[] };
 
 // One tool invocation made by the v3 agent loop (src/agent.ts) — recorded
@@ -52,10 +67,11 @@ export type ValidationResult =
 // ─── Option types ─────────────────────────────────────────────────────────────
 
 export interface CallTriageModelOptions {
-  maxAPIRetries?: number;
   // Pre-formatted KB article snippets to prepend to the prompt (see retrieve.ts).
   // Empty/omitted means "no retrieval" — the model still returns kb_citations: [].
   kbContext?: string;
+  provider?:  ProviderName;
+  model?:     string;
 }
 
 export interface TriageTicketOptions {
@@ -63,4 +79,6 @@ export interface TriageTicketOptions {
   // Set false to skip KB retrieval entirely (used by scripts/rag-eval.ts to
   // compare with/without retrieval on the same tickets). Defaults to true.
   useRetrieval?: boolean;
+  provider?:     ProviderName;
+  model?:        string;
 }
