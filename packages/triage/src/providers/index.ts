@@ -1,5 +1,6 @@
 import type { ProviderName, TriageProvider } from "./types";
 import { createAnthropicProvider } from "./anthropic";
+import { createOpenAIProvider } from "./openai";
 
 export type { ProviderName, TriageProvider, Usage, Completion } from "./types";
 
@@ -15,7 +16,7 @@ export function getProvider(name?: ProviderName, model?: string): TriageProvider
   switch (chosen) {
     case "anthropic":
       return createAnthropicProvider(model);
-    default:
-      throw new Error(`Provider "${chosen}" is not implemented yet.`);
+    case "openai":
+      return createOpenAIProvider(model);
   }
 }
