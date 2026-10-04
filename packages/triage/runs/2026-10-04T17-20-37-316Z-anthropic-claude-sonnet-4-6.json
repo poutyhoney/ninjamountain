@@ -1,0 +1,502 @@
+{
+  "version": 1,
+  "runId": "2026-10-04T17-20-37-316Z-anthropic-claude-sonnet-4-6",
+  "createdAt": "2026-10-04T17:20:37.316Z",
+  "provider": "anthropic",
+  "model": "claude-sonnet-4-6",
+  "promptHash": "ef0017a755b7",
+  "useRetrieval": true,
+  "split": "dev",
+  "summary": {
+    "scored": 22,
+    "ok": 22,
+    "failed": 0,
+    "catAccuracy": 0.6818181818181818,
+    "sevExact": 0.7727272727272727,
+    "sevWithin1": 1,
+    "sevMae": 0.22727272727272727,
+    "inputTokens": 54571,
+    "outputTokens": 10599,
+    "p50LatencyMs": 11862.5
+  },
+  "rows": [
+    {
+      "id": "T004",
+      "goldCat": "how_to",
+      "goldSev": "low",
+      "ok": true,
+      "result": {
+        "category": "how_to",
+        "severity": "low",
+        "summary": "Customer wants to configure SAML 2.0 SSO with Okta as the identity provider for Flex UI 2.x and is unsure whether to use the enhanced SSO or legacy SSO path.",
+        "suggested_first_response": "Thank you for reaching out! Since you are on Flex UI 2.x, the path you should take depends on your specific version. If you are on Flex UI 2.5.x or later and are setting up SSO for the first time, you should use the Enhanced SSO flow, which is an OAuth 2.0-based setup configured under Flex's Users and Access > Single Sign-On settings — this is the recommended modern path. If you are on Flex UI 2.4.x or earlier, you would follow the Legacy SSO (SAML 2.0) setup instead. In either case, the configuration is done within Flex's own SSO settings, not the general Twilio Console SSO section (which is for Console login only and is unrelated). When configuring Okta as your IdP, you will need to provide Flex-specific ACS URLs, issuer values, and certificates, and ensure Okta is configured to send the required identity attributes (unique user ID, roles, full name, and email). Could you confirm your exact Flex UI version so we can point you to the precise setup guide? We are happy to walk you through the steps once we know which path applies.",
+        "needs_engineering_escalation": false,
+        "kb_citations": [
+          "kb-009"
+        ]
+      },
+      "attempts": 1,
+      "usage": {
+        "inputTokens": 2184,
+        "outputTokens": 354
+      },
+      "latencyMs": 10015
+    },
+    {
+      "id": "T005",
+      "goldCat": "bug",
+      "goldSev": "high",
+      "ok": true,
+      "result": {
+        "category": "bug",
+        "severity": "medium",
+        "summary": "The customer's TwiML <Gather> verb intermittently returns truncated or empty DTMF digits on approximately 15% of calls, with worse behavior observed on mobile carrier calls.",
+        "suggested_first_response": "Thank you for reaching out and for sharing your TwiML. The behavior you're describing — truncated or empty digits despite the caller pressing keys — is a known class of issue with <Gather> and DTMF capture. A few things to investigate: (1) Mobile carriers and certain VoIP paths can use audio compression codecs that interfere with DTMF tone transmission, which may explain why the problem is worse on mobile calls. (2) Please confirm whether your /verify-pin action URL ever returns an HTTP redirect — if it does, Twilio follows the redirect but does not re-send the Digits parameter, which can cause your application to see an empty value. (3) Check whether finishOnKey is set (default is '#') and whether any callers may be pressing '#' as part of their input, causing early submission. (4) Consider adding actionOnEmptyResult='true' to your <Gather> so that Twilio still POSTs to your action URL even when no digits are captured, which will help you log and distinguish true empty-capture events from application-side issues. We are escalating this to our engineering team to review whether there is a platform-side DTMF detection issue on specific carrier paths. In the meantime, could you share a few affected Call SIDs so we can pull the detailed call logs and debugger events?",
+        "needs_engineering_escalation": true,
+        "kb_citations": [
+          "kb-005"
+        ]
+      },
+      "attempts": 1,
+      "usage": {
+        "inputTokens": 2169,
+        "outputTokens": 377
+      },
+      "latencyMs": 12513
+    },
+    {
+      "id": "T006",
+      "goldCat": "billing",
+      "goldSev": "low",
+      "ok": true,
+      "result": {
+        "category": "billing",
+        "severity": "low",
+        "summary": "Customer is confused by several unrecognized line items on their invoice, including Carrier Surcharge, Short Code MMS, and Voice Insights charges, and wants clarification before assuming they are being overcharged.",
+        "suggested_first_response": "Thank you for reaching out and for providing your Account SID. We're happy to walk you through each of these line items. Here's a brief explanation of what you're likely seeing:\n\n1. **Programmable Messaging – Carrier Surcharge**: This is a pass-through fee that carriers impose on A2P messaging traffic (including 10DLC long code). Twilio passes these fees through to customers; they are not a Twilio markup and are standard across the industry.\n\n2. **Short Code MMS**: This line item can sometimes appear if there was any MMS traffic routed through a short code path, or it may reflect a legacy billing category. Since you only use a 10DLC number, we'll review your account logs to confirm whether this charge corresponds to actual traffic or is a billing error.\n\n3. **Voice Insights**: This is Twilio's call quality and analytics add-on. It may have been enabled on your account (sometimes by default on certain plan types). If you are not intentionally using it, we can check whether it can be disabled going forward.\n\nWe will pull your usage records and invoice details for account AC44... to verify each charge against actual traffic. If any charges are found to be erroneous, we will initiate the appropriate credit or dispute process. Could you please confirm the billing period in question so we can investigate promptly?",
+        "needs_engineering_escalation": false,
+        "kb_citations": [
+          "kb-002"
+        ]
+      },
+      "attempts": 1,
+      "usage": {
+        "inputTokens": 2110,
+        "outputTokens": 391
+      },
+      "latencyMs": 14053
+    },
+    {
+      "id": "T008",
+      "goldCat": "bug",
+      "goldSev": "high",
+      "ok": true,
+      "result": {
+        "category": "bug",
+        "severity": "high",
+        "summary": "Customer is experiencing 30-45 minute SMS delivery delays starting this morning, with messages remaining in 'queued' status far longer than expected during their 2,000 messages/hour morning batch.",
+        "suggested_first_response": "Thank you for reaching out and for the detailed information. We understand how critical timely appointment reminders are for your business. We can see your Messaging Service SID (MGxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx) and are investigating the abnormal queuing delays you're experiencing. While our status page may not yet reflect an incident, delays of this magnitude affecting a high-volume batch are consistent with a potential platform-side throughput or queuing issue that warrants immediate investigation. We are escalating this to our engineering team now. In the meantime, please monitor your StatusCallback webhooks for any status transitions and check the Twilio Console Messaging logs for any error codes on the affected messages. We will follow up shortly with findings.",
+        "needs_engineering_escalation": true,
+        "kb_citations": [
+          "kb-004"
+        ]
+      },
+      "attempts": 1,
+      "usage": {
+        "inputTokens": 2113,
+        "outputTokens": 234
+      },
+      "latencyMs": 7874
+    },
+    {
+      "id": "T009",
+      "goldCat": "bug",
+      "goldSev": "medium",
+      "ok": true,
+      "result": {
+        "category": "config",
+        "severity": "medium",
+        "summary": "Customer's Flex plugin OAuth token refresh is returning 401 after the initial access token expires, suspected to be an issue with their own token persistence or refresh logic rather than a Twilio platform defect.",
+        "suggested_first_response": "Thank you for the detailed report. Based on what you've described, the 401 error on token refresh is most likely originating from your own authentication layer rather than from Twilio or Flex itself — particularly since the refresh token validates successfully in Postman and the initial token works fine. A few things to investigate: (1) Confirm that the full refresh token value is being read back correctly from FlexManager.getInstance().store at the time of the refresh call — check the Network tab in browser Developer Tools to inspect the exact request being sent to your token endpoint. (2) Check for clock skew between the Flex client and your token endpoint, as some OAuth servers reject requests if timestamps are too far off. (3) Verify whether your token endpoint has any IP allowlisting, CORS restrictions, or middleware that could be stripping or altering the Authorization header when the request originates from the browser plugin context versus Postman. (4) Confirm that no signing-key rotation or credential change has occurred on your CRM/OAuth side since the plugin was deployed. If after these checks the refresh token value and request appear identical to the working Postman call, please share the browser console and network logs so we can help narrow down further.",
+        "needs_engineering_escalation": false,
+        "kb_citations": [
+          "kb-015"
+        ]
+      },
+      "attempts": 1,
+      "usage": {
+        "inputTokens": 2148,
+        "outputTokens": 347
+      },
+      "latencyMs": 10508
+    },
+    {
+      "id": "T011",
+      "goldCat": "billing",
+      "goldSev": "critical",
+      "ok": true,
+      "result": {
+        "category": "billing",
+        "severity": "critical",
+        "summary": "Customer's Twilio account has been suspended, completely blocking all calls and messages during a critical product launch, with no explanation of the suspension reason.",
+        "suggested_first_response": "Thank you for reaching out, and we understand the urgency given your product launch. We can see your account (ACyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy) is currently suspended, which will block all calls, messages, and API activity until it is reactivated. Suspension can result from a billing issue (e.g., failed payment or zero balance), a compliance or Terms of Service review, or a fraud/abuse flag. We are escalating this immediately to the team that can identify the specific reason and reinstate your account as quickly as possible. In the meantime, please check whether there are any outstanding payment issues or recent emails from our Trust & Safety or Billing teams, as that may help us resolve this faster. We will follow up shortly with more information.",
+        "needs_engineering_escalation": false,
+        "kb_citations": [
+          "kb-003"
+        ]
+      },
+      "attempts": 1,
+      "usage": {
+        "inputTokens": 1899,
+        "outputTokens": 231
+      },
+      "latencyMs": 6992
+    },
+    {
+      "id": "T012",
+      "goldCat": "bug",
+      "goldSev": "medium",
+      "ok": true,
+      "result": {
+        "category": "bug",
+        "severity": "medium",
+        "summary": "Flex WrapUp auto-advance timer is not firing for approximately one-third of agents after calls, potentially correlated with transfers, and the supervisor dashboard is showing incorrect agent presence states.",
+        "suggested_first_response": "Thank you for writing in. The symptoms you're describing — WrapUp not auto-advancing for a subset of agents and incorrect presence on the supervisor dashboard — suggest there may be an issue with how TaskRouter Activity transitions are being applied after certain call flows, particularly those involving transfers. A few things would help us investigate: (1) Can you confirm the exact Flex configuration setting used for the WrapUp timeout (e.g., the value of `autoWrapupTimeout` in your Flex configuration, and the `DequeuePostWorkActivitySid` set on your dequeue instruction or TaskQueue)? (2) Are the affected agents using a specific browser, plugin version, or call flow path (e.g., warm vs. cold transfer)? (3) Can you share TaskRouter Workspace and Workflow SIDs so we can review reservation and activity event logs for affected workers? The transfer correlation you mentioned is a useful lead — transfer flows can affect how reservations complete and which post-work Activity is applied. We'll review the TaskRouter event logs to determine whether this is a configuration mismatch or unexpected platform behavior. In the meantime, agents can manually advance out of WrapUp as a workaround.",
+        "needs_engineering_escalation": true,
+        "kb_citations": [
+          "kb-008"
+        ]
+      },
+      "attempts": 1,
+      "usage": {
+        "inputTokens": 2099,
+        "outputTokens": 338
+      },
+      "latencyMs": 10477
+    },
+    {
+      "id": "T013",
+      "goldCat": "bug",
+      "goldSev": "high",
+      "ok": true,
+      "result": {
+        "category": "bug",
+        "severity": "high",
+        "summary": "20-30% of users on certain carriers (notably AT&T) are not receiving Verify OTP SMS codes despite the API returning a 'pending' status.",
+        "suggested_first_response": "Thank you for reaching out and for the detailed information. A 'pending' status from the Verify API confirms Twilio accepted the verification request, but it does not guarantee downstream carrier delivery — so the issue is likely occurring between Twilio and the carrier. The carrier-specific pattern you're seeing (AT&T users disproportionately affected) is a strong signal of a deliverability or 10DLC registration issue. Here are the steps we'd like you to take immediately:\n\n1. **Check your Verify logs in the Console Debugger** for your Service SID (VAxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx). Look for any error codes on the affected verifications — particularly 60205 (landline), 60207 (rate limit), or 60203 (max send attempts reached).\n2. **Confirm your 10DLC campaign registration status.** AT&T is known to enforce A2P 10DLC filtering strictly. If your campaign is unregistered, pending, or was rejected, AT&T traffic is very likely being filtered (carrier error 30007). Please share your Brand and Campaign registration status so we can investigate further.\n3. **Check for opt-out (STOP) records** — if any affected users previously opted out, Twilio will suppress delivery (error 21610).\n\nWe are escalating this to our engineering and carrier operations team given the scale of impact (20-30% of users) and the carrier-specific pattern. Please reply with any error codes you find in the Verify logs and your 10DLC campaign registration details so we can expedite the investigation.",
+        "needs_engineering_escalation": true,
+        "kb_citations": [
+          "kb-010",
+          "kb-004",
+          "kb-012"
+        ]
+      },
+      "attempts": 1,
+      "usage": {
+        "inputTokens": 2206,
+        "outputTokens": 438
+      },
+      "latencyMs": 12421
+    },
+    {
+      "id": "T014",
+      "goldCat": "feature_request",
+      "goldSev": "low",
+      "ok": true,
+      "result": {
+        "category": "feature_request",
+        "severity": "low",
+        "summary": "Customer requests an official dark mode or built-in theme switcher for the Flex agent desktop UI to reduce eye strain for overnight shift agents.",
+        "suggested_first_response": "Thank you for the feedback! We understand that a native dark mode would be valuable for agents working overnight shifts. While Twilio does not currently offer an official dark theme or built-in theme switcher out of the box for Flex, you can implement a custom dark theme today using the Flex UI theming API within a Flex plugin. We recognize that building a full theme from scratch is a non-trivial effort, and we appreciate you sharing this use case. I'll log this as a feature request with our product team so it can be considered for the roadmap. In the meantime, if you'd like guidance on getting started with Flex UI theming via a plugin, our support team is happy to point you to the relevant documentation.",
+        "needs_engineering_escalation": false,
+        "kb_citations": []
+      },
+      "attempts": 1,
+      "usage": {
+        "inputTokens": 2062,
+        "outputTokens": 223
+      },
+      "latencyMs": 7237
+    },
+    {
+      "id": "T015",
+      "goldCat": "bug",
+      "goldSev": "high",
+      "ok": true,
+      "result": {
+        "category": "bug",
+        "severity": "high",
+        "summary": "Conference recordings are not being created despite record='record-from-start' being set, and the RecordingStatusCallback is never triggered, even when tested with a TwiML Bin.",
+        "suggested_first_response": "Thank you for the detailed report and for isolating the issue with a TwiML Bin — that's very helpful. The behavior you're describing, where the conference connects successfully but no recording is created and the RecordingStatusCallback is never fired, points to a potential platform-level issue with conference recording on your account. Since you've already ruled out your application code and confirmed recordings are enabled on a paid account, we'd like to investigate further on our end. Could you please share a few example CallSids and Conference SIDs (or friendly names) from affected sessions, along with the approximate timestamps? This will allow us to trace the recording pipeline and determine whether there's an issue with how the recording job is being initiated for your conferences. We'll escalate this for engineering review in the meantime.",
+        "needs_engineering_escalation": true,
+        "kb_citations": []
+      },
+      "attempts": 1,
+      "usage": {
+        "inputTokens": 2035,
+        "outputTokens": 244
+      },
+      "latencyMs": 9049
+    },
+    {
+      "id": "T016",
+      "goldCat": "how_to",
+      "goldSev": "low",
+      "ok": true,
+      "result": {
+        "category": "how_to",
+        "severity": "low",
+        "summary": "Customer wants to migrate a large legacy codebase from Twilio Client JS SDK v1.x to Voice SDK v2.x and needs guidance on breaking changes, API differences, and migration strategy for 200 concurrent users.",
+        "suggested_first_response": "Thank you for reaching out! Migrating from Twilio Client JS 1.x to Voice SDK 2.x involves several key changes to be aware of:\n\n1. **Access Tokens**: The token structure has changed. V2 uses the same Twilio AccessToken framework, but you must use the `VoiceGrant` (not the older `ClientCapabilityToken`). If you were already using AccessTokens with VoiceGrant in v1, the server-side token generation is largely compatible, but please verify you are using the `VoiceGrant` class in your token server.\n\n2. **Device.connect() API**: The signature has changed. In v2, `Device.connect()` returns a `Call` object (a Promise in some versions) rather than a `Connection` object. Parameters are now passed as `{ params: { ... } }` rather than a plain object. You will need to update all call setup and event-handling code accordingly.\n\n3. **Audio Constraints**: V2 introduces a dedicated `Device.audio` API for managing input/output devices, including `Device.audio.setInputDevice()` and `Device.audio.speakerDevices`/`Device.audio.ringtoneDevices`. This replaces the older approach and gives much finer-grained control.\n\n4. **Coexistence**: Running both SDK versions simultaneously on the same page is not supported and is likely to cause conflicts. The recommended approach is a phased rollout at the user/session level — for example, routing a subset of users to a new build of your application that uses v2, while others remain on v1, rather than loading both on the same page.\n\nGiven your 200 concurrent users, we strongly recommend reviewing the official Twilio Voice JS SDK migration guide (https://www.twilio.com/docs/voice/sdks/javascript/migrating-to-js-voice-sdk-2x) for the full list of breaking changes, and testing thoroughly in a staging environment before rolling out. If you run into specific errors during migration, please open a follow-up ticket and we can assist further.",
+        "needs_engineering_escalation": false,
+        "kb_citations": []
+      },
+      "attempts": 1,
+      "usage": {
+        "inputTokens": 2168,
+        "outputTokens": 568
+      },
+      "latencyMs": 14748
+    },
+    {
+      "id": "T017",
+      "goldCat": "bug",
+      "goldSev": "medium",
+      "ok": true,
+      "result": {
+        "category": "how_to",
+        "severity": "medium",
+        "summary": "Agent's TaskRouter worker remains in Available state when the browser tab is closed or crashes, causing tasks to route to unavailable agents and timeout.",
+        "suggested_first_response": "Thank you for reaching out. This is a known challenge with browser-based worker state management. The beforeunload event is indeed unreliable — browsers do not guarantee it fires on tab crashes or in all close scenarios, so it should not be solely relied upon to set workers Offline.\n\nHere are the recommended approaches:\n\n1. **Flex Heartbeat / Worker Activity Timeout**: Flex UI does not have a built-in automatic heartbeat that marks workers Offline on disconnect out of the box. However, TaskRouter supports a Worker Activity Timeout (also called a 'worker disconnect timeout') that can be configured on the Workspace. When the TaskRouter JS SDK loses its WebSocket connection and does not reconnect within the configured window, TaskRouter can automatically move the worker to a specified Offline activity. Verify whether this is configured on your Workspace via the Workspace settings (workerActivityTimeout and workerDisconnectActivitySid).\n\n2. **TaskRouter JS SDK disconnect event**: Rather than relying on beforeunload, listen to the TaskRouter Worker SDK's 'disconnected' or 'tokenExpired' events server-side or via a backend webhook, and use the REST API to update the worker's activity to Offline programmatically.\n\n3. **Server-side watchdog**: Implement a server-side heartbeat where the Flex plugin pings your backend at a regular interval; if the ping stops, your backend calls the TaskRouter REST API to set the worker Offline.\n\n4. **Reservation TTL tuning**: While you address the root cause, consider reducing the reservation TTL on your Workflow so that timed-out reservations are returned to queue faster, limiting SLA impact.\n\nPlease check your Workspace configuration for workerActivityTimeout first, as that is the most direct platform-level mitigation. Let us know if you need guidance on configuring any of these options.",
+        "needs_engineering_escalation": false,
+        "kb_citations": [
+          "kb-008"
+        ]
+      },
+      "attempts": 1,
+      "usage": {
+        "inputTokens": 2040,
+        "outputTokens": 495
+      },
+      "latencyMs": 13569
+    },
+    {
+      "id": "T018",
+      "goldCat": "bug",
+      "goldSev": "medium",
+      "ok": true,
+      "result": {
+        "category": "bug",
+        "severity": "medium",
+        "summary": "Outbound calls from Flex intermittently display an incorrect or unknown caller ID instead of the configured business number, affecting roughly 1 in 10 calls.",
+        "suggested_first_response": "Thank you for reaching out. We understand how disruptive incorrect caller ID display can be for your customers. While the Flex desktop initiates the outbound call, the caller ID presented to recipients is determined by the underlying voice call-origination logic — such as your Studio flow, TwiML, or Functions backend — rather than the Flex UI itself. We recommend reviewing the following: (1) Confirm the callerId set in your Flex Outbound Call configuration matches your verified number (+15559876543). (2) Inspect the voice call logs and Twilio Debugger for the affected calls to identify which 'from' number is actually being used at the point of call creation. (3) Check any Studio flows, TwiML Bins, or Functions involved in outbound call orchestration to ensure they are not overriding the caller ID. (4) If you are using a custom Flex plugin to initiate calls, review its call-creation logic for any conditions that might pass a different or empty 'from' value. Since this is intermittent, capturing the Call SIDs of affected calls will help us pinpoint the pattern. Could you please share a few Call SIDs where the wrong caller ID was observed so we can investigate further?",
+        "needs_engineering_escalation": true,
+        "kb_citations": [
+          "kb-015"
+        ]
+      },
+      "attempts": 1,
+      "usage": {
+        "inputTokens": 2180,
+        "outputTokens": 344
+      },
+      "latencyMs": 11301
+    },
+    {
+      "id": "T020",
+      "goldCat": "config",
+      "goldSev": "high",
+      "ok": true,
+      "result": {
+        "category": "config",
+        "severity": "high",
+        "summary": "Customer's 10DLC campaign registration was rejected with a vague 'content violation' reason and they are unable to send order confirmation and shipping update messages while the issue is unresolved.",
+        "suggested_first_response": "Thank you for reaching out. The rejection originates from The Campaign Registry (TCR), which is the industry registry that carriers use — Twilio submits your campaign on your behalf but the approval decision comes from TCR. The generic 'Content violation' reason often corresponds to issues such as a vague campaign description, sample messages that don't clearly match the registered use case, or an opt-in workflow that reviewers couldn't fully validate. Since your use case (order confirmations and shipping updates) is a well-supported one, the good news is that this is likely correctable without deleting and recreating your campaign. We recommend reviewing your campaign description to make sure it clearly and specifically describes your messaging program, ensuring your sample messages include realistic, representative message content (including any required opt-out language such as 'Reply STOP to unsubscribe'), and confirming that your opt-in workflow is clearly documented and matches what you described. Once you've made those updates, you can resubmit the existing campaign rather than starting over. Please check your campaign details in the Twilio Console for any additional error codes beyond the generic content violation notice, as more specific codes can pinpoint the exact issue. If you share those details with us, we can help you identify the precise fix needed.",
+        "needs_engineering_escalation": false,
+        "kb_citations": [
+          "kb-012"
+        ]
+      },
+      "attempts": 1,
+      "usage": {
+        "inputTokens": 2202,
+        "outputTokens": 351
+      },
+      "latencyMs": 11235
+    },
+    {
+      "id": "T022",
+      "goldCat": "config",
+      "goldSev": "medium",
+      "ok": true,
+      "result": {
+        "category": "how_to",
+        "severity": "low",
+        "summary": "Developer is trying to understand why workers intermittently transition to Unavailable after a reservation timeout in Flex/TaskRouter, and wants to know how to configure or control that behavior.",
+        "suggested_first_response": "Thank you for the detailed write-up — this is a great question and the intermittent nature is the key clue here. To address your core question: TaskRouter does have a built-in mechanism called the 'Activity on Timeout' (or 'timeout activity') setting at the Workflow level, specifically on the Workflow's Routing Step or Filter configuration. If a reservation times out, TaskRouter can automatically move the worker to a designated Activity SID — but if this is not explicitly set, the behavior can fall back to workspace-level defaults or remain unchanged, which may explain why you see it happen inconsistently rather than 100% of the time. The non-determinism you're observing (30–40% of timeouts) is a strong signal that this is not a deliberately configured transition, but rather a race condition or a workspace/workflow default being applied inconsistently — possibly influenced by client connectivity state at the moment of timeout (e.g., the Flex client briefly losing its WebSocket connection to TaskRouter at the same moment the timeout fires, which can cause TaskRouter to treat the worker as unreachable and move them to an offline-adjacent activity). Here are the steps we'd recommend: (1) Check your Workflow configuration in the Twilio Console under TaskRouter > Workspaces > your workspace > Workflows, and inspect each Routing Step for any 'Activity on Timeout' or 'Activity on Reservation Timeout' field — note the SID configured there, if any. (2) Review your Workspace's default Activity setting, as this can serve as a fallback. (3) Pull the Worker Activity history log (available via the TaskRouter REST API at /v1/Workspaces/{WorkspaceSid}/Workers/{WorkerSid}/WorkerChannels or the Worker Statistics endpoint) for the affected worker around the time of a timeout event to see what triggered the activity change — the 'reason' field in the activity transition event should indicate whether it was a TaskRouter-initiated change or a client-initiated one. (4) Check for any Flex Insights or Event Streams data around those timestamps for the worker SID you provided. You are correct that DequeuePostWorkActivitySid would not apply here since the task was never accepted. Could you confirm whether you have any 'Activity on Timeout' SID configured in your Workflow Routing Steps, and share the output of a GET request to your Workflow resource so we can review the full configuration? That will help us determine whether this is a configuration gap or something worth escalating further.",
+        "needs_engineering_escalation": false,
+        "kb_citations": [
+          "kb-008"
+        ]
+      },
+      "attempts": 1,
+      "usage": {
+        "inputTokens": 3004,
+        "outputTokens": 634
+      },
+      "latencyMs": 18313
+    },
+    {
+      "id": "T023",
+      "goldCat": "bug",
+      "goldSev": "high",
+      "ok": true,
+      "result": {
+        "category": "bug",
+        "severity": "high",
+        "summary": "A custom Flex plugin's beforeAcceptTask override throws FlexError 45601 on every second task acceptance in the same browser session, causing reservations to time out and blocking agents from accepting tasks.",
+        "suggested_first_response": "Thank you for the detailed report and repro steps. Based on what you've described, FlexError 45601 indicates the error is originating inside your plugin's beforeAcceptTask override rather than the Flex platform itself — specifically, it appears the channel reference on the task object is becoming undefined after the first task lifecycle completes within the same browser session.\n\nThe most common cause of this pattern is that the task or reservation object captured in the Action override callback is stale or has been torn down after wrap-up, and the plugin is attempting to read properties (such as .channel) from a reference that no longer points to a valid object. We'd recommend the following:\n\n1. Add a defensive null/undefined check for the channel property before reading it in your beforeAcceptTask handler (e.g., if (!task || !task.channel) return early or re-fetch the task from the Flex store).\n2. Avoid closing over task or reservation references from a previous lifecycle — always read task data fresh from the payload passed into the override callback on each invocation.\n3. If you are storing any task state in module-level or component-level variables between tasks, ensure those are cleared during the task completed or reservation completed event.\n\nThe Status Report you mentioned would be very helpful — please share it so we can confirm the exact stack trace and rule out any platform-side contribution. Also, since this began after your plugin release last Tuesday (configuration FJxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx), rolling back to the previous known-good Flex Release is available as an immediate workaround to unblock your agents while you investigate the plugin code.\n\nPlease share the Status Report and your beforeAcceptTask handler code (sanitized as needed) and we'll continue from there.",
+        "needs_engineering_escalation": false,
+        "kb_citations": [
+          "kb-007"
+        ]
+      },
+      "attempts": 1,
+      "usage": {
+        "inputTokens": 2385,
+        "outputTokens": 466
+      },
+      "latencyMs": 13181
+    },
+    {
+      "id": "T024",
+      "goldCat": "bug",
+      "goldSev": "high",
+      "ok": true,
+      "result": {
+        "category": "how_to",
+        "severity": "medium",
+        "summary": "Customer's Flex plugin leaves the AcceptTask action in a stuck/unresponsive state when a beforeAcceptTask handler fails without explicitly calling payload.reject(), and they want to know the supported pattern for handling retries.",
+        "suggested_first_response": "Thank you for the detailed write-up — this is a well-understood behavior of the Flex Action framework. When a beforeAcceptTask handler neither resolves cleanly nor explicitly calls payload.reject(), the Action framework treats the action as still in-flight and does not reset its internal state. This is expected behavior, not a platform defect. The supported fix is to always call payload.reject() (or throw an error) in your catch block when you want to abort the action — this signals to the framework that the action has terminated, which re-enables the Accept button and allows a retry. A recommended pattern is: (1) in your catch block, call payload.reject() after displaying the toast so the framework knows the action was aborted; (2) optionally, re-invoke Flex.Actions.invokeAction('AcceptTask', payload) programmatically if you want an automatic retry rather than requiring the agent to click again. Because payload.reject() was never called, the framework held the action open, which is why Flex.Monitor.getErrors() returned empty (no FlexError was generated — the action simply never completed). The reservation timeout behavior you observed is consistent with kb-008: a timed-out reservation is not lost, it returns to queue for re-evaluation. To avoid agents needing to refresh, ensure every code path in your beforeAcceptTask handler either allows the action to proceed or explicitly calls payload.reject().",
+        "needs_engineering_escalation": false,
+        "kb_citations": [
+          "kb-007",
+          "kb-008"
+        ]
+      },
+      "attempts": 1,
+      "usage": {
+        "inputTokens": 2601,
+        "outputTokens": 400
+      },
+      "latencyMs": 10280
+    },
+    {
+      "id": "T026",
+      "goldCat": "bug",
+      "goldSev": "high",
+      "ok": true,
+      "result": {
+        "category": "how_to",
+        "severity": "medium",
+        "summary": "Customer's custom Flex plugin consistently breaks the agent desktop for all agents after each new release, with a workaround of rolling back to the prior configuration SID, and they are asking for best practices on safe deployment, diagnostics, and plugin initialization lifecycle.",
+        "suggested_first_response": "Thank you for the detailed write-up — this is really helpful context. Based on what you've described, the pattern (all agents affected simultaneously right after a release, immediate recovery on rollback to the prior configuration SID) is consistent with the new plugin version introducing a runtime error during initialization, likely before one or more Flex SDKs are fully ready. A few targeted suggestions:\n\n1. **Canary / staged releases**: The Flex Plugins CLI supports releasing a plugin version to a subset of agents by creating a Plugin Configuration that includes the new version and activating it as a Flex Release only for a test group. This lets you validate against production data and infrastructure without exposing all agents.\n\n2. **Diagnostics — Status Report and browser console**: Yes, the Status Report (available since Flex UI 1.32) is the right starting point. Ask a affected agent to export it immediately after the breakage occurs; it contains structured logs and error details far more useful than a screenshot. Pair that with the browser Console and Network tabs in Developer Tools. The 'undefined' channel property reference you're seeing in the console is the key signal — capturing the full stack trace from the console at the moment of breakage will help pinpoint whether it's a 45600 (Flex UI platform) or 45601 (custom plugin) error.\n\n3. **Initialization lifecycle**: This is a very common root cause for the pattern you're describing. Plugins should not access Flex SDK objects (TaskRouter Worker, Conversations, Voice, Sync) until the relevant manager or service is confirmed ready. The recommended pattern is to gate initialization logic on Flex lifecycle events such as `Flex.Manager` being fully initialized and listening for SDK-specific ready events rather than running logic synchronously at plugin registration time. Review any Action overrides (especially around task acceptance) and event listeners added in your plugin's `init` method for code that assumes SDK state is available immediately.\n\nIf after capturing the Status Report and full console stack trace you cannot identify the offending line, please share your account SID and the specific error text and we can dig deeper with you.",
+        "needs_engineering_escalation": false,
+        "kb_citations": [
+          "kb-007"
+        ]
+      },
+      "attempts": 1,
+      "usage": {
+        "inputTokens": 2387,
+        "outputTokens": 560
+      },
+      "latencyMs": 17081
+    },
+    {
+      "id": "T027",
+      "goldCat": "config",
+      "goldSev": "medium",
+      "ok": true,
+      "result": {
+        "category": "bug",
+        "severity": "medium",
+        "summary": "A custom beforeAcceptTask Action override in the customer's Flex plugin intermittently causes task acceptance to silently fail, resulting in reservation timeouts for a small percentage of acceptances.",
+        "suggested_first_response": "Thank you for the detailed write-up — this is very helpful context. The pattern you're describing (acceptance silently stopping only when the beforeAcceptTask override is active, with no visible UI error) is consistent with an Action chain not resolving or rejecting cleanly inside the override, which causes Flex to stall rather than proceed or surface an error.\n\nThe key thing to be aware of with beforeAcceptTask (and Action overrides generally) is that Flex expects the override function to either resolve or reject its promise reliably every time. If the promise returned by your override hangs — for example, because invokeAction itself returns a promise that doesn't settle under certain race or timing conditions — Flex will not proceed with the acceptance, and the reservation will eventually time out back to the queue, which matches what you're seeing.\n\nA few things to check and try:\n\n1. Wrap your invokeAction call in a try/catch (or .catch()) and ensure any rejection is explicitly re-thrown or handled — an unhandled rejection inside an override can silently swallow the action chain.\n2. Add a timeout/fallback so that if the inner invokeAction call does not settle within a reasonable window (e.g. 5 seconds), you either reject explicitly or allow the action to proceed without the attribute stamping, rather than hanging indefinitely.\n3. Avoid calling Flex.Actions.invokeAction('AcceptTask') or similar nested invocations inside beforeAcceptTask if that is what you are doing — invoking the same action recursively inside its own before-hook is a known source of infinite loops or deadlocks in the Flex action framework. The recommended pattern for attribute stamping before acceptance is to perform your async work (e.g. a TaskRouter Task attribute update via the REST API or a Twilio Function) and then resolve the override promise, letting Flex complete the original AcceptTask action naturally.\n4. Add console logging at the entry and exit of your override (including the catch path) so you can correlate a Status Report from an affected session with exactly where the override stalled.\n\nCould you share a Status Report export from an affected agent session (captured immediately after a stuck acceptance)? That will show us whether a 45601 error or an unhandled promise rejection is being recorded at the time of the failure, and will help us pinpoint whether this is purely in the plugin layer or if there is any underlying platform signal. Workspace SID and TaskQueue SID noted — we may also want to pull the specific Reservation SID for a failed acceptance to check the TaskRouter event stream on our end.",
+        "needs_engineering_escalation": false,
+        "kb_citations": [
+          "kb-007",
+          "kb-008"
+        ]
+      },
+      "attempts": 1,
+      "usage": {
+        "inputTokens": 2237,
+        "outputTokens": 659
+      },
+      "latencyMs": 17759
+    },
+    {
+      "id": "T029",
+      "goldCat": "bug",
+      "goldSev": "medium",
+      "ok": true,
+      "result": {
+        "category": "config",
+        "severity": "medium",
+        "summary": "Developer's custom Flex SDK softphone loses call audio and controls when AcceptTask is called without a VoiceClientEvent listener pre-registered, though a workaround has been identified and applied.",
+        "suggested_first_response": "Thank you for the detailed write-up — this is clearly well-diagnosed. To address your three questions directly: (1) The requirement to register a VoiceClientEvent listener *before* calling AcceptTask on a voice task is an ordering constraint in the Flex SDK; if the listener is not in place when the voice leg is established, the SDK has nowhere to dispatch the call context and it is silently dropped. We acknowledge this is not prominently called out in the current documentation and will flag that gap internally. (2) The silent success behavior you've described — AcceptTask resolving cleanly with no warning when no voice listener is registered — is a known usability concern; we will raise a product feedback item requesting that the SDK surface a console warning or a rejected/flagged result in this scenario. (3) Regarding degraded mode: since you are not seeing any DegradedModeActive notifications and the workaround (registering the listener first) fully resolves the issue, a degraded Voice SDK initialization is unlikely to be a factor here. Your root cause diagnosis appears correct. The fix you've already applied — registering the VoiceClientEvent listener before invoking client.execute(new AcceptTask(...)) — is the right approach. If you continue to see any anomalies after that reordering, please share the exact @twilio/flex-sdk version string and any relevant worker/task SIDs and we can investigate further.",
+        "needs_engineering_escalation": true,
+        "kb_citations": []
+      },
+      "attempts": 1,
+      "usage": {
+        "inputTokens": 2988,
+        "outputTokens": 388
+      },
+      "latencyMs": 11304
+    },
+    {
+      "id": "T030",
+      "goldCat": "config",
+      "goldSev": "medium",
+      "ok": true,
+      "result": {
+        "category": "config",
+        "severity": "high",
+        "summary": "Agents are disconnected from TaskRouter after ~60 minutes because the custom Flex SDK integration fetches a new token on expiry but never calls client.updateToken(), leaving the live SDK client and all connected services holding a stale, expired token.",
+        "suggested_first_response": "Thank you for the detailed write-up — your diagnosis looks correct. The root cause is that your refresh flow updates your application state with the new token but never propagates it to the live SDK client via client.updateToken(newToken, newRefreshToken), so TaskRouter, Voice, and Conversations continue using the original expired token and begin rejecting operations with error 45775.\n\nTo answer your specific questions:\n\n1. Call signature: Yes, client.updateToken(newToken, newRefreshToken) is the correct call. Both arguments should be supplied when you have a refresh token; passing the refresh token is what allows the SDK to propagate updated credentials to the underlying connected services (TaskRouter Worker client, Voice SDK, Conversations) — not just the top-level Flex client.\n\n2. Token type: The token passed to updateToken() should be the same Flex user token (JWE) that was originally passed to createClient() — not a standalone Voice Access Token. The Voice Access Token (relevant to the error 31207 you saw previously) is a separate credential used for the Voice SDK in non-Flex or standalone contexts; within the Flex SDK client lifecycle, the Flex user token covers TaskRouter and the bundled services.\n\n3. Re-registration of listeners: You should not need to re-register your reservation.created listener after a successful updateToken() call. The SDK is designed to maintain the existing client session and event subscriptions across a token refresh; the Worker connection is updated internally. If you observe listeners dropping after the swap, that would be worth flagging as a follow-up, but the expected behavior is that they persist.\n\nRecommended fix for your refresh flow:\n1. Listen for the token expiry signal\n2. POST to your backend, receive newToken + newRefreshToken\n3. Call validateToken(accountSid, newToken) — confirm success\n4. Call client.updateToken(newToken, newRefreshToken) — this propagates credentials to all connected services\n5. Store newToken in your React/Redux state\n\nAlso worth confirming: ensure your token expiry listener fires with enough lead time (e.g., at ~55 minutes rather than exactly at 3600s) so the refresh completes before the old token is fully expired, avoiding a window where operations are attempted with an already-expired token.\n\nPlease let us know if you'd like us to arrange a session with a Solutions Engineer to review the full token lifecycle implementation, or if issues persist after deploying the fix.",
+        "needs_engineering_escalation": false,
+        "kb_citations": []
+      },
+      "attempts": 1,
+      "usage": {
+        "inputTokens": 3098,
+        "outputTokens": 674
+      },
+      "latencyMs": 18846
+    },
+    {
+      "id": "T031",
+      "goldCat": "how_to",
+      "goldSev": "medium",
+      "ok": true,
+      "result": {
+        "category": "how_to",
+        "severity": "medium",
+        "summary": "Customer is building a custom Flex SDK integration and needs guidance on the correct token refresh flow, proactive expiry events, degraded mode recovery, and Voice Access Token TTL constraints to prevent session failures after the initial 3600s TTL.",
+        "suggested_first_response": "Hi Daniel,\n\nThank you for the detailed write-up — this gives us a clear picture of what you're working through. Let me address each of your questions:\n\n1. **Token refresh sequence:** You are correct that fetching a new token on your backend and updating local state alone is not sufficient. You must call `client.updateToken(newToken, newRefreshToken)` on the Flex SDK client instance so that the underlying sub-clients (TaskRouter, Voice, Conversations, Sync) receive the updated credentials. Without this call, those clients continue using the stale token, which is consistent with the 45775 errors you are seeing. The general sequence is: (a) detect approaching expiry, (b) call your backend to mint a fresh token, (c) call `client.updateToken(newToken, newRefreshToken)`. The `validateToken` and `refreshToken` calls you referenced are server-side helpers for token validation/issuance and are not required steps in the client-side refresh flow itself.\n\n2. **Proactive expiry event:** Yes, you should listen for a token expiry warning event on the client rather than reacting to failures. The Flex SDK surfaces a `tokenAboutToExpire` (or equivalent `tokenWillExpire`) event that fires before the token actually expires, giving you a window to fetch and apply a new token cleanly. We recommend triggering your refresh logic from this event rather than on a fixed timer or on error detection.\n\n3. **Degraded mode and Voice recovery:** Your interpretation is correct. The `SessionState: setting degraded to true` log entry indicates that one or more sub-clients (in this case, the Voice SDK client) failed to reinitialize after the token became invalid — this is not a TaskRouter routing or Workflow configuration issue. Calling `client.updateToken(...)` with a valid fresh token should allow the SDK to attempt to recover the degraded sub-clients. However, if the Voice client has fully disconnected, a full client reinitialization may be required in some cases. We'd recommend testing the `updateToken` path first and observing whether the Voice client transitions out of degraded state.\n\n4. **Voice Access Token vs. Flex JWE token:** These are two distinct token types with independent TTLs. The Flex user token (JWE) governs the Flex SDK session, while the Voice Access Token (a JWT you generate with your API key and secret, scoped to the Voice grant) governs the Voice SDK client. Error 31207 means the TTL you set on the Voice Access Token exceeds the maximum allowed value (3600 seconds for Voice Access Tokens). Ensure you are generating the Voice Access Token with a TTL of 3600 seconds or less, and refresh it independently of the Flex token on the same proactive schedule.\n\nWe'd recommend implementing the `tokenAboutToExpire` listener as your primary refresh trigger and confirming that `client.updateToken(...)` is called in all refresh paths before going to production. If after implementing these changes you continue to see 45775 errors or the Voice client does not recover from degraded state after a token update, please share a HAR file or console log from a reproduction session and we can dig deeper.\n\nBest regards,\nTwilio Support",
+        "needs_engineering_escalation": false,
+        "kb_citations": [
+          "kb-015"
+        ]
+      },
+      "attempts": 2,
+      "usage": {
+        "inputTokens": 6256,
+        "outputTokens": 1883
+      },
+      "latencyMs": 47763
+    }
+  ]
+}

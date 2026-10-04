@@ -1,0 +1,505 @@
+{
+  "version": 1,
+  "runId": "2026-10-04T17-23-49-425Z-openai-gpt-5.5",
+  "createdAt": "2026-10-04T17:23:49.425Z",
+  "provider": "openai",
+  "model": "gpt-5.5",
+  "promptHash": "ef0017a755b7",
+  "useRetrieval": true,
+  "split": "dev",
+  "summary": {
+    "scored": 22,
+    "ok": 22,
+    "failed": 0,
+    "catAccuracy": 0.45454545454545453,
+    "sevExact": 0.7272727272727273,
+    "sevWithin1": 1,
+    "sevMae": 0.2727272727272727,
+    "inputTokens": 46300,
+    "outputTokens": 13053,
+    "p50LatencyMs": 8041
+  },
+  "rows": [
+    {
+      "id": "T004",
+      "goldCat": "how_to",
+      "goldSev": "low",
+      "ok": true,
+      "result": {
+        "category": "how_to",
+        "severity": "low",
+        "summary": "The customer wants guidance on configuring SAML 2.0 SSO for Flex with Okta on Flex UI 2.x and is unsure whether to use Flex SSO or Console OAuth settings.",
+        "suggested_first_response": "Thanks for reaching out. For agents logging into Flex with Okta, you should use the Flex SSO configuration path, not the general Twilio Console SSO flow. In Flex, go to the Flex Users and access / Single sign-on settings and configure Okta as the SAML 2.0 identity provider using the Flex-specific service provider URLs, certificates, trusted domains, and redirect/ACS details shown there. Please also confirm your exact Flex UI version: if you are on Flex UI 2.5.x or later and setting up SSO for the first time, you should follow the enhanced SSO path; if you are on 2.4.x or earlier, or had SSO configured before Jan 29, 2024, that is considered legacy SSO. In Okta, make sure the SAML assertion sends the required Flex identity attributes, including a unique user ID, email, full name, and Flex role values such as agent, supervisor, or admin. If you can share your exact Flex UI version and whether SSO was previously configured on this account, we can point you to the correct setup path and validate the required values.",
+        "needs_engineering_escalation": false,
+        "kb_citations": [
+          "kb-009"
+        ]
+      },
+      "attempts": 1,
+      "usage": {
+        "inputTokens": 1968,
+        "outputTokens": 450
+      },
+      "latencyMs": 5809
+    },
+    {
+      "id": "T005",
+      "goldCat": "bug",
+      "goldSev": "high",
+      "ok": true,
+      "result": {
+        "category": "config",
+        "severity": "medium",
+        "summary": "The customer's TwiML <Gather> intermittently returns empty or truncated DTMF digits for a 4-digit PIN, affecting about 15% of calls and more often from mobile carriers.",
+        "suggested_first_response": "Thanks for the details. Your basic <Gather numDigits=\"4\" action=\"/verify-pin\" method=\"POST\"> usage looks valid, and Twilio should send captured digits to your action URL in the Digits parameter once 4 digits are received. To narrow this down, please share several affected Call SIDs and timestamps, and confirm whether /verify-pin ever returns an HTTP redirect, since Digits are not resent across redirects. Also check whether any callers are using a finish key or whether your app expects one to be included, and whether the affected calls show empty Digits versus fewer than 4 digits in your webhook logs. DTMF reliability can vary with certain devices, VoIP/compressed audio paths, or carrier/network conditions, so call examples will help determine whether this is application behavior or a transmission issue.",
+        "needs_engineering_escalation": false,
+        "kb_citations": [
+          "kb-005"
+        ]
+      },
+      "attempts": 1,
+      "usage": {
+        "inputTokens": 1924,
+        "outputTokens": 467
+      },
+      "latencyMs": 7927
+    },
+    {
+      "id": "T006",
+      "goldCat": "billing",
+      "goldSev": "low",
+      "ok": true,
+      "result": {
+        "category": "billing",
+        "severity": "low",
+        "summary": "Customer is requesting an explanation of unfamiliar invoice line items including Messaging carrier surcharges, Short Code MMS, and Voice Insights charges.",
+        "suggested_first_response": "Thanks for reaching out. We can review the invoice for account AC44... and help map each line item to the underlying usage or recurring fees. Carrier surcharges can appear as pass-through Messaging fees, and Insights may reflect Voice analytics/add-on usage; we’ll also verify why any Short Code MMS line item appears if you only expect 10DLC traffic. Please share the invoice date or invoice number, and we’ll compare it against your Usage Records, Messaging logs, Voice logs, and enabled products to confirm whether the charges are expected or need billing review.",
+        "needs_engineering_escalation": false,
+        "kb_citations": [
+          "kb-002"
+        ]
+      },
+      "attempts": 1,
+      "usage": {
+        "inputTokens": 1874,
+        "outputTokens": 214
+      },
+      "latencyMs": 5730
+    },
+    {
+      "id": "T008",
+      "goldCat": "bug",
+      "goldSev": "high",
+      "ok": true,
+      "result": {
+        "category": "bug",
+        "severity": "high",
+        "summary": "Outbound SMS appointment reminders sent through the customer's Messaging Service are being accepted by the API but remaining queued for 30–45 minutes before delivery.",
+        "suggested_first_response": "Thanks for reporting this. A 2xx response with `queued` means Twilio accepted the Message resource, but we need to determine where the delay is occurring before confirming an incident. Please send 3–5 affected Message SIDs, the approximate send times, destination countries/carriers if available, and whether the traffic was sent as a burst or evenly over the hour. We’ll review the message status timeline, Messaging Service sender configuration, throughput/queueing behavior, logs, callbacks, and any downstream carrier results, and we’ll also check internally for any active messaging degradation not yet reflected on the public status page.",
+        "needs_engineering_escalation": true,
+        "kb_citations": [
+          "kb-004"
+        ]
+      },
+      "attempts": 1,
+      "usage": {
+        "inputTokens": 1912,
+        "outputTokens": 707
+      },
+      "latencyMs": 10916
+    },
+    {
+      "id": "T009",
+      "goldCat": "bug",
+      "goldSev": "medium",
+      "ok": true,
+      "result": {
+        "category": "config",
+        "severity": "medium",
+        "summary": "A custom Flex plugin can use the initial OAuth token but receives 401 Unauthorized from the customer-owned token endpoint when attempting a refresh after expiration.",
+        "suggested_first_response": "Thanks for the details. Based on the behavior, this looks more likely to be an issue in the plugin’s OAuth refresh implementation or your authentication layer rather than a Flex platform bug, since the 401 is coming from your token endpoint. Please capture the refresh request in the browser Developer Tools Network tab and compare it with the successful Postman request, including grant_type, client authentication method, headers, redirect/client IDs if applicable, request body encoding, and whether the stored refresh token value is unchanged at the time of refresh. Also check for clock skew, token revocation/rotation, and any plugin lifecycle code that may overwrite or clear the stored token state.",
+        "needs_engineering_escalation": false,
+        "kb_citations": [
+          "kb-015"
+        ]
+      },
+      "attempts": 1,
+      "usage": {
+        "inputTokens": 1938,
+        "outputTokens": 580
+      },
+      "latencyMs": 8893
+    },
+    {
+      "id": "T011",
+      "goldCat": "billing",
+      "goldSev": "critical",
+      "ok": true,
+      "result": {
+        "category": "config",
+        "severity": "high",
+        "summary": "The customer's Twilio account is suspended, blocking all messaging and calling during a production launch.",
+        "suggested_first_response": "Thank you for contacting us. We understand the urgency and that the suspension is blocking production calls and messages. We’ll review account SID ACyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy to confirm the suspension reason and route it to the appropriate team for reinstatement review, such as billing, compliance, fraud/security, or account status. We’ll follow up as soon as we have the confirmed next steps; please also share the suspension email you received if possible.",
+        "needs_engineering_escalation": false,
+        "kb_citations": [
+          "kb-003"
+        ]
+      },
+      "attempts": 1,
+      "usage": {
+        "inputTokens": 1715,
+        "outputTokens": 441
+      },
+      "latencyMs": 6212
+    },
+    {
+      "id": "T012",
+      "goldCat": "bug",
+      "goldSev": "medium",
+      "ok": true,
+      "result": {
+        "category": "bug",
+        "severity": "medium",
+        "summary": "Some Flex agents are remaining in WrapUp past the configured 60-second auto-wrap timeout, possibly related to transferred calls, with a separate report of supervisor activity state discrepancies.",
+        "suggested_first_response": "Thanks for reporting this. We’ll help investigate whether Flex/TaskRouter is failing to apply the wrap-up timeout or whether a post-call activity/configuration path is sending certain transferred tasks into a different state. Could you send 3–5 recent examples with agent Worker SID, Task/Reservation SID, approximate timestamp/time zone, whether the call involved a transfer, and any recent Flex plugin/configuration changes? In parallel, please verify the relevant post-work/wrap-up activity settings, including any dequeue/post-work activity configuration used by your voice flow, since transferred calls can follow a different routing path.",
+        "needs_engineering_escalation": true,
+        "kb_citations": [
+          "kb-008",
+          "kb-007"
+        ]
+      },
+      "attempts": 1,
+      "usage": {
+        "inputTokens": 1901,
+        "outputTokens": 712
+      },
+      "latencyMs": 9432
+    },
+    {
+      "id": "T013",
+      "goldCat": "bug",
+      "goldSev": "high",
+      "ok": true,
+      "result": {
+        "category": "config",
+        "severity": "high",
+        "summary": "A significant share of users are not receiving Verify SMS OTPs even though verification creation returns pending, with complaints concentrated on certain carriers such as AT&T.",
+        "suggested_first_response": "Thanks for the details. A `pending` Verify status means the verification was created, but it does not by itself confirm handset delivery. Please send a few affected phone numbers, timestamps, and any Verification SIDs or related Message SIDs so we can review the Verify and Messaging logs for carrier delivery results, filtering codes, rate limits, invalid/unsupported recipient types, or opt-out blocks. We should also verify your Service configuration and sender/A2P 10DLC setup for US SMS traffic, especially since the issue appears carrier-specific.",
+        "needs_engineering_escalation": false,
+        "kb_citations": [
+          "kb-010",
+          "kb-004"
+        ]
+      },
+      "attempts": 1,
+      "usage": {
+        "inputTokens": 1995,
+        "outputTokens": 608
+      },
+      "latencyMs": 8060
+    },
+    {
+      "id": "T014",
+      "goldCat": "feature_request",
+      "goldSev": "low",
+      "ok": true,
+      "result": {
+        "category": "feature_request",
+        "severity": "low",
+        "summary": "The customer is requesting an official out-of-the-box dark mode or theme switcher for the Flex agent desktop to reduce overnight agents' eye strain.",
+        "suggested_first_response": "Thank you for sharing this feedback. I understand why an official dark mode for Flex would be valuable for overnight agents, especially given the effort required to build and maintain a full custom theme via a plugin. I’ll capture this as a product feature request for the Flex team. While I can’t confirm roadmap timing or availability, your use case and impact details are helpful for prioritization.",
+        "needs_engineering_escalation": false,
+        "kb_citations": []
+      },
+      "attempts": 1,
+      "usage": {
+        "inputTokens": 1854,
+        "outputTokens": 210
+      },
+      "latencyMs": 3433
+    },
+    {
+      "id": "T015",
+      "goldCat": "bug",
+      "goldSev": "high",
+      "ok": true,
+      "result": {
+        "category": "bug",
+        "severity": "high",
+        "summary": "Conference calls connect successfully, but the configured `record='record-from-start'` conference recording is not being created and the recording status callback is not firing.",
+        "suggested_first_response": "Thanks for the details and for testing with a TwiML Bin to rule out your application code. Since the conference itself connects but Twilio is not creating the expected recording or sending the RecordingStatusCallback, we’ll investigate this as a potential platform-side issue. Please share a recent Call SID, Conference SID, timestamp/time zone, and the TwiML Bin URL or TwiML used so we can review the conference and recording logs and escalate to engineering if needed.",
+        "needs_engineering_escalation": true,
+        "kb_citations": []
+      },
+      "attempts": 1,
+      "usage": {
+        "inputTokens": 1828,
+        "outputTokens": 326
+      },
+      "latencyMs": 4732
+    },
+    {
+      "id": "T016",
+      "goldCat": "how_to",
+      "goldSev": "low",
+      "ok": true,
+      "result": {
+        "category": "how_to",
+        "severity": "low",
+        "summary": "Customer is planning a migration from Twilio Client JS SDK 1.x to Voice SDK 2.x and wants guidance on breaking changes, token usage, connect API changes, audio constraints, and rollout strategy.",
+        "suggested_first_response": "Thanks for the details. We can help you plan the migration from Client JS 1.x to Voice SDK 2.x. At a high level, Voice SDK 2.x still uses Twilio Access Tokens with a VoiceGrant, but the browser client API changed: you instantiate a Device with `new Device(token, options)` rather than the older 1.x setup pattern, `Device.connect()` uses the newer options shape and returns a Call asynchronously, and audio device/constraint handling should be updated to the 2.x audio APIs. For rollout, you can usually phase users onto the new SDK rather than doing an all-at-once cutover, but we recommend isolating the two versions by page/bundle or feature flag and validating token generation, incoming/outgoing call flows, and audio device behavior under load before moving all 200 concurrent users.",
+        "needs_engineering_escalation": false,
+        "kb_citations": []
+      },
+      "attempts": 1,
+      "usage": {
+        "inputTokens": 1943,
+        "outputTokens": 593
+      },
+      "latencyMs": 8062
+    },
+    {
+      "id": "T017",
+      "goldCat": "bug",
+      "goldSev": "medium",
+      "ok": true,
+      "result": {
+        "category": "how_to",
+        "severity": "medium",
+        "summary": "The customer wants guidance on preventing TaskRouter from continuing to route work to Flex agents whose browser tab closed or crashed while their Worker activity remains Available.",
+        "suggested_first_response": "Thanks for the details. TaskRouter routing eligibility is based on the Worker’s current Activity, so if the Worker remains in an Available activity, new reservations can still be assigned and will only move on after the configured reservation timeout. Browser `beforeunload` handling is not reliable for crashes or abrupt tab closes, so it should not be the only mechanism used to mark agents offline. We recommend verifying the configured offline/logout Activity and implementing a server-side or supervisory heartbeat/presence process that updates the Worker to an unavailable/offline Activity after missed heartbeats; reducing reservation timeout can also limit SLA impact while you implement that. If you can share your Flex UI version and whether any plugins override worker activity/logout behavior, we can help review the best approach.",
+        "needs_engineering_escalation": false,
+        "kb_citations": [
+          "kb-008"
+        ]
+      },
+      "attempts": 1,
+      "usage": {
+        "inputTokens": 1848,
+        "outputTokens": 1097
+      },
+      "latencyMs": 13895
+    },
+    {
+      "id": "T018",
+      "goldCat": "bug",
+      "goldSev": "medium",
+      "ok": true,
+      "result": {
+        "category": "config",
+        "severity": "medium",
+        "summary": "Outbound calls from Flex intermittently present an unexpected or unknown caller ID instead of the configured business number.",
+        "suggested_first_response": "Thanks for reporting this. Flex initiates the outbound call, but the caller ID ultimately comes from the underlying voice call-origination flow, such as Studio, TwiML, Functions, or other backend logic. Please send a few recent Call SIDs where the caller ID was wrong and one where it was correct, along with the approximate timestamps and agent IDs, so we can compare the originating flow and confirm which From/callerId value was used for each call. In the meantime, please review any custom outbound call flows or plugins to ensure they consistently pass +15559876543 as the callerId/from value for all outbound paths.",
+        "needs_engineering_escalation": false,
+        "kb_citations": [
+          "kb-015"
+        ]
+      },
+      "attempts": 1,
+      "usage": {
+        "inputTokens": 1943,
+        "outputTokens": 442
+      },
+      "latencyMs": 5663
+    },
+    {
+      "id": "T020",
+      "goldCat": "config",
+      "goldSev": "high",
+      "ok": true,
+      "result": {
+        "category": "config",
+        "severity": "high",
+        "summary": "The customer’s A2P 10DLC campaign registration was rejected for a content/guidelines issue despite a verified brand, blocking them from sending order and shipping SMS updates.",
+        "suggested_first_response": "Thanks for the details — I understand the urgency. Campaign approval is separate from Brand verification and is reviewed through the 10DLC carrier/TCR registration process, so a verified Brand can still have a Campaign rejected. Please share the Campaign SID and any rejection/error codes shown in Trust Hub so we can confirm the exact reason. In the meantime, for a transactional order/shipping update use case, the most common fixes before resubmission are to make the campaign description very specific, ensure sample messages exactly match the registered use case, document the checkout opt-in workflow clearly, include accurate HELP/STOP language, and make sure your website/brand identity can be validated by reviewers. In most correctable campaign failures, you should update the failed Campaign and resubmit rather than deleting and recreating it, unless the selected use case or Brand association needs to change.",
+        "needs_engineering_escalation": false,
+        "kb_citations": [
+          "kb-012"
+        ]
+      },
+      "attempts": 1,
+      "usage": {
+        "inputTokens": 1994,
+        "outputTokens": 374
+      },
+      "latencyMs": 4938
+    },
+    {
+      "id": "T022",
+      "goldCat": "config",
+      "goldSev": "medium",
+      "ok": true,
+      "result": {
+        "category": "bug",
+        "severity": "medium",
+        "summary": "Workers intermittently transition to Unavailable after an unaccepted reservation times out, even though reservation timeout should re-evaluate the task and DequeuePostWorkActivitySid should only apply after an accepted dequeue/post-work flow.",
+        "suggested_first_response": "Thanks for the detailed reproduction steps and SIDs. You’re correct that DequeuePostWorkActivitySid applies to post-dequeue/post-call behavior, not to a reservation that was never accepted; a reservation timeout should leave the task eligible for re-evaluation rather than deterministically moving the worker to a fallback wrap-up activity. Since the worker is intermittently being moved to Unavailable without an apparent plugin handler or client-side error, we’d like to investigate this as unexpected behavior. Please send a few exact timestamps with the affected Worker SID, Reservation SID, Task SID, and Workspace SID for both a timeout that stayed Available and one that moved to Unavailable, and we’ll review the worker activity transition history and TaskRouter/Flex events.",
+        "needs_engineering_escalation": true,
+        "kb_citations": [
+          "kb-008"
+        ]
+      },
+      "attempts": 1,
+      "usage": {
+        "inputTokens": 2706,
+        "outputTokens": 487
+      },
+      "latencyMs": 6374
+    },
+    {
+      "id": "T023",
+      "goldCat": "bug",
+      "goldSev": "high",
+      "ok": true,
+      "result": {
+        "category": "config",
+        "severity": "medium",
+        "summary": "A custom Flex plugin's beforeAcceptTask override is throwing FlexError 45601 on the second task acceptance in a browser session, preventing that reservation from being accepted until the agent refreshes.",
+        "suggested_first_response": "Thanks for the detailed repro and for checking the Status Report. FlexError 45601 indicates the exception is coming from custom Flex UI/plugin code, and since the stack points to your beforeAcceptTask callback after a recent plugin release, the best immediate mitigation is to roll back to the previous known-good Flex release/configuration if agents are impacted. For debugging, please share the Status Report export and the relevant beforeAcceptTask code; in the meantime, review the handler for any retained task/channel references across task lifecycles and add defensive checks before reading channel data so the override does not throw and block the Accept action.",
+        "needs_engineering_escalation": false,
+        "kb_citations": [
+          "kb-007"
+        ]
+      },
+      "attempts": 1,
+      "usage": {
+        "inputTokens": 2152,
+        "outputTokens": 576
+      },
+      "latencyMs": 7198
+    },
+    {
+      "id": "T024",
+      "goldCat": "bug",
+      "goldSev": "high",
+      "ok": true,
+      "result": {
+        "category": "config",
+        "severity": "medium",
+        "summary": "A custom Flex plugin's beforeAcceptTask logic can leave task acceptance pending when the customer-owned API call fails and the handler does not explicitly settle or abort the action.",
+        "suggested_first_response": "Thanks for the detailed repro. Based on the behavior, this looks most likely to be caused by the custom plugin leaving the AcceptTask action in an in-flight state when the internal API call fails. Please update the beforeAcceptTask handler so every code path settles deterministically: continue only after the logging call succeeds, and explicitly abort/reject the action on failure rather than returning silently. Also confirm in the browser Network/Console tabs that the failing request is to your internal API, and capture a Flex Status Report if the issue persists after adding explicit settle/abort handling. If AcceptTask still becomes unresponsive with a minimal plugin that always resolves or explicitly aborts, we can escalate that as a potential Flex UI action-framework issue. Until then, the reservation timing out and being re-evaluated is consistent with TaskRouter behavior when it remains pending.",
+        "needs_engineering_escalation": false,
+        "kb_citations": [
+          "kb-007",
+          "kb-015",
+          "kb-008"
+        ]
+      },
+      "attempts": 1,
+      "usage": {
+        "inputTokens": 2333,
+        "outputTokens": 1227
+      },
+      "latencyMs": 15013
+    },
+    {
+      "id": "T026",
+      "goldCat": "bug",
+      "goldSev": "high",
+      "ok": true,
+      "result": {
+        "category": "config",
+        "severity": "medium",
+        "summary": "A newly released custom Flex plugin version is breaking the agent desktop for all users, but rolling back to the prior plugin configuration restores service.",
+        "suggested_first_response": "Thanks for the details. Since rolling back to the previous plugin configuration immediately resolves the issue, this most likely points to an error in the new custom plugin version rather than a Flex platform defect. Please capture a Flex Status Report from an affected session, along with the browser console stack trace, the active Release/Plugin Configuration SID, the previous known-good configuration SID, and the plugin version that introduced the issue. The Status Report is the right first diagnostic artifact, and we recommend checking the stack trace for 45601/custom plugin errors, recent Action overrides, component replacements, event listeners, and dependency changes. For safer testing, continue using a separate staging Flex environment where possible and only promote a tested plugin configuration to production; keeping the last known-good release available for immediate rollback is also recommended.",
+        "needs_engineering_escalation": false,
+        "kb_citations": [
+          "kb-007"
+        ]
+      },
+      "attempts": 1,
+      "usage": {
+        "inputTokens": 2145,
+        "outputTokens": 624
+      },
+      "latencyMs": 8022
+    },
+    {
+      "id": "T027",
+      "goldCat": "config",
+      "goldSev": "medium",
+      "ok": true,
+      "result": {
+        "category": "config",
+        "severity": "medium",
+        "summary": "A custom Flex plugin beforeAcceptTask override appears to intermittently prevent the AcceptTask action chain from completing, causing reservations to time out and return to queue.",
+        "suggested_first_response": "Thanks for the details. Since removing the beforeAcceptTask override stops the issue, this most likely points to the custom plugin action handler rather than TaskRouter itself. In a beforeAcceptTask listener, avoid invoking and returning another Flex.Actions.invokeAction result as part of the same acceptance path unless you are certain it always resolves quickly and cannot re-enter or block the action chain. The safer pattern is to do only the required pre-accept async work, wrap it in try/catch, ensure the promise always resolves or explicitly aborts, and move any non-blocking follow-up work to afterAcceptTask where possible. Please send a Status Report from an affected session plus any Console/Network errors around the failed acceptance so we can confirm whether the handler is throwing, rejecting, or hanging; if needed, also compare against the previous known-good plugin release.",
+        "needs_engineering_escalation": false,
+        "kb_citations": [
+          "kb-007",
+          "kb-008"
+        ]
+      },
+      "attempts": 1,
+      "usage": {
+        "inputTokens": 2018,
+        "outputTokens": 722
+      },
+      "latencyMs": 8800
+    },
+    {
+      "id": "T029",
+      "goldCat": "bug",
+      "goldSev": "medium",
+      "ok": true,
+      "result": {
+        "category": "config",
+        "severity": "medium",
+        "summary": "The customer's custom Flex SDK softphone accepts voice tasks before registering the required VoiceClientEvent listener, causing accepted reservations to have no usable call/audio context despite a successful AcceptTask response.",
+        "suggested_first_response": "Thanks for the detailed repro. Based on your testing, registering the VoiceClientEvent listener before calling AcceptTask is the correct ordering for a custom SDK-only softphone, and the fact that the call connects once you reorder the code points to an implementation/order-of-initialization issue rather than a TaskRouter reservation failure. I’d recommend keeping the voice event listener initialization in place immediately after createClient and before any reservation can be accepted, then checking the browser console/network logs and Flex/Voice degraded-mode indicators to confirm the Voice component is healthy. Please send the exact @twilio/flex-sdk version, timestamps, and sample WT/WR SIDs from failed attempts, and we can also review whether this should be raised as SDK/documentation feedback for a clearer warning when AcceptTask is invoked without the listener in place.",
+        "needs_engineering_escalation": true,
+        "kb_citations": [
+          "kb-015"
+        ]
+      },
+      "attempts": 1,
+      "usage": {
+        "inputTokens": 2676,
+        "outputTokens": 754
+      },
+      "latencyMs": 9708
+    },
+    {
+      "id": "T030",
+      "goldCat": "config",
+      "goldSev": "medium",
+      "ok": true,
+      "result": {
+        "category": "config",
+        "severity": "high",
+        "summary": "Agents in a custom embedded Flex SDK integration are being disconnected after token expiry because the app refreshes and stores new credentials but does not update the live SDK client with them.",
+        "suggested_first_response": "Thanks for the detailed investigation. Your diagnosis sounds correct: validating and storing the refreshed token in your application state will not update the active Flex SDK client or its connected services. Please add the SDK client token update step after receiving the refreshed Flex user token and refresh token, using the refreshed credentials from the same token flow used to initialize the client. The SDK should then propagate the new credentials to its underlying services; you should not need to manually recreate TaskRouter listeners unless you continue to see connection errors after the update. If the issue persists after deploying that change, please share the exact SDK version, sanitized refresh/update logs, and timestamps for affected workers so we can investigate further.",
+        "needs_engineering_escalation": false,
+        "kb_citations": []
+      },
+      "attempts": 1,
+      "usage": {
+        "inputTokens": 2818,
+        "outputTokens": 637
+      },
+      "latencyMs": 8311
+    },
+    {
+      "id": "T031",
+      "goldCat": "how_to",
+      "goldSev": "medium",
+      "ok": true,
+      "result": {
+        "category": "config",
+        "severity": "medium",
+        "summary": "The customer’s custom Flex SDK integration is not correctly propagating refreshed credentials to the live SDK client after the initial token TTL, causing invalid-token errors and degraded Voice behavior.",
+        "suggested_first_response": "Thanks for the detailed context. This does sound like a token-refresh implementation issue rather than TaskRouter routing. Updating only your app state with a new token is not sufficient; the live Flex SDK client and its underlying services need to receive the refreshed credentials, so you should call the SDK token update flow after your backend mints/returns the new token. We recommend refreshing proactively before the token expires, based on the token expiry/TTL or any SDK-supported expiry event for your installed version, rather than waiting for 45775 failures. The degraded Voice state is consistent with one of the underlying SDKs becoming unavailable due to auth failure; a successful token update may recover it, but if Voice does not reconnect cleanly you may need to reinitialize the client and capture browser console/network logs for review. Also, error 31207 relates to a Voice JWT TTL constraint; that Voice Access Token is separate from the Flex user JWE and has its own expiration rules. Please share your exact @twilio/flex-sdk version and the token refresh code path so we can validate the sequence.",
+        "needs_engineering_escalation": false,
+        "kb_citations": [
+          "kb-015"
+        ]
+      },
+      "attempts": 1,
+      "usage": {
+        "inputTokens": 2815,
+        "outputTokens": 805
+      },
+      "latencyMs": 10139
+    }
+  ]
+}
