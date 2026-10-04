@@ -2,7 +2,7 @@
 // Retries on 429 (rate limit) with exponential backoff — same pattern as
 // client.ts's handling of Anthropic API errors, needed here for real: Voyage's
 // free tier (no payment method on file) caps requests at 3/minute.
-const EMBED_MODEL = "voyage-3";
+export const EMBED_MODEL = "voyage-3";
 
 export async function embedTexts(
   texts: string[],

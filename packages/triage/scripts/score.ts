@@ -1,28 +1,26 @@
 /**
  * Scored accuracy report: runs the triage pipeline over every labeled ticket and
- * compares predictions against the gold labels in experiments/data/labels.json.
+ * compares predictions against the gold labels in experiments/data/dataset.json.
  *
- *   npm run score
+ *   npm run score                         # dev split, default provider
+ *   npm run score -- --provider openai    # same tickets on OpenAI
+ *   npm run score -- --test               # frozen test split (or --all for everything)
+ *   npm run score -- --no-save            # print only, don't write runs/<runId>.json
  *
  * Reports category accuracy + per-class precision/recall/F1 + a confusion matrix,
  * and severity exact / off-by-one / mean-absolute-error (severity is ordinal).
+ * Each run is saved to runs/ (see scripts/lib/runs.ts) for compare.ts and the dashboard.
  */
 import "./load-env";
 
-import { triageTicket } from "../src/index";
-import type { Category, Severity } from "../src/index";
-import { CATEGORIES, SEV_RANK, loadDataset, type DatasetTicket, type Split } from "./lib/dataset";
+import { retrievalQuery, triageTicket } from "../src/index";
+import { cachedEmbedQuery, warmEmbeddingCache } from "./lib/embed-cache";
+import { CATEGORIES, loadDataset, type DatasetTicket, type Split } from "./lib/dataset";
+import { chooseProvider } from "./lib/cli";
+import { makeRunId, promptHash, summarizeRun, writeRunFile, type RunRow } from "./lib/runs";
 
-const CONCURRENCY = 5;
-
-type Row = {
-  id: string;
-  goldCat: Category;
-  goldSev: Severity;
-  predCat?: Category;
-  predSev?: Severity;
-  failed?: string;
-};
+const CONCURRENCY   = 5;
+const USE_RETRIEVAL = true;
 
 // Run async work over items with a fixed concurrency, preserving input order.
 async function mapPool<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
@@ -42,6 +40,10 @@ function pct(n: number, d: number): string {
   return d === 0 ? "n/a" : `${n}/${d} (${Math.round((n / d) * 100)}%)`;
 }
 
+function pctOf(ratio: number, d: number): string {
+  return pct(Math.round(ratio * d), d);
+}
+
 function fmt(x: number | null): string {
   return x === null ? "  — " : x.toFixed(2);
 }
@@ -57,14 +59,13 @@ function countTo(pairs: string[]): [string, number][] {
 }
 
 async function main(): Promise<void> {
-  if (!process.env.ANTHROPIC_API_KEY) {
-    console.error("ANTHROPIC_API_KEY is not set. Add it to packages/triage/.env or export it.");
-    process.exit(1);
-  }
+  const args = process.argv.slice(2);
+  const { name, model } = chooseProvider(args);
+  const save = !args.includes("--no-save");
 
   // Scope: default to the dev split so routine iteration never touches the frozen test set.
-  const scope: Split | null = process.argv.includes("--test") ? "test"
-    : process.argv.includes("--all") ? null
+  const scope: Split | null = args.includes("--test") ? "test"
+    : args.includes("--all") ? null
     : "dev";
   const inScope = (t: DatasetTicket) => scope === null || t.split === scope;
 
@@ -77,39 +78,51 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  console.log(`Triaging ${scored.length} labeled tickets [scope: ${scope ?? "all"}] (concurrency ${CONCURRENCY})…`);
+  console.log(
+    `Triaging ${scored.length} labeled tickets [scope: ${scope ?? "all"}] ` +
+    `with ${name} (${model}), concurrency ${CONCURRENCY}…`
+  );
 
-  const rows: Row[] = await mapPool(scored, CONCURRENCY, async (t) => {
+  if (USE_RETRIEVAL) {
+    await warmEmbeddingCache(scored.map((t) => retrievalQuery(t)));
+  }
+
+  const startedAt = new Date();
+  const rows = await mapPool(scored, CONCURRENCY, async (t): Promise<RunRow> => {
     const gold = t.gold!;
-    const outcome = await triageTicket({ subject: t.subject, body: t.body });
+    const base = { id: t.id, goldCat: gold.category, goldSev: gold.severity };
+    const outcome = await triageTicket(
+      { subject: t.subject, body: t.body },
+      { provider: name, model, useRetrieval: USE_RETRIEVAL, embedQuery: cachedEmbedQuery }
+    );
     if (!outcome.ok) {
-      return { id: t.id, goldCat: gold.category, goldSev: gold.severity, failed: outcome.reason };
+      return { ...base, ok: false, reason: outcome.reason, errors: outcome.lastErrors };
     }
     return {
-      id: t.id,
-      goldCat: gold.category,
-      goldSev: gold.severity,
-      predCat: outcome.result.category,
-      predSev: outcome.result.severity,
+      ...base,
+      ok:        true,
+      result:    outcome.result,
+      attempts:  outcome.attempts,
+      usage:     outcome.usage,
+      latencyMs: outcome.latencyMs,
     };
   });
 
-  const ok = rows.filter((r) => !r.failed && r.predCat && r.predSev);
-  const failed = rows.filter((r) => r.failed);
+  const summary = summarizeRun(rows);
+  const ok = rows.filter((r) => r.ok);
+  const failed = rows.filter((r) => !r.ok);
   const n = ok.length;
 
   // ── Category ────────────────────────────────────────────────────────────────
-  const catCorrect = ok.filter((r) => r.predCat === r.goldCat).length;
-
   console.log("\n" + "═".repeat(64));
   console.log("CATEGORY");
   console.log("═".repeat(64));
-  console.log(`  accuracy: ${pct(catCorrect, n)}`);
+  console.log(`  accuracy: ${pctOf(summary.catAccuracy, n)}`);
   console.log(`  ${pad("class", 16)} ${pad("P", 5)} ${pad("R", 5)} ${pad("F1", 5)} support`);
   for (const c of CATEGORIES) {
-    const tp = ok.filter((r) => r.predCat === c && r.goldCat === c).length;
-    const fp = ok.filter((r) => r.predCat === c && r.goldCat !== c).length;
-    const fn = ok.filter((r) => r.predCat !== c && r.goldCat === c).length;
+    const tp = ok.filter((r) => r.result.category === c && r.goldCat === c).length;
+    const fp = ok.filter((r) => r.result.category === c && r.goldCat !== c).length;
+    const fn = ok.filter((r) => r.result.category !== c && r.goldCat === c).length;
     const support = ok.filter((r) => r.goldCat === c).length;
     const prec = tp + fp === 0 ? null : tp / (tp + fp);
     const rec = tp + fn === 0 ? null : tp / (tp + fn);
@@ -118,49 +131,64 @@ async function main(): Promise<void> {
   }
 
   const catMistakes = countTo(
-    ok.filter((r) => r.predCat !== r.goldCat).map((r) => `${r.goldCat} → ${r.predCat}`)
+    ok.filter((r) => r.result.category !== r.goldCat).map((r) => `${r.goldCat} → ${r.result.category}`)
   );
   console.log("\n  confusion (actual → predicted):");
   if (catMistakes.length === 0) console.log("    (no category mistakes)");
   for (const [k, v] of catMistakes) console.log(`    ${pad(k, 28)} ×${v}`);
 
   // ── Severity (ordinal) ──────────────────────────────────────────────────────
-  const sevExact = ok.filter((r) => r.predSev === r.goldSev).length;
-  const sevWithin1 = ok.filter(
-    (r) => Math.abs(SEV_RANK[r.predSev!] - SEV_RANK[r.goldSev]) <= 1
-  ).length;
-  const mae = ok.reduce((s, r) => s + Math.abs(SEV_RANK[r.predSev!] - SEV_RANK[r.goldSev]), 0) / n;
-
   console.log("\n" + "═".repeat(64));
   console.log("SEVERITY (ordinal: low < medium < high < critical)");
   console.log("═".repeat(64));
-  console.log(`  exact:        ${pct(sevExact, n)}`);
-  console.log(`  off-by-one:   ${pct(sevWithin1, n)}`);
-  console.log(`  mean abs err: ${mae.toFixed(2)}  (0 = perfect)`);
+  console.log(`  exact:        ${pctOf(summary.sevExact, n)}`);
+  console.log(`  off-by-one:   ${pctOf(summary.sevWithin1, n)}`);
+  console.log(`  mean abs err: ${summary.sevMae.toFixed(2)}  (0 = perfect)`);
 
   const sevMistakes = countTo(
-    ok.filter((r) => r.predSev !== r.goldSev).map((r) => `${r.goldSev} → ${r.predSev}`)
+    ok.filter((r) => r.result.severity !== r.goldSev).map((r) => `${r.goldSev} → ${r.result.severity}`)
   );
   console.log("\n  confusion (actual → predicted):");
   if (sevMistakes.length === 0) console.log("    (no severity mistakes)");
   for (const [k, v] of sevMistakes) console.log(`    ${pad(k, 28)} ×${v}`);
 
   // ── Per-ticket mistakes ─────────────────────────────────────────────────────
-  const wrong = ok.filter((r) => r.predCat !== r.goldCat || r.predSev !== r.goldSev);
+  const wrong = ok.filter((r) => r.result.category !== r.goldCat || r.result.severity !== r.goldSev);
   console.log("\n" + "═".repeat(64));
   console.log(`PER-TICKET MISTAKES (${wrong.length})`);
   console.log("═".repeat(64));
   for (const r of wrong) {
-    const cat = r.predCat === r.goldCat ? "✓" : `✗ ${r.goldCat}→${r.predCat}`;
-    const sev = r.predSev === r.goldSev ? "✓" : `✗ ${r.goldSev}→${r.predSev}`;
+    const cat = r.result.category === r.goldCat ? "✓" : `✗ ${r.goldCat}→${r.result.category}`;
+    const sev = r.result.severity === r.goldSev ? "✓" : `✗ ${r.goldSev}→${r.result.severity}`;
     console.log(`  ${pad(r.id, 5)} cat ${pad(cat, 22)} sev ${sev}`);
   }
 
   // ── Footer ──────────────────────────────────────────────────────────────────
   console.log("\n" + "─".repeat(64));
   console.log(`triaged ok: ${n}/${scored.length}` + (failed.length ? `  | FAILED: ${failed.length}` : ""));
-  for (const r of failed) console.log(`  ✗ ${r.id}: ${r.failed}`);
+  for (const r of failed) console.log(`  ✗ ${r.id}: ${r.reason}`);
   if (skipped.length) console.log(`unlabeled (skipped): ${skipped.map((t) => t.id).join(", ")}`);
+  console.log(
+    `tokens: ${summary.inputTokens} in / ${summary.outputTokens} out · ` +
+    `median latency: ${(summary.p50LatencyMs / 1000).toFixed(1)}s`
+  );
+
+  if (save) {
+    const runId = makeRunId(name, model, startedAt);
+    const path = writeRunFile({
+      version:      1,
+      runId,
+      createdAt:    startedAt.toISOString(),
+      provider:     name,
+      model,
+      promptHash:   promptHash(),
+      useRetrieval: USE_RETRIEVAL,
+      split:        scope ?? "all",
+      summary,
+      rows,
+    });
+    console.log(`saved: ${path}`);
+  }
   console.log();
 }
 

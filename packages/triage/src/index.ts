@@ -5,7 +5,7 @@ export { triageTicket } from "./triage";
 export { callTriageModel } from "./client";
 export { extractJson } from "./parse";
 export { validateTriage } from "./validate";
-export { retrieveRelevantArticles } from "./retrieve";
+export { retrievalQuery, retrieveRelevantArticles } from "./retrieve";
 export { runTriageAgent } from "./agent";
 export { getProvider } from "./providers";
 
@@ -22,5 +22,5 @@ export type {
   ToolCallLogEntry,
   ModelCall,
 } from "./types";
-export type { KbMatch } from "./retrieve";
+export type { EmbedQuery, KbMatch } from "./retrieve";
 export type { ProviderName, Usage } from "./providers";
