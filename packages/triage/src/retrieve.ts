@@ -1,5 +1,6 @@
 import embeddingsData from "../kb/embeddings.json";
 import { embedTexts } from "./embeddings-client";
+import type { Ticket } from "./types";
 
 interface KbEmbedding {
   id:        string;
@@ -13,6 +14,17 @@ export interface KbMatch {
   title: string;
   body:  string;
   score: number;
+}
+
+export type EmbedQuery = (text: string) => Promise<number[]>;
+
+const voyageEmbedQuery: EmbedQuery = async (text) => {
+  const [embedding] = await embedTexts([text]);
+  return embedding;
+};
+
+export function retrievalQuery(ticket: Ticket): string {
+  return `${ticket.subject}\n\n${ticket.body}`;
 }
 
 function cosineSimilarity(a: number[], b: number[]): number {
@@ -32,9 +44,10 @@ function cosineSimilarity(a: number[], b: number[]): number {
  */
 export async function retrieveRelevantArticles(
   query: string,
-  topK = 3
+  topK = 3,
+  embedQuery: EmbedQuery = voyageEmbedQuery
 ): Promise<KbMatch[]> {
-  const [queryEmbedding] = await embedTexts([query]);
+  const queryEmbedding = await embedQuery(query);
 
   const scored: KbMatch[] = (embeddingsData as KbEmbedding[]).map((article) => ({
     id:    article.id,

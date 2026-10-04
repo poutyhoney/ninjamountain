@@ -1,4 +1,5 @@
 import type { Completion, ProviderName, Usage } from "./providers/types";
+import type { EmbedQuery } from "./retrieve";
 
 // ─── Domain types ─────────────────────────────────────────────────────────────
 // Ported from support-triage-assistant/ts/types.ts
@@ -81,4 +82,5 @@ export interface TriageTicketOptions {
   useRetrieval?: boolean;
   provider?:     ProviderName;
   model?:        string;
+  embedQuery?:   EmbedQuery;
 }

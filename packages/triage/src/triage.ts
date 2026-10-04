@@ -3,7 +3,7 @@ import type { Usage }               from "./providers";
 import { callTriageModel }          from "./client";
 import { extractJson }              from "./parse";
 import { validateTriage }           from "./validate";
-import { retrieveRelevantArticles } from "./retrieve";
+import { retrievalQuery, retrieveRelevantArticles } from "./retrieve";
 
 /**
  * Full triage pipeline for a single ticket.
@@ -19,7 +19,7 @@ import { retrieveRelevantArticles } from "./retrieve";
  */
 export async function triageTicket(
   ticket: Ticket,
-  { maxOutputRetries = 2, useRetrieval = true, provider, model }: TriageTicketOptions = {}
+  { maxOutputRetries = 2, useRetrieval = true, provider, model, embedQuery }: TriageTicketOptions = {}
 ): Promise<TriageOutcome> {
   let correctionHint = "";
   const usage: Usage = { inputTokens: 0, outputTokens: 0 };
@@ -30,7 +30,7 @@ export async function triageTicket(
   let kbContext = "";
   if (useRetrieval) {
     try {
-      const kbMatches = await retrieveRelevantArticles(`${ticket.subject}\n\n${ticket.body}`, 3);
+      const kbMatches = await retrieveRelevantArticles(retrievalQuery(ticket), 3, embedQuery);
       kbContext = kbMatches
         .map((m) => `[${m.id}] ${m.title}\n${m.body}`)
         .join("\n\n---\n\n");
