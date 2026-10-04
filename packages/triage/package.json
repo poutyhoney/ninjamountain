@@ -12,6 +12,7 @@
     "triage": "tsx scripts/triage-cli.ts",
     "agent": "tsx scripts/agent-cli.ts",
     "score": "tsx scripts/score.ts",
+    "compare": "tsx scripts/compare.ts",
     "dataset:migrate": "tsx scripts/migrate-dataset.ts",
     "dataset:report": "tsx scripts/dataset-report.ts",
     "dataset:validate": "tsx scripts/validate-dataset.ts",
