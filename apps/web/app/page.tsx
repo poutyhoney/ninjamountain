@@ -1,9 +1,11 @@
-import Link from 'next/link';
-import Image from 'next/image';
-import SiteHeader from './components/SiteHeader';
-import SiteFooter from './components/SiteFooter';
-import DotConstellation from './components/DotConstellation';
-import NewsletterSignup from './components/NewsletterSignup';
+import Link from "next/link";
+import Image from "next/image";
+import SiteHeader from "./components/SiteHeader";
+import SiteFooter from "./components/SiteFooter";
+import DotConstellation from "./components/DotConstellation";
+import NewsletterSignup from "./components/NewsletterSignup";
+import { latestRunPerProvider } from "@/lib/triage-runs";
+import { pct } from "@/lib/format";
 
 // ─── Hero background: faint dot grid + connector path ────────────────────────
 
@@ -16,7 +18,14 @@ function HeroDotPattern() {
       preserveAspectRatio="xMidYMid slice"
     >
       <defs>
-        <pattern id="dot-grid" x="0" y="0" width="46" height="46" patternUnits="userSpaceOnUse">
+        <pattern
+          id="dot-grid"
+          x="0"
+          y="0"
+          width="46"
+          height="46"
+          patternUnits="userSpaceOnUse"
+        >
           <circle cx="23" cy="23" r="1" fill="#8B6CFF" opacity="0.08" />
         </pattern>
       </defs>
@@ -30,12 +39,12 @@ function HeroDotPattern() {
 const iconProps = {
   width: 24,
   height: 24,
-  viewBox: '0 0 24 24',
-  fill: 'none',
-  stroke: '#8B6CFF',
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "#8B6CFF",
   strokeWidth: 1.5,
-  strokeLinecap: 'round' as const,
-  strokeLinejoin: 'round' as const,
+  strokeLinecap: "round" as const,
+  strokeLinejoin: "round" as const,
 };
 
 const PATH_ICONS: Record<string, React.ReactNode> = {
@@ -66,18 +75,51 @@ const PATH_ICONS: Record<string, React.ReactNode> = {
   ),
 };
 
-type Pathway = { icon: keyof typeof PATH_ICONS; title: string; body: string; href: string; cta: string };
+type Pathway = {
+  icon: keyof typeof PATH_ICONS;
+  title: string;
+  body: string;
+  href: string;
+  cta: string;
+};
 
 const PATHWAYS: Pathway[] = [
-  { icon: 'dojo',      title: 'Dojo',        body: 'Focused lessons and practices for builders.',       href: '/projects/onboard', cta: 'Enter the Dojo'  },
-  { icon: 'trails',    title: 'Trails',      body: 'Curated learning paths through real topics.',        href: '/trails',           cta: 'Explore Trails'  },
-  { icon: 'artifacts', title: 'Artifacts',   body: 'Reusable code, tools, and reference materials.',     href: '/projects/gallery', cta: 'Browse Artifacts' },
-  { icon: 'notes',     title: 'Field Notes', body: 'Notes from the climb — insights and logs.',          href: '/projects/notes',   cta: 'Read Notes'      },
+  {
+    icon: "dojo",
+    title: "Dojo",
+    body: "Focused lessons and practices for builders.",
+    href: "/projects/onboard",
+    cta: "Enter the Dojo",
+  },
+  {
+    icon: "trails",
+    title: "Trails",
+    body: "Curated learning paths through real topics.",
+    href: "/trails",
+    cta: "Explore Trails",
+  },
+  {
+    icon: "artifacts",
+    title: "Artifacts",
+    body: "Reusable code, tools, and reference materials.",
+    href: "/projects/gallery",
+    cta: "Browse Artifacts",
+  },
+  {
+    icon: "notes",
+    title: "Field Notes",
+    body: "Notes from the climb — insights and logs.",
+    href: "/projects/notes",
+    cta: "Read Notes",
+  },
 ];
+
+const TRIAGE_STAGES = ["Baseline", "RAG", "Agent", "MCP", "Claude vs GPT"];
 
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 export default function Home() {
+  const latestRuns = latestRunPerProvider();
   return (
     <div className="min-h-screen bg-[#0A0B0F] text-[#E9ECF2]">
       <SiteHeader />
@@ -89,26 +131,36 @@ export default function Home() {
           className="pointer-events-none absolute inset-0"
           style={{
             background:
-              'radial-gradient(ellipse 60% 50% at 30% 30%, rgba(139,108,255,0.10) 0%, transparent 70%)',
+              "radial-gradient(ellipse 60% 50% at 30% 30%, rgba(139,108,255,0.10) 0%, transparent 70%)",
           }}
         />
         <div className="relative mx-auto max-w-[1180px] px-5 py-28 sm:py-36">
-        {/* Large faint logo watermark — aligned to right edge of content container */}
-        <div className="pointer-events-none absolute right-0 top-1/2 hidden -translate-y-1/2 opacity-[0.12] lg:block">
-          <Image src="/nmb_transparent_logo_pack/ninja_mountain_logo_symbol_transparent.png" alt="" width={440} height={440} aria-hidden="true" />
-        </div>
+          {/* Large faint logo watermark — aligned to right edge of content container */}
+          <div className="pointer-events-none absolute right-0 top-1/2 hidden -translate-y-1/2 opacity-[0.12] lg:block">
+            <Image
+              src="/nmb_transparent_logo_pack/ninja_mountain_logo_symbol_transparent.png"
+              alt=""
+              width={440}
+              height={440}
+              aria-hidden="true"
+            />
+          </div>
           <h1 className="max-w-3xl text-5xl font-bold leading-[1.05] tracking-tight sm:text-7xl">
             <span className="block text-[#E9ECF2]">You&apos;re not a dot.</span>
-            <span className="block text-[#E9ECF2]">You&apos;re the one who</span>
+            <span className="block text-[#E9ECF2]">
+              You&apos;re the one who
+            </span>
             <span className="block">
               <span className="text-[#8B6CFF]">connects</span> the dots...
-              <sup className="ml-0.5 text-[0.35em] font-semibold align-super">&trade;</sup>
+              <sup className="ml-0.5 text-[0.35em] font-semibold align-super">
+                &trade;
+              </sup>
             </span>
           </h1>
 
           <p className="mt-7 max-w-lg text-lg leading-relaxed text-[#6F7684]">
-            Ninja Mountain is a quiet dojo for builders and thinkers. We share trails, artifacts,
-            and field notes to help you ship with intention.
+            Ninja Mountain is a quiet dojo for builders and thinkers. We share
+            trails, artifacts, and field notes to help you ship with intention.
           </p>
 
           <div className="mt-9 flex flex-wrap gap-4">
@@ -130,7 +182,9 @@ export default function Home() {
 
       {/* ── Pathways ── */}
       <section className="mx-auto max-w-[1180px] px-5 py-20">
-        <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Pathways</h2>
+        <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+          Pathways
+        </h2>
         <p className="mt-2 text-[#6F7684]">Four ways we climb together.</p>
 
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -144,7 +198,9 @@ export default function Home() {
                 {PATH_ICONS[p.icon]}
               </span>
               <h3 className="mb-2 font-semibold text-[#E9ECF2]">{p.title}</h3>
-              <p className="mb-5 flex-1 text-sm leading-relaxed text-[#6F7684]">{p.body}</p>
+              <p className="mb-5 flex-1 text-sm leading-relaxed text-[#6F7684]">
+                {p.body}
+              </p>
               <span className="text-sm font-medium text-[#8B6CFF] group-hover:underline">
                 {p.cta} →
               </span>
@@ -160,20 +216,86 @@ export default function Home() {
             <p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-[#8B6CFF]">
               Featured project
             </p>
-            <h2 className="text-4xl font-bold tracking-tight">Support Triage Assistant</h2>
+            <h2 className="text-4xl font-bold tracking-tight">
+              Support Triage Assistant
+            </h2>
             <p className="mt-4 max-w-md leading-relaxed text-[#6F7684]">
-              Paste a support ticket and Claude classifies it — category, severity, a one-line
-              summary, a suggested first response, and whether it needs engineering escalation.
+              An LLM classifies support tickets: category, severity, a summary,
+              a first response, and whether to escalate. Built in five stages
+              and scored against hand-labeled tickets, on two model providers
+              with the same prompt.
             </p>
-            <Link
-              href="/projects/triage"
-              className="mt-8 inline-flex items-center rounded-full border border-[#6F7684] px-5 py-2.5 text-sm font-semibold text-[#E9ECF2] transition hover:-translate-y-px hover:border-[#8B6CFF]"
+
+            <ol
+              className="mt-6 flex flex-wrap items-center gap-2 text-xs"
+              aria-label="Build stages"
             >
-              View Project →
-            </Link>
+              {TRIAGE_STAGES.map((stage, i) => (
+                <li key={stage} className="flex items-center gap-2">
+                  <span className="rounded-full border border-[#202431] bg-[#0A0B0F] px-3 py-1 text-[#C8CCD4]">
+                    <span className="font-mono text-[#8B6CFF]">v{i + 1}</span>{" "}
+                    {stage}
+                  </span>
+                  {i < TRIAGE_STAGES.length - 1 && (
+                    <span aria-hidden="true" className="text-[#6F7684]">
+                      →
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ol>
+
+            <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
+              <Link
+                href="/projects/triage"
+                className="inline-flex items-center rounded-full border border-[#6F7684] px-5 py-2.5 text-sm font-semibold text-[#E9ECF2] transition hover:-translate-y-px hover:border-[#8B6CFF]"
+              >
+                Try it →
+              </Link>
+              <Link
+                href="/projects/triage/story"
+                className="text-sm font-semibold text-[#8B6CFF] underline-offset-4 hover:underline"
+              >
+                How it was built →
+              </Link>
+              <Link
+                href="/projects/triage/runs/compare"
+                className="text-sm font-semibold text-[#8B6CFF] underline-offset-4 hover:underline"
+              >
+                Compare the models →
+              </Link>
+            </div>
           </div>
+
           <div className="rounded-2xl border border-[#202431] bg-[#0A0B0F] p-6">
-            <DotConstellation className="h-56 w-full" />
+            <DotConstellation className="h-24 w-full" />
+            {latestRuns.length > 0 ? (
+              <>
+                <p className="mt-4 text-sm text-[#6F7684]">
+                  Category accuracy on {latestRuns[0].summary.scored} labeled
+                  tickets
+                </p>
+                <dl className="mt-4 grid gap-4 sm:grid-cols-2">
+                  {latestRuns.map((run) => (
+                    <div
+                      key={run.runId}
+                      className="rounded-xl border border-[#202431] p-4"
+                    >
+                      <dt className="text-sm text-[#6F7684]">
+                        {run.provider} · {run.model}
+                      </dt>
+                      <dd className="mt-1 text-4xl font-bold tabular-nums">
+                        {pct(run.summary.catAccuracy)}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </>
+            ) : (
+              <p className="mt-4 text-sm text-[#6F7684]">
+                Scored runs will appear here.
+              </p>
+            )}
           </div>
         </div>
       </section>
@@ -187,10 +309,15 @@ export default function Home() {
           viewBox="0 0 600 160"
           preserveAspectRatio="xMaxYMax slice"
         >
-          <path d="M0 160 L160 60 L260 110 L380 20 L480 90 L600 30 L600 160 Z" fill="#202431" />
+          <path
+            d="M0 160 L160 60 L260 110 L380 20 L480 90 L600 30 L600 160 Z"
+            fill="#202431"
+          />
         </svg>
         <div className="relative mx-auto max-w-3xl px-5 text-center">
-          <span className="font-heading text-6xl leading-none text-[#8B6CFF]/40">&ldquo;</span>
+          <span className="font-heading text-6xl leading-none text-[#8B6CFF]/40">
+            &ldquo;
+          </span>
           <blockquote className="-mt-4 text-3xl font-bold leading-snug tracking-tight sm:text-4xl">
             Clarity comes from connection.
             <br />
@@ -205,15 +332,28 @@ export default function Home() {
         <div className="mx-auto flex max-w-[1180px] flex-col items-start gap-8 px-5 py-14 md:flex-row md:items-center md:justify-between">
           <div className="flex items-start gap-4">
             <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#8B6CFF]/10 ring-1 ring-inset ring-[#8B6CFF]/20">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8B6CFF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#8B6CFF"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
                 <rect x="3" y="5" width="18" height="14" rx="2" />
                 <path d="m3 7 9 6 9-6" />
               </svg>
             </span>
             <div>
-              <h2 className="text-xl font-bold tracking-tight">Stay in the loop.</h2>
+              <h2 className="text-xl font-bold tracking-tight">
+                Stay in the loop.
+              </h2>
               <p className="mt-1 max-w-sm text-sm leading-relaxed text-[#6F7684]">
-                Field notes, new trails, and dojo updates — delivered with intention.
+                Field notes, new trails, and dojo updates — delivered with
+                intention.
               </p>
             </div>
           </div>
