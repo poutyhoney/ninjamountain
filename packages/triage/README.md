@@ -88,6 +88,29 @@ which is what the CLI below prints.
 Requires `ANTHROPIC_API_KEY` in the environment for both entry points, plus
 `VOYAGE_API_KEY` for KB retrieval (v2+, since `search_kb` embeds the query).
 
+## Comparing providers
+
+`triageTicket()` runs on Anthropic (default) or OpenAI. Pick one with
+`--provider anthropic|openai` on the CLI scripts, or set `TRIAGE_PROVIDER`.
+OpenAI needs `OPENAI_API_KEY` in `.env`. Override the model with `OPENAI_MODEL`.
+
+```bash
+npm run score -- --provider openai
+npm run compare -- runs/<a>.json runs/<b>.json
+```
+
+`npm run score` saves each run to `runs/<timestamp>-<provider>-<model>.json`.
+Each file holds the summary metrics and the full output for every ticket.
+`compare.ts` diffs two runs: which tickets each model got right, and where they disagree.
+The same runs are browsable at `/projects/triage/runs` in `apps/web`.
+
+Query embeddings are cached in `.cache/` (gitignored), so only the first run
+calls Voyage. The two providers then retrieve the same KB articles.
+
+Note: `gpt-5.5` only supports the default temperature, so OpenAI runs are not
+deterministic. Claude runs at temperature 0.
+
+
 ## CLI (fast iteration loop)
 
 Run from anywhere in the monorepo:
