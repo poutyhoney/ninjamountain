@@ -8,11 +8,16 @@ export async function embedTexts(
   texts: string[],
   { maxRetries = 4 }: { maxRetries?: number } = {}
 ): Promise<number[][]> {
+  const apiKey = process.env.VOYAGE_API_KEY;
+  if (!apiKey) {
+    throw new Error("VOYAGE_API_KEY is not set. Add it to the env file this process loads.");
+  }
+
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     const res = await fetch("https://api.voyageai.com/v1/embeddings", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${process.env.VOYAGE_API_KEY}`,
+        Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ input: texts, model: EMBED_MODEL }),
