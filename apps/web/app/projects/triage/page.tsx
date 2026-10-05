@@ -3,7 +3,7 @@ import SiteFooter from "../../components/SiteFooter";
 import TrainingNotes from "../../components/TrainingNotes";
 import TriageForm from "./TriageForm";
 import Link from "next/link";
-import { loadRuns } from "@/lib/triage-runs";
+import { latestRunPerProvider } from "@/lib/triage-runs";
 import { pct } from "@/lib/format";
 
 const TRAINING_NOTES = [
@@ -35,9 +35,7 @@ export const metadata = {
 };
 
 export default function TriagePage() {
-  const latestRuns = loadRuns().filter(
-    (run, i, all) => all.findIndex((r) => r.provider === run.provider) === i
-  );
+  const latestRuns = latestRunPerProvider();
   return (
     <div className="min-h-screen bg-[#0A0B0F] text-[#E9ECF2]">
       <SiteHeader />
@@ -49,9 +47,9 @@ export default function TriagePage() {
           Support Triage Assistant
         </h1>
         <p className="mt-4 max-w-2xl text-lg leading-relaxed text-[#6F7684]">
-          Paste a support ticket and Claude will classify it — category, severity, a
-          one-line summary, a suggested first response, and whether it needs engineering
-          escalation.
+          Paste a support ticket and Claude will classify it — category,
+          severity, a one-line summary, a suggested first response, and whether
+          it needs engineering escalation.
         </p>
 
         <div className="mt-10">
@@ -59,15 +57,21 @@ export default function TriagePage() {
         </div>
         {latestRuns.length > 0 && (
           <section className="mt-16 rounded-lg border border-white/10 bg-white/5 p-6">
-            <h2 className="text-2xl font-bold tracking-tight">How do I know it works?</h2>
+            <h2 className="text-2xl font-bold tracking-tight">
+              How do I know it works?
+            </h2>
             <p className="mt-3 leading-relaxed text-[#6F7684]">
-              Every prompt change is scored against {latestRuns[0].summary.scored} hand-labeled
-              tickets. The same prompt runs on two providers, so the results compare models
+              Every prompt change is scored against{" "}
+              {latestRuns[0].summary.scored} hand-labeled tickets. The same
+              prompt runs on two providers, so the results compare models
               directly. Latest category accuracy:
             </p>
             <dl className="mt-6 grid gap-4 sm:grid-cols-2">
               {latestRuns.map((run) => (
-                <div key={run.runId} className="rounded-md border border-white/10 p-4">
+                <div
+                  key={run.runId}
+                  className="rounded-md border border-white/10 p-4"
+                >
                   <dt className="text-sm text-[#6F7684]">
                     {run.provider} · {run.model}
                   </dt>
