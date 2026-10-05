@@ -5,6 +5,7 @@ import TriageForm from "./TriageForm";
 import Link from "next/link";
 import { latestRunPerProvider } from "@/lib/triage-runs";
 import { pct } from "@/lib/format";
+import Breadcrumbs from "@/app/components/Breadcrumbs";
 
 const TRAINING_NOTES = [
   {
@@ -40,6 +41,14 @@ export default function TriagePage() {
     <div className="min-h-screen bg-[#0A0B0F] text-[#E9ECF2]">
       <SiteHeader />
       <main className="mx-auto max-w-3xl px-6 py-20">
+        <div className="mb-8">
+          <Breadcrumbs
+            items={[
+              { label: "Projects", href: "/projects" },
+              { label: "Support Triage" },
+            ]}
+          />
+        </div>
         <p className="text-xs font-bold uppercase tracking-[.2em] text-[#8B6CFF]">
           Support tooling
         </p>

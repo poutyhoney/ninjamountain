@@ -5,6 +5,8 @@ import SiteFooter from "@/app/components/SiteFooter";
 import { pct } from "@/lib/format";
 import { latestRunPerProvider } from "@/lib/triage-runs";
 
+import Breadcrumbs from "@/app/components/Breadcrumbs";
+
 export const metadata = {
   title: "How the Triage Assistant Was Built",
   description:
@@ -91,12 +93,13 @@ export default function TriageStoryPage() {
     <div className="min-h-screen bg-[#0A0B0F] text-[#E9ECF2]">
       <SiteHeader />
       <main className="mx-auto max-w-3xl px-6 py-20">
-        <Link
-          href="/projects/triage"
-          className="text-sm text-[#8B6CFF] underline-offset-4 hover:underline"
-        >
-          ← Support Triage Assistant
-        </Link>
+        <Breadcrumbs
+          items={[
+            { label: "Projects", href: "/projects" },
+            { label: "Support Triage", href: "/projects/triage" },
+            { label: "How it was built" },
+          ]}
+        />
         <p className="mt-6 text-xs font-bold uppercase tracking-[.2em] text-[#8B6CFF]">
           How it was built
         </p>

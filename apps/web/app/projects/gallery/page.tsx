@@ -22,18 +22,18 @@ const samplePhotos = [
   {
     title: "Seeking Knowledge",
     src: "/sample-photos/seeking_knowledge.jpg",
-    caption: "The first real image in the Photo Dojo."
+    caption: "The first real image in the Photo Dojo.",
   },
   {
     title: "Later Today",
-    src:  "/sample-photos/signal_lantern.jpg",
-    caption: "The second real image in the Photo Dojo."
+    src: "/sample-photos/signal_lantern.jpg",
+    caption: "The second real image in the Photo Dojo.",
   },
   {
     title: "Taunting Temptation",
-    src:  "/sample-photos/hidden_trail.jpg",
-    caption: "The third real image in the Photo Dojo."
-  }
+    src: "/sample-photos/hidden_trail.jpg",
+    caption: "The third real image in the Photo Dojo.",
+  },
 ];
 
 export default function GalleryPage() {
@@ -41,11 +41,13 @@ export default function GalleryPage() {
     <div className="min-h-screen bg-[#0A0B0F] text-[#E9ECF2]">
       <SiteHeader />
       <main className="mx-auto max-w-[1180px] px-5 py-20">
-        <p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-[#8B6CFF]">Artifacts</p>
+        <p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-[#8B6CFF]">
+          Projects
+        </p>
         <h1 className="text-4xl font-bold tracking-tight">Photo Dojo</h1>
         <p className="mt-4 max-w-2xl text-[#6F7684]">
-          The future home of the photo upload and gallery experiment.
-          For now, real images mixed with placeholder tiles.
+          The future home of the photo upload and gallery experiment. For now,
+          real images mixed with placeholder tiles.
         </p>
 
         <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -70,7 +72,9 @@ export default function GalleryPage() {
               </div>
               <div className="p-5">
                 <h2 className="font-semibold text-[#E9ECF2]">{photo.title}</h2>
-                <p className="mt-2 text-sm leading-6 text-[#6F7684]">{photo.caption}</p>
+                <p className="mt-2 text-sm leading-6 text-[#6F7684]">
+                  {photo.caption}
+                </p>
               </div>
             </article>
           ))}

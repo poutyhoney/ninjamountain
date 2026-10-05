@@ -1,18 +1,22 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import NinjaMark from './NinjaMark';
+import { useState } from "react";
+import Link from "next/link";
+import NinjaMark from "./NinjaMark";
 
 const NAV = [
-  { href: '/projects/onboard', label: 'Dojo'      },
-  { href: '/trails',           label: 'Trails'    },
-  { href: '/knowledge',        label: 'Knowledge' },
-  { href: '/projects/gallery', label: 'Artifacts' },
-  { href: '/about',            label: 'About'     },
+  { href: "/projects/onboard", label: "Dojo" },
+  { href: "/trails", label: "Trails" },
+  { href: "/knowledge", label: "Knowledge" },
+  { href: "/projects", label: "Projects" },
+  { href: "/about", label: "About" },
 ];
 
-export default function SiteHeader({ children }: { children?: React.ReactNode }) {
+export default function SiteHeader({
+  children,
+}: {
+  children?: React.ReactNode;
+}) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -56,15 +60,33 @@ export default function SiteHeader({ children }: { children?: React.ReactNode })
           <button
             className="flex h-9 w-9 items-center justify-center rounded-lg text-[#6F7684] transition-colors hover:text-[#E9ECF2] md:hidden"
             onClick={() => setOpen((o) => !o)}
-            aria-label={open ? 'Close menu' : 'Open menu'}
+            aria-label={open ? "Close menu" : "Open menu"}
             aria-expanded={open}
           >
             {open ? (
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                aria-hidden="true"
+              >
                 <path d="M4 4l12 12M16 4L4 16" />
               </svg>
             ) : (
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                aria-hidden="true"
+              >
                 <path d="M3 5h14M3 10h14M3 15h14" />
               </svg>
             )}
