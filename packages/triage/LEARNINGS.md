@@ -222,6 +222,8 @@ nominal target (category).
 | `npm ... run triage -- --id T02` | Triage one dataset ticket by id. |
 | `npm ... run triage -- --all` | Triage every ticket in the dataset. |
 | `npm ... run score` | Full scored accuracy report vs gold labels. |
+| `npm ... run score -- --provider openai` | Score on OpenAI; saves the run to `runs/`. |
+| `npm ... run compare -- runs/<a>.json runs/<b>.json` | Compare two saved runs ticket by ticket. |
 | `npm ... run typecheck` | Type-check the package. |
 | `npm run dev:web` | Start the Next.js app; UI at /projects/triage. |
 
@@ -444,7 +446,138 @@ works," which is the harder and more interview-relevant question than "what's an
 
 ---
 
-## 14. Where to go next
+## 14. Day 15+: Anthropic vs OpenAI
+
+**Goal:** run the same tickets through Claude and an OpenAI model, compare the results, and
+make the comparison inspectable in a dashboard. Built in three PRs, each with green CI before
+merge: the provider switch (#40), saved runs and a CLI compare (#41), and the dashboard (#42).
+
+### The provider adapter
+
+Only one function in the pipeline talked to an SDK: `callTriageModel`. So the change was
+small and contained. Everything else (retrieval, the correction loop, `extractJson`,
+`validateTriage`) stayed the same.
+
+- `src/prompt.ts` holds the system prompt and the user-content builder. Both providers get a
+  byte-identical prompt. Without that, a "model" difference could really be a prompt difference.
+- `src/providers/` defines a `TriageProvider` interface with one method, `complete(system, user)`,
+  and one adapter per vendor. `getProvider()` picks one: explicit argument, then the
+  `TRIAGE_PROVIDER` env var, then Anthropic as the default. The web app passes nothing and
+  keeps its old behavior.
+- `src/retry.ts` is a generic `withRetry` loop. Each adapter injects its own `isRetryable()`,
+  because only the adapter knows its error codes. Anthropic retries 529 ("overloaded");
+  OpenAI has no such code.
+- The adapters hide real API differences: Anthropic takes the system prompt as a top-level
+  field, OpenAI takes it as the first message. Usage fields are `input_tokens` vs
+  `prompt_tokens`. OpenAI's `content` can be `null`.
+- A refactor check that worked well: save the CLI output before the change, diff it after.
+  Category and severity must match. Summary wording may drift a little even at temperature 0.
+
+### Caveats that matter for any cross-provider comparison
+
+- **Temperature.** The first OpenAI call failed with a 400: `gpt-5.5` is a reasoning model and
+  only accepts the default temperature of 1. So OpenAI runs are nondeterministic while Claude
+  runs at 0. Proof came quickly: the same ticket flipped `escalate` from yes to no between two
+  OpenAI runs. The retry logic did the right thing: 400 is not retryable, so it failed after
+  1 attempt instead of 3.
+- **Tokenizers.** The same prompt counted as 2,103 input tokens on Claude and 1,878 on GPT.
+  Token counts do not compare across providers. Cost comparisons need each provider's prices.
+- **Reasoning tokens.** GPT's output count was about 2x Claude's even though its reply text was
+  shorter. Hidden reasoning tokens are billed as output. They also spend the same budget, so
+  `max_completion_tokens` must leave room for them or `content` comes back empty.
+
+### Results on the dev split (22 tickets)
+
+| | Claude Sonnet 4.6 | GPT-5.5 |
+|---|---|---|
+| Category accuracy | 68% | 45% |
+| Severity exact | 77% | 73% |
+| Severity MAE | 0.23 | 0.27 |
+| Median latency | 11.9s | 8.0s |
+
+- Severity was close. Both models share one weakness: rating `high` tickets as `medium`.
+- Category split. GPT's misses had one pattern: `bug → config`, 8 times. On tickets like
+  missing Verify OTPs or a wrong Flex caller ID, GPT described the problem correctly but
+  blamed the customer's setup. The rubric says a platform that fails to honor a correct
+  setting is a `bug`. Claude follows that clause; GPT mostly does not.
+- Claude's lead was nearly one-directional: right on 6 tickets GPT missed, wrong on only 1
+  that GPT got right.
+- **The big caveat: the prompt was tuned on Claude.** Day 4's rubric edits were made until
+  Claude's mistakes went away. So this measures "Claude with a Claude-tuned prompt" against
+  "GPT with Claude's prompt." A prompt overfit to one model is a real finding in itself.
+- **Label review signal.** When both models give the same wrong answer (T009, T017, T029),
+  check the gold label before blaming the models. T009 is a 401 from the customer's own
+  OAuth endpoint, labeled `bug`; both models said `config`.
+- 22 tickets is small: each one is about 4.5 points. A second OpenAI run could move its
+  numbers by a ticket or two from sampling alone.
+- Claude's 68% does not contradict the earlier 90%. That number came before RAG and on an
+  older, smaller dataset.
+
+### Saved runs and comparison
+
+- `npm run score -- --provider openai` now saves every run to
+  `runs/<timestamp>-<provider>-<model>.json`: summary metrics plus the full output for every
+  ticket. The console report and the file read the same `summarizeRun()` result, so they
+  cannot disagree.
+- Each run records a `promptHash` (SHA-256 of the system prompt). Tools warn when two runs
+  used different prompts.
+- `RunRow` is a discriminated union on `ok`, like `TriageOutcome`. Filtering on `r.ok`
+  narrows the type, which removed the `!` assertions the old scorer needed.
+- `npm run compare -- <a> <b>` joins two runs on ticket id and sorts tickets into buckets:
+  both right, only A, only B, both wrong.
+
+### The Voyage rate limit, and a bug it exposed
+
+The first scored run with retrieval crawled: Voyage's free tier allows 3 requests per minute,
+and the scorer runs 5 tickets at a time. Two lessons came out of it.
+
+- **A latent bug.** Retrieval ran outside any `try` in `triageTicket`. A Voyage failure would
+  throw out of a function promised never to throw, and in the scorer one throw rejects
+  `Promise.all` and loses the whole run. It never showed up when triaging one ticket at a time.
+  Fix: retrieval failures now return `{ ok: false, reason: "api_failure" }` with a
+  `retrieval:` prefix. No silent fallback to "no retrieval", which would quietly change the
+  experiment for some tickets.
+- **A cache, injected.** The ticket text is the same across runs and providers, so its
+  embedding is too. `triageTicket` now accepts an optional `embedQuery` function (dependency
+  injection with a default parameter). `score.ts` passes a disk-cached version that embeds all
+  missing queries up front in batches of 10: 3 requests instead of 22. The second provider's
+  run made zero Voyage calls, and both providers retrieved the same KB articles. The cache
+  lives in `scripts/` because `src/` also runs on Vercel, which cannot write files.
+
+### The dashboard
+
+Three static pages in `apps/web`: `/projects/triage/runs` (all runs),
+`/projects/triage/runs/compare` (pick two runs, filter by outcome), and
+`/projects/triage/runs/tickets/[ticketId]` (the ticket, its gold notes, and every run's answer).
+
+- **Prerendered at build time.** The run files live outside `apps/web`. Reading them at request
+  time on Vercel would need file tracing configuration. Reading them during `next build`
+  needs nothing: the pages ship as static HTML. The ticket route uses `generateStaticParams`
+  with `dynamicParams = false`, so unknown ids 404 instead of rendering at request time.
+- **The server/client boundary is a serialization boundary.** The compare page sends the
+  client component only categories and severities per ticket. Full replies stay on the server
+  and appear on the ticket pages.
+- **"Both wrong" splits in two in the UI:** same wrong answer (label-review queue) and
+  different wrong answers (hard ticket). The CLI lumped them together.
+- **A hydration warning from whitespace.** A lost line break put `</th>` and `<td>` on one line
+  with spaces between them. JSX keeps same-line whitespace as a text node, HTML does not allow
+  text inside `<tr>`, and React flagged the mismatch. Rule: one tag per line inside table rows.
+- The project page now links to the dashboard with the latest accuracy per provider. A page
+  only the builder can find does not exist for anyone else.
+
+### Smaller lessons
+
+- **Check the file name before the error.** Two "cannot find module" errors this stretch came
+  from the file being saved as `run.ts` / `formats.ts` instead of `runs.ts` / `format.ts`.
+  Typecheck cannot flag a misnamed file until something imports it.
+- **zsh globs square brackets.** `mkdir .../[ticketId]` fails with "no matches found". Quote
+  the path.
+- **Extract on the second use.** `parseProviderFlag`, the formatters, and `Mark` each moved to
+  a shared module only when a second caller needed them.
+
+---
+
+## 15. Where to go next
 
 - **Grow the dataset** to 40–60 tickets — the single highest-leverage move, since it stops
   the metrics from swinging on one ticket.
@@ -463,3 +596,11 @@ works," which is the harder and more interview-relevant question than "what's an
   a ticket with a plausible-looking but non-matching identifier (rather than none at all) to
   force the agent to actually call the tool and get a real miss, closing the coverage gap
   noted in Day 11.
+- **Review the "same wrong answer" labels** (T009, T017, T029) on the dashboard. If a label
+  changes, re-score both providers so the saved runs stay comparable.
+- **Measure OpenAI's run-to-run variance**: two more OpenAI runs, compared against each other,
+  show how much of the 23-point category gap is sampling noise.
+- **A GPT-tuned prompt variant** for the `bug → config` pattern, compared against the current
+  prompt. The prompt hash will mark those runs as using a different prompt.
+- **Port the agent loop (v3/v4) to OpenAI.** Tool calling uses a different message format, so
+  it needs its own adapter method.
