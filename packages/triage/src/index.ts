@@ -24,3 +24,4 @@ export type {
 } from "./types";
 export type { EmbedQuery, KbMatch } from "./retrieve";
 export type { ProviderName, Usage } from "./providers";
+export type { RunFile, RunRow, RunSummary } from "./run-file";
