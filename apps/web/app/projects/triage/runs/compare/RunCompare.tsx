@@ -1,3 +1,14 @@
+// Interactive half of /projects/triage/runs/compare.
+//
+// page.tsx (a Server Component) reads every run file at build time, slims each
+// one with toCompareRun(), and passes the result here as props. This Client
+// Component holds the interactive state: which two runs are picked and which
+// filter is active. Everything else (pairs, counts, visible rows) is derived
+// from that state on each render.
+//
+// "use client" marks the server/client boundary. Props crossing it are
+// serialized into the page and sent to the browser, which is why page.tsx
+// sends CompareRun (categories and severities only), not full RunFiles.
 "use client";
 
 import { useState } from "react";
@@ -8,6 +19,10 @@ import type { RunSummary } from "@ninjamountain/triage";
 import { kilo, pct, seconds } from "@/lib/format";
 import { runLabel, type CompareRow, type CompareRun } from "@/lib/triage-compare";
 
+// Functions stored as data: each metric carries how to read it (value), how to
+// display it (format), and which direction wins. The summary table is a single
+// .map over METRICS, and the winner highlight works the same for accuracy
+// (higher is better) and latency (lower is better).
 interface Metric {
   label:          string;
   value:          (s: RunSummary) => number;
@@ -15,6 +30,8 @@ interface Metric {
   higherIsBetter: boolean;
 }
 
+// Input tokens are deliberately missing: each provider has its own tokenizer,
+// so the counts are not comparable (see the note under the table).
 const METRICS: Metric[] = [
   { label: "Category accuracy", value: (s) => s.catAccuracy,  format: pct,                  higherIsBetter: true },
   { label: "Severity exact",    value: (s) => s.sevExact,     format: pct,                  higherIsBetter: true },
@@ -24,6 +41,14 @@ const METRICS: Metric[] = [
   { label: "Median latency",    value: (s) => s.p50LatencyMs, format: seconds,              higherIsBetter: false },
 ];
 
+// How a ticket's category came out across the two runs. "Both wrong" is split
+// in two because the cases mean different things:
+//   sameWrong: both models gave the same wrong answer, so suspect the gold
+//              label first (the label-review queue).
+//   diffWrong: each model was wrong its own way, so the ticket is probably
+//              hard or ambiguous.
+// FilterKey builds a union from another union: a filter is an Outcome or one
+// of two special views.
 type Outcome = "both" | "onlyA" | "onlyB" | "sameWrong" | "diffWrong";
 type FilterKey = "all" | "disagree" | Outcome;
 
@@ -37,6 +62,8 @@ const FILTERS: { key: FilterKey; label: string }[] = [
   { key: "all",       label: "All tickets" },
 ];
 
+// One ticket with both runs' answers side by side. CompareRow["goldCat"] is an
+// indexed access type: "whatever type CompareRow uses for goldCat".
 interface PairedRow {
   id:       string;
   goldCat:  CompareRow["goldCat"];
@@ -47,15 +74,23 @@ interface PairedRow {
   disagree: boolean;
 }
 
+// The same join as scripts/compare.ts: index run B by ticket id (like a SQL
+// join on id), so the pairing works even if the runs cover different tickets.
 function pairRows(a: CompareRun, b: CompareRun): PairedRow[] {
   const rowsB = new Map(b.rows.map((row) => [row.id, row]));
 
+  // flatMap returning [] or [row] filters and transforms in one pass: tickets
+  // missing from run B drop out, the rest become PairedRows.
   return a.rows.flatMap((ra) => {
     const rb = rowsB.get(ra.id);
     if (!rb) return [];
 
+    // A failed row has cat === null, so it never equals the gold label and
+    // counts as wrong.
     const aRight = ra.cat === ra.goldCat;
     const bRight = rb.cat === rb.goldCat;
+    // Nested ternary read top to bottom like an if / else-if chain. The
+    // `: Outcome` annotation makes TypeScript check every branch is allowed.
     const outcome: Outcome =
       aRight && bRight ? "both"
       : aRight ? "onlyA"
@@ -75,12 +110,18 @@ function pairRows(a: CompareRun, b: CompareRun): PairedRow[] {
   });
 }
 
+// The single definition of "this row belongs to this filter". Both the chip
+// counts and the table use it, so a chip's number always equals the rows shown
+// when it is clicked.
 function matches(row: PairedRow, filter: FilterKey): boolean {
   if (filter === "all") return true;
   if (filter === "disagree") return row.disagree;
   return row.outcome === filter;
 }
 
+// One run's answer for one ticket. Mark (../Mark.tsx) shows a check or cross
+// plus color plus screen-reader text, so color is never the only signal
+// (WCAG 1.4.1, Use of Color).
 function Prediction({ row }: { row: CompareRow }) {
   if (row.cat === null || row.sev === null) {
     return <span className="text-red-400">failed</span>;
@@ -93,6 +134,9 @@ function Prediction({ row }: { row: CompareRow }) {
   );
 }
 
+// A controlled <select>: React state owns the value, and onChange reports the
+// new run id up to RunCompare. Small and used only here, so it stays in this
+// file.
 function RunPicker({
   label,
   runs,
@@ -123,13 +167,21 @@ function RunPicker({
 }
 
 export default function RunCompare({ runs }: { runs: CompareRun[] }) {
+  // Minimal state: just ids and the filter key. runs arrive newest first, so
+  // the defaults compare the two latest runs (older as A, newer as B).
+  // page.tsx only renders this component when there are at least two runs.
   const [aId, setAId] = useState(runs[1].runId);
   const [bId, setBId] = useState(runs[0].runId);
   const [filter, setFilter] = useState<FilterKey>("disagree");
 
+  // Derived state: the run objects are looked up from the ids on every render,
+  // so they can never drift out of sync with the selection. .find returns
+  // T | undefined, and the ?? fallback satisfies TypeScript.
   const a = runs.find((run) => run.runId === aId) ?? runs[1];
   const b = runs.find((run) => run.runId === bId) ?? runs[0];
 
+  // Recomputed on every render. With ~22 tickets that is instant; useMemo would
+  // only be worth adding if a profiler showed it was slow.
   const paired = pairRows(a, b);
   const visible = paired.filter((row) => matches(row, filter));
 
@@ -188,6 +240,9 @@ export default function RunCompare({ runs }: { runs: CompareRun[] }) {
       </p>
 
       <h2 className="mt-12 text-xl font-bold">Tickets</h2>
+      {/* Filter chips. role="group" + aria-label names the set; aria-pressed
+          makes each chip a toggle button for screen readers; focus-visible
+          gives keyboard users a focus ring. */}
       <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label="Filter tickets">
         {FILTERS.map((f) => {
           const count = paired.filter((row) => matches(row, f.key)).length;
@@ -229,6 +284,9 @@ export default function RunCompare({ runs }: { runs: CompareRun[] }) {
               </tr>
             ) : (
               visible.map((row) => (
+                // Keep each tag on its own line inside <tr>: whitespace between
+                // tags on the same line becomes a text node, which HTML does
+                // not allow in a table row (that caused a hydration warning).
                 <tr key={row.id} className="align-top hover:bg-white/5">
                   <th scope="row" className="px-4 py-3 font-mono font-normal">
                     <Link
