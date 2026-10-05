@@ -3,47 +3,13 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import type { Category, ProviderName, Severity, TriageResult, Usage } from "../../src/index";
+import type { ProviderName, RunFile, RunRow, RunSummary } from "../../src/index";
 import { SYSTEM_PROMPT } from "../../src/prompt";
-import { SEV_RANK, type Split } from "./dataset";
+import { SEV_RANK } from "./dataset";
+
+export type { RunFile, RunRow, RunSummary };
 
 export const RUNS_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "../../runs");
-
-interface RunRowBase {
-  id:      string;
-  goldCat: Category;
-  goldSev: Severity;
-}
-
-export type RunRow =
-  | (RunRowBase & { ok: true;  result: TriageResult; attempts: number; usage: Usage; latencyMs: number })
-  | (RunRowBase & { ok: false; reason: string; errors: string[] });
-
-export interface RunSummary {
-  scored:       number;
-  ok:           number;
-  failed:       number;
-  catAccuracy:  number;
-  sevExact:     number;
-  sevWithin1:   number;
-  sevMae:       number;
-  inputTokens:  number;
-  outputTokens: number;
-  p50LatencyMs: number;
-}
-
-export interface RunFile {
-  version:      1;
-  runId:        string;
-  createdAt:    string;
-  provider:     ProviderName;
-  model:        string;
-  promptHash:   string;
-  useRetrieval: boolean;
-  split:        Split | "all";
-  summary:      RunSummary;
-  rows:         RunRow[];
-}
 
 export function promptHash(): string {
   return createHash("sha256").update(SYSTEM_PROMPT).digest("hex").slice(0, 12);
