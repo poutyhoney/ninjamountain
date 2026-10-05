@@ -13,7 +13,7 @@ const TRAINING_NOTES = [
   },
   {
     title: "API routes keep credentials server-side",
-    body: "The Next.js route at /api/triage proxies the request to FastAPI rather than calling the Claude API directly from the browser. This means the ANTHROPIC_API_KEY never reaches the client.",
+    body: "The browser never calls Claude. It posts the ticket to the Next.js route at /api/triage, which runs the shared triage package in a Node.js serverless function. The API keys live in Vercel's environment settings for that project and never reach the client. Those settings are read when a deployment is created, so a new or changed key needs a redeploy.",
   },
   {
     title: "Streaming vs. single-shot responses are a product decision",
