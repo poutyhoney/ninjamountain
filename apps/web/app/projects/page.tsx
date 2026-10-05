@@ -57,7 +57,7 @@ const PROJECTS: Project[] = [
     summary:
       "Every change goes through a pull request. CI must pass before merge, and merging to main deploys to production.",
     shows: [
-      "GitHub Actions and GitLab CI for the same monorepo",
+      "A GitLab CI pipeline built as a second-provider exercise",
       "A Semgrep static analysis scan on every PR",
       "Vercel preview deploys posted back to the PR",
     ],
@@ -134,7 +134,7 @@ export default function ProjectsPage() {
       <SiteHeader />
       <main className="mx-auto max-w-[1180px] px-5 py-20">
         <p className="text-xs font-bold uppercase tracking-[.2em] text-[#8B6CFF]">Projects</p>
-        <h1 className="mt-4 text-4xl font-bold tracking-tight sm:text-5xl">What I&rsquo;ve built</h1>
+        <h1 className="mt-4 text-4xl font-bold tracking-tight sm:text-5xl">What&rsquo;s been built</h1>
         <p className="mt-4 max-w-2xl text-lg leading-relaxed text-[#6F7684]">
           Each project is small, working, and shipped through the same pipeline. Each one lists
           what it demonstrates and links to the proof.

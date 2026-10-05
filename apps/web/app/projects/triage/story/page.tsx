@@ -59,13 +59,13 @@ const STAGES: Stage[] = [
     link: { label: "Code at triage-v4", href: `${REPO}/tree/triage-v4/packages/triage` },
   },
   {
-    tag: "Now",
+    tag: "v5",
     title: "Anthropic vs OpenAI, side by side",
     added:
       "An interface in front of the model with one adapter per vendor, so the pipeline does not know which model it calls. Both get a byte-identical prompt. Every scored run is saved and browsable.",
     proof:
       "Saved runs on 22 labeled tickets, compared ticket by ticket in a static dashboard, with a prompt hash so runs that used different prompts are never compared by accident.",
-    link: { label: "The merged triage PRs", href: `${REPO}/pulls?q=is%3Apr+is%3Amerged+triage` },
+    link: { label: "Code at triage-v5", href: `${REPO}/tree/triage-v5/packages/triage` },
   },
 ];
 
