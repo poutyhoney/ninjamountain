@@ -1,7 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import type { TriageOutcome, TriageResult, Severity } from '@ninjamountain/triage';
+import type { TriageOutcome, Severity } from '@ninjamountain/triage';
+
+import { seconds } from '@/lib/format';
+
+type TriageSuccess = Extract<TriageOutcome, { ok: true }>;
 
 // A couple of sample tickets (from the support-triage-assistant data set) so the
 // page is usable without typing a full ticket from scratch.
@@ -39,20 +43,20 @@ export default function TriageForm() {
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<TriageResult | null>(null);
+  const [outcome, setOutcome] = useState<TriageSuccess | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const loadSample = (sample: (typeof SAMPLES)[number]) => {
     setSubject(sample.subject);
     setBody(sample.body);
-    setResult(null);
+    setOutcome(null);
     setError(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setResult(null);
+    setOutcome(null);
     setError(null);
 
     try {
@@ -61,12 +65,12 @@ export default function TriageForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ subject, body }),
       });
-      const outcome: TriageOutcome = await res.json();
+      const data: TriageOutcome = await res.json();
 
-      if (outcome.ok) {
-        setResult(outcome.result);
+      if (data.ok) {
+        setOutcome(data);
       } else {
-        setError(`Triage failed (${outcome.reason}): ${outcome.lastErrors.join('; ')}`);
+        setError(`Triage failed (${data.reason}): ${data.lastErrors.join('; ')}`);
       }
     } catch {
       setError('Could not reach the triage service. Please try again.');
@@ -133,12 +137,14 @@ export default function TriageForm() {
         </div>
       )}
 
-      {result && <TriageResultCard result={result} />}
+      {outcome && <TriageResultCard outcome={outcome} />}
     </div>
   );
 }
 
-function TriageResultCard({ result }: { result: TriageResult }) {
+function TriageResultCard({ outcome }: { outcome: TriageSuccess }) {
+  const result = outcome.result;
+
   return (
     <div className={`${card} flex flex-col gap-5`}>
       <div className="flex flex-wrap items-center gap-2">
@@ -170,6 +176,22 @@ function TriageResultCard({ result }: { result: TriageResult }) {
           {result.suggested_first_response}
         </p>
       </div>
+
+      <div>
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+          Knowledge base articles cited
+        </h3>
+        <p className="mt-1 font-mono text-sm text-[#C8CCD4]">
+          {result.kb_citations.length > 0
+            ? result.kb_citations.join(', ')
+            : 'None. No retrieved article was relevant.'}
+        </p>
+      </div>
+
+      <p className="border-t border-[#202431] pt-4 text-xs text-[#6F7684]">
+        {outcome.model} · {seconds(outcome.latencyMs)} · {outcome.usage.inputTokens} in /{' '}
+        {outcome.usage.outputTokens} out tokens · {outcome.attempts} attempt(s)
+      </p>
     </div>
   );
 }
