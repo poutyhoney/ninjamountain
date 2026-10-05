@@ -100,10 +100,10 @@ const PATHWAYS: Pathway[] = [
   },
   {
     icon: "artifacts",
-    title: "Artifacts",
-    body: "Reusable code, tools, and reference materials.",
-    href: "/projects/gallery",
-    cta: "Browse Artifacts",
+    title: "Projects",
+    body: "Working builds, what each one demonstrates, and links to the proof.",
+    href: "/projects",
+    cta: "Browse Projects",
   },
   {
     icon: "notes",
