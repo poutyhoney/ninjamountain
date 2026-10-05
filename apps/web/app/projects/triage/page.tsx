@@ -9,6 +9,34 @@ import Breadcrumbs from "@/app/components/Breadcrumbs";
 
 const TRAINING_NOTES = [
   {
+    title: "Pin temperature before you measure",
+    body: "The first scores looked good at the default temperature. Pinning temperature to 0 made them drop, which showed the earlier numbers were partly luck. A lower score you can reproduce beats a higher one you cannot, because only a stable score can tell you whether a prompt change helped.",
+  },
+  {
+    title: "A failing score can mean the label is wrong",
+    body: "Twice in the first version, the model was right and the hand-written gold label was wrong. Later, when Claude and GPT gave the same wrong answer on the same ticket, the label became the first suspect. An eval checks your data as much as your model.",
+  },
+  {
+    title: "Ground the answer where the model is confidently wrong",
+    body: "Retrieval was tested on the same tickets with and without the knowledge base. It helped on 3 of 5, and its real wins were fixing 2 confident factual errors: a wrong claim about SSO and error codes from the wrong product. It never made an answer worse, and when no article fit, the model cited none.",
+  },
+  {
+    title: "Prove an agent's exit paths, not just its happy path",
+    body: "An agent decides which tools to call, so some code paths only run when the model chooses them. Forcing the iteration cap to 1 confirmed the loop fails cleanly with its tool log intact. The tool log is the main debugging artifact: it shows whether a wrong answer came from a skipped tool or a bad conclusion.",
+  },
+  {
+    title: "A prompt tuned on one model favors it",
+    body: "With the same prompt, Claude scored 68% on category and GPT scored 45%. But the rubric was refined against Claude's mistakes, so part of that gap is the prompt, not the model. A fair comparison names what it was tuned on.",
+  },
+  {
+    title: "Swap the model, keep the pipeline",
+    body: "The triage package talks to a small TriageProvider interface instead of a specific SDK. Anthropic and OpenAI each get an adapter with their own retry rules, and both receive a byte-identical prompt, so the comparison measures the model and not the plumbing.",
+  },
+  {
+    title: "Prerender the evidence",
+    body: "The runs dashboard reads saved JSON run files during next build and ships static HTML. Nothing reads the file system at request time, which avoids monorepo file-tracing problems on Vercel and makes the pages instant.",
+  },
+  {
     title: "Split Server and Client Components at the data boundary",
     body: "The page wrapper (page.tsx) stays a Server Component for metadata and layout. The form itself becomes a Client Component (TriageForm.tsx) because it needs useState and event handlers. Only the leaf that needs interactivity opts in to 'use client'.",
   },
@@ -19,14 +47,6 @@ const TRAINING_NOTES = [
   {
     title: "Streaming vs. single-shot responses are a product decision",
     body: "For triage classification, a complete JSON object is easier to parse than a stream. Streaming makes more sense for long-form responses where showing partial output improves perceived speed.",
-  },
-  {
-    title: "Swap the model, keep the pipeline",
-    body: "The triage package talks to a small TriageProvider interface instead of a specific SDK. Anthropic and OpenAI each get an adapter with their own retry rules, and both receive a byte-identical prompt, so the comparison measures the model and not the plumbing.",
-  },
-  {
-    title: "Prerender the evidence",
-    body: "The runs dashboard reads saved JSON run files during next build and ships static HTML. Nothing reads the file system at request time, which avoids monorepo file-tracing problems on Vercel and makes the pages instant.",
   },
 ];
 
