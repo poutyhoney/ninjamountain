@@ -575,6 +575,40 @@ Three static pages in `apps/web`: `/projects/triage/runs` (all runs),
 - **Extract on the second use.** `parseProviderFlag`, the formatters, and `Mark` each moved to
   a shared module only when a second caller needed them.
 
+### Shipping it: environment lessons
+
+Every check passed and the dashboard deployed. Then a test of the live form returned HTTP 500:
+`ANTHROPIC_API_KEY is not configured on the server`. None of the problems below were in the code.
+All of them were about where configuration lives.
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| Live form: 500, key "not configured" | Keys were added to the `ninjamountain-store` Vercel project, not `ninjamountain-web` | Move the keys to the web project; delete them from store |
+| Still 500 after the keys were in place | A deployment reads env vars when it is created; the running one predated the keys | Redeploy |
+| Local form: Voyage 401 "Provided API key is invalid" | The key was missing, not wrong. The header became `Bearer undefined` | Add the key, restart the dev server |
+| Still 401 after adding the key | It went into `apps/store/.env.local`, not `apps/web/.env.local` | Move it; check the full path before saving |
+| Typecheck errors in `.next/types/validator.ts` for pages not on the branch | A build on another branch left generated route types behind | `rm -rf apps/web/.next/types` |
+| `gh pr merge` refused: "base branch policy prohibits the merge" | `gh pr checks --watch` ran before the CI jobs registered, saw only the Vercel checks, and exited | Watch again, then merge. Never `--admin` |
+
+The lessons underneath:
+
+- **Each process reads its own config.** The CLI reads `packages/triage/.env`. The local web
+  app reads `apps/web/.env.local`. Production reads the Vercel project's settings. A key that
+  works in one place proves nothing about the others.
+- **Twin apps invite the same mistake twice.** `apps/store` and `apps/web` have identical
+  layouts, and Vercel lists both projects side by side. The same store-for-web slip happened in
+  the dashboard and on disk. The habit: read the project name or full file path before saving.
+- **A deployment is a snapshot of code and config.** Changing a setting affects the next
+  deployment, not the running one. Same idea as the prerendered dashboard pages.
+- **"Invalid" can mean "missing".** An unset variable interpolated into a string becomes the
+  text `undefined`, and the API reports a bad key. `embedTexts()` now checks first and fails
+  with `VOYAGE_API_KEY is not set` (#45). A clear error at the source beats a misleading one
+  from the far end.
+- **Least privilege for secrets.** Production gets only the keys it uses: Anthropic and Voyage,
+  not OpenAI. Keys left in the wrong project were deleted, not kept "just in case".
+- **Errors in files you did not write point at generated or installed state.** Same lesson as
+  the earlier `npm ci` fix: check `.next/`, `node_modules/`, and env files before the code.
+
 ---
 
 ## 15. Where to go next
