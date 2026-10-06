@@ -32,6 +32,7 @@ environment, give the full commands, including the checks:
 ## "Comment it" pass
 
 After Tom says a file works, and he asks for it, add teaching comments to that file:
+
 - A header comment: what the file is for and how it connects to the rest.
 - Inline comments on anything non-obvious: why, not just what. Name the concept
   (e.g. "server component", "type narrowing", "dependency injection") so he can
@@ -51,7 +52,7 @@ After Tom says a file works, and he asks for it, add teaching comments to that f
 - `main` is protected: all work goes through a branch and a PR. CI (GitHub Actions
   and GitLab CI) must pass. Merging to `main` deploys to production on Vercel.
 - Never push to `main`, force-push, or change CI/deploy config without asking.
-- Ramp-up plan: `docs/store-week-2-checklist.md` for the current week. The full
+- Ramp-up plan: `docs/store-week-4-checklist.md` for the current week. The full
   8-week plan lives in Tom's Claude doc "Web UI Ramp-Up Plan".
 
 ## Writing style for READMEs and docs
