@@ -72,9 +72,9 @@ Branch: `docker/store`
 
 Branch: `docker/api`
 
-- [ ] `apps/api/Dockerfile`: slim Python image, install requirements, run with
+- [x] `apps/api/Dockerfile`: slim Python image, install requirements, run with
       uvicorn, non-root user.
-- [ ] `docker build` and `docker run` it. `/health` answers on port 8000.
+- [x] `docker build` and `docker run` it. `/health` answers on port 8000.
 
 ## 5. docker compose
 
@@ -280,6 +280,42 @@ with `apt` plus root sandbox flags.
 - `-e API_URL=` on `docker run`: inside the container, `127.0.0.1:8000` means
   the container itself, where no API runs. Compose fixes this in section 5.
 
+### Key learnings: API Docker image
+
+**1. Build context and `.dockerignore`**
+
+- The API builds with `apps/api` as its context. Docker only reads a
+  `.dockerignore` at the root of the context, so the repo-root one doesn't
+  apply.
+- Copying `main.py` and `entitlements.py` by name keeps out `.venv` (Mac-built
+  packages that wouldn't run on Linux), caches, and tests. An explicit copy
+  list is a simple alternative to an ignore file.
+
+**2. The same patterns as the store image**
+
+- Install dependencies (`requirements.txt`, `pip install`) before copying code,
+  so code changes reuse the cached install layer.
+- `--host 0.0.0.0` so connections from outside the container reach the server.
+- A non-root user. The Python image has none built in, so `useradd` creates
+  `appuser`.
+
+**3. Python in containers**
+
+- Run `uvicorn` directly. `fastapi dev` adds auto-reload, which is for local
+  coding.
+- `PYTHONUNBUFFERED=1` prints logs immediately, so `docker logs` shows
+  requests as they happen. `PYTHONDONTWRITEBYTECODE=1` skips `.pyc` files.
+- `--no-cache-dir` on `pip install` keeps pip's download cache out of the
+  image.
+
+**4. Size**
+
+- 64.1 MB compressed, 281 MB on disk. Most of it is the `python:3.13-slim`
+  base.
+- **Known gap:** `requirements.txt` includes `pytest` and `ruff`, so they ship
+  in the image. A separate `requirements-dev.txt` would fix it but changes the
+  CI `api` job.
+
 ### Commands I had to look up
 
 - `API_URL= npm run build:store` and `API_URL= npm run start:store`: run a
@@ -306,6 +342,14 @@ with `apt` plus root sandbox flags.
 - `docker run --rm -p 3001:3001 --env-file apps/store/.env.local -e API_URL= ninjamountain-store`
 - `docker images <name>` and `docker history <name>`: image size and layers.
 - `git restore <file>`: discard uncommitted changes to one file.
+
+- `docker build -t ninjamountain-api apps/api`: build with `apps/api` as the
+  context.
+- `docker run --rm -p 8000:8000 ninjamountain-api`, then
+  `curl -s http://localhost:8000/health`.
+- `docker run --rm <image> sh -c 'whoami; ls -a /app'`: check the user and
+  files inside an image.
+- `docker ps`: list running containers and their ports.
 
 ### Errors I hit and what fixed them
 
