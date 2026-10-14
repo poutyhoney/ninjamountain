@@ -48,25 +48,25 @@ Branch: `store/perf-baseline`
 
 Branch: `store/lighthouse-ci`
 
-- [ ] Install `@lhci/cli` in the store workspace.
-- [ ] `lighthouserc` config: production build, `/` and `/checkout/cancel`,
+- [x] Install `@lhci/cli` in the store workspace.
+- [x] `lighthouserc` config: production build, `/` and `/checkout/cancel`,
       3 runs each, mobile settings, score assertions from the decisions above.
-- [ ] Run it locally and read the report.
-- [ ] CI job `lighthouse`, with the Contentful secrets on the build step.
+- [x] Run it locally and read the report.
+- [x] CI job `lighthouse`, with the Contentful secrets on the build step.
       (CI config change: approve it.)
-- [ ] Prove the budget can fail (throwaway branch), then clean up.
-- [ ] Add `lighthouse` as a required check on `main`.
+- [x] Prove the budget can fail (throwaway branch), then clean up.
+- [x] Add `lighthouse` as a required check on `main`.
 
 ## 3. Store Docker image
 
 Branch: `docker/store`
 
-- [ ] Read the Next 16 docs on `output: "standalone"` and self-hosting.
-- [ ] Turn on standalone output and confirm `next build` still works.
-- [ ] `apps/store/Dockerfile`: multi-stage build from the repo root (workspace
+- [x] Read the Next 16 docs on `output: "standalone"` and self-hosting.
+- [x] Turn on standalone output and confirm `next build` still works.
+- [x] `apps/store/Dockerfile`: multi-stage build from the repo root (workspace
       install), Contentful passed as BuildKit secrets, non-root runtime user.
-- [ ] `.dockerignore` at the repo root.
-- [ ] `docker build` and `docker run` it. The store loads on port 3001.
+- [x] `.dockerignore` at the repo root.
+- [x] `docker build` and `docker run` it. The store loads on port 3001.
 
 ## 4. API Docker image
 
@@ -168,6 +168,118 @@ Chrome DevTools Lighthouse, Mobile, incognito, production build with
 Lesson: a Lighthouse suggestion is not a requirement. Weigh the gain against
 the cost and risk, and write down the reasoning.
 
+### Key learnings: Lighthouse CI
+
+**1. What `lhci autorun` does**
+
+- Three steps in one command: **collect** (starts the server, runs Lighthouse
+  3 times per URL), **assert** (checks scores against the budget), **upload**
+  (saves the reports).
+- A failed assertion makes it exit with status 1. That exit code is what turns
+  the CI check red.
+
+**2. The budget**
+
+- Performance 0.9, Best Practices 0.9, SEO 0.9, Accessibility 1. Scores are
+  0 to 1 in the config, 0 to 100 in reports.
+- Accessibility is 1 (100) so the week 3 audit can't quietly slip.
+- No `settings` block means Lighthouse's default mobile simulation, the same
+  as the manual DevTools runs.
+
+**3. `median-run` and flaky performance tests**
+
+- The failing test run showed `all values: 0.89, 0.98, 0.99` for `/`. The
+  first run is usually the slowest because the server has just started.
+- `optimistic` (the default, best run) can hide a slow page.
+- `pessimistic` (worst run) fails CI randomly whenever one cold run dips.
+- `median-run` checks every category from the median run: stable and honest.
+
+**4. CI design choices**
+
+- Runs against a production build in GitHub Actions, not the Vercel preview,
+  so it doesn't depend on Vercel finishing a deploy.
+- No `API_URL` in CI, so the build is static like production.
+- No browser install step: GitHub's `ubuntu-latest` already has Chrome.
+- Reports saved with `upload-artifact` and `if: always()`, so they're
+  available even when the check fails. Not uploaded to
+  "temporary-public-storage," because those links are public.
+- The `upload-artifact` action is pinned to a commit SHA, looked up with
+  `gh api repos/actions/upload-artifact/commits/v4 --jq .sha`.
+
+**5. Proving the budget can fail**
+
+- Raised the performance budget to 1 on a throwaway branch. The check went red
+  with `expected: >=1, found: 0.99`. Raising the bar tests the mechanism
+  without breaking the app.
+
+**6. Required checks have an order**
+
+- A check can only be required after the job exists on `main`. Requiring it
+  earlier would leave every new PR waiting for a check that never runs.
+- `main` now requires 7 checks: api, packages, web, semgrep, store, e2e,
+  lighthouse.
+
+**Known gap:** Lighthouse runs in GitHub Actions only. GitLab's `node:22`
+image has no Chrome, so a matching GitLab job would need Chromium installed
+with `apt` plus root sandbox flags.
+
+### Key learnings: store Docker image
+
+**1. Standalone output**
+
+- `output: "standalone"` makes `next build` also write `.next/standalone/`:
+  a small `server.js` plus only the `node_modules` files the server loads.
+- Sizes: full `node_modules` 816 MB, standalone output 38 MB.
+- In a monorepo, set `outputFileTracingRoot` to the repo root
+  (`path.join(__dirname, "../..")`) so the trace includes the shared root
+  `node_modules` and `packages/ui`. The output mirrors the repo layout, so the
+  server lives at `.next/standalone/apps/store/server.js`.
+- Standalone is turned on only when `BUILD_STANDALONE=1` (set in the
+  Dockerfile). With it always on, `next start` still works but warns on every
+  run, and Playwright and Lighthouse CI both use `next start`.
+- The standalone server doesn't serve `.next/static` (or `public`) unless you
+  copy them next to it. The Dockerfile copies `.next/static`.
+
+**2. Multi-stage build**
+
+- The `build` stage has the full toolchain. The `runtime` stage starts fresh
+  from `node:22-slim` and copies in only the standalone output and static
+  files.
+- Image: 91.5 MB compressed ("content size"), 397 MB on disk. About 350 MB is
+  the Debian and Node base; the app adds about 40 MB.
+
+**3. Layer caching**
+
+- Copy `package.json` files and the lockfile, run `npm ci`, and only then copy
+  source code. Code changes reuse the cached install layer.
+- Copy every workspace's `package.json`, because `npm ci` checks the lockfile
+  against all workspaces, even with `--workspace apps/store`.
+
+**4. Secrets in Docker builds**
+
+- `RUN --mount=type=secret,id=...,env=NAME` exposes a secret as an env var for
+  that one `RUN` step only. It's never written into a layer.
+- `ARG` or `ENV` for secrets would bake them into the image, readable with
+  `docker history`.
+- Verified: no Contentful or Stripe values in the image's env or layer
+  history.
+- Runtime secrets (`--env-file` on `docker run`) are fine because they live in
+  the running container, not the image.
+- `.dockerignore` excludes `**/.env*` (except `.env.example`), so secret files
+  never even enter the build context.
+
+**5. Running safely**
+
+- `HOSTNAME=0.0.0.0`: inside a container, `localhost` only accepts
+  connections from the container itself, so port mapping couldn't reach it.
+- `USER node`: the server runs as the image's non-root user.
+  `--chown=node:node` lets it write ISR cache files.
+- `node:22-slim` over `alpine`: Alpine uses musl, and native packages
+  (Tailwind's compiler) sometimes need special builds for it. Slim costs about
+  70 MB more and avoids that risk.
+- `-e API_URL=` on `docker run`: inside the container, `127.0.0.1:8000` means
+  the container itself, where no API runs. Compose fixes this in section 5.
+
 ### Commands I had to look up
 
 - `API_URL= npm run build:store` and `API_URL= npm run start:store`: run a
@@ -176,6 +288,24 @@ the cost and risk, and write down the reasoning.
   Mode Navigation, Device Mobile, all four categories.
 - `curl -s http://localhost:3001/ | grep -c 'as="font"'`: counts the font
   preload tags in the page's HTML.
+
+- `API_URL= npm run lighthouse:store`: Lighthouse CI locally, matching
+  production.
+- `gh run list --branch <branch> --workflow CI --limit 1`: find a run's ID.
+- `gh run view <run-id> --log-failed`: print only the failed steps' logs.
+- `gh run download <run-id> -n lighthouse-reports -D ~/Downloads/lighthouse-reports`:
+  download a CI artifact without a browser.
+- Cmd+click a URL in macOS Terminal to open it in the browser.
+- `gh pr close <number> --delete-branch`: `close` always needs the PR number.
+
+- `BUILD_STANDALONE=1 API_URL= npm run build:store`: standalone build
+  locally. `du -sh <folder>` shows a folder's size.
+- `set -a; source apps/store/.env.local; set +a`: load and export a `.env`
+  file into the shell, so `docker build --secret ...,env=NAME` can read it.
+- `docker build -f apps/store/Dockerfile -t ninjamountain-store --secret id=contentful_space_id,env=CONTENTFUL_SPACE_ID --secret id=contentful_access_token,env=CONTENTFUL_ACCESS_TOKEN .`
+- `docker run --rm -p 3001:3001 --env-file apps/store/.env.local -e API_URL= ninjamountain-store`
+- `docker images <name>` and `docker history <name>`: image size and layers.
+- `git restore <file>`: discard uncommitted changes to one file.
 
 ### Errors I hit and what fixed them
 
@@ -196,3 +326,33 @@ the cost and risk, and write down the reasoning.
 - **Why:** a code formatter (likely Prettier, on save) reformatted the file.
 - **Fix:** none needed. It doesn't change behavior. Decide whether that
   formatter should run on this repo, because it makes diffs noisier.
+
+**3. `grep` found nothing in the failed Lighthouse log** (section 2)
+
+- **What happened:** `gh run view ... --log-failed | grep 'categories:performance'`
+  printed nothing, even though the job had failed.
+- **Why:** the report writes `categories.performance` with a dot (the config
+  uses a colon), and color codes sit between the words.
+- **Fix:** search for plain words, like `grep -A3 'performance failure'`, or
+  read the tail of the log.
+
+**4. `gh pr close --delete-branch` failed** (section 2)
+
+- **What happened:** "cannot close pull request: number, url, or branch
+  required."
+- **Why:** unlike `checks`, `view`, and `merge`, `gh pr close` doesn't default
+  to the current branch's PR.
+- **Fix:** `gh pr close 53 --delete-branch`. Find numbers with
+  `gh pr list --head <branch>`.
+
+**5. The triage README showed up on the Docker branch** (section 3)
+
+- **What happened:** after committing the README on its own branch (PR #54)
+  and switching back, `git status` on `docker/store` still listed
+  `packages/triage/README.md` as modified.
+- **Why:** the file was saved again after the commit (one blank line removed,
+  likely the on-save formatter), so an uncommitted copy came along to the new
+  branch.
+- **Fix:** `git restore packages/triage/README.md`. The real changes were safe
+  in PR #54.
+- **Lesson:** run `git status` right after switching branches.
