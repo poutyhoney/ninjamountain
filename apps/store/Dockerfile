@@ -15,6 +15,7 @@ COPY packages/ui packages/ui
 COPY apps/store apps/store
 
 ENV BUILD_STANDALONE=1
+ARG API_URL
 RUN --mount=type=secret,id=contentful_space_id,env=CONTENTFUL_SPACE_ID \
     --mount=type=secret,id=contentful_access_token,env=CONTENTFUL_ACCESS_TOKEN \
     npm run build --workspace apps/store
