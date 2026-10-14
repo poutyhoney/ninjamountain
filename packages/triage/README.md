@@ -137,6 +137,57 @@ agent loop — run:
 npx @modelcontextprotocol/inspector tsx src/mcp-server.ts
 ```
 
+
+## Command reference
+
+Run every script from the repo root:
+`npm --workspace @ninjamountain/triage run <script> -- <flags>`.
+The `--` passes the flags to the script instead of to npm.
+
+| Script | Flags | What it does |
+|---|---|---|
+| `triage` | (none) | Triage the built-in sample ticket |
+| | `--id T02` | Triage one dataset ticket |
+| | `--all` | Triage every dataset ticket |
+| | `--provider anthropic\|openai` | Pick the AI provider |
+| `agent` | (none) or `--id T01` | Run the MCP agent (Anthropic only) |
+| `score` | (none) | Score the dev split and save to `runs/` |
+| | `--test` / `--all` | Score the test split, or everything |
+| | `--provider openai` | Score on OpenAI |
+| | `--no-save` | Print only. Don't write a run file |
+| `compare` | `runs/<a>.json runs/<b>.json` | Diff two saved runs |
+| `generate` | `--cell "flex/taskrouter·bug·high"` | Make tickets for one cell |
+| | `--fill-gaps` | Make tickets for thin cells (not with `--cell`) |
+| | `-n 8` / `--count 8` | How many to make |
+| | `--twist`, `--out`, `--seed` | Twist style, output file, random seed |
+| | `--dry-run` | Show the plan and a sample prompt. No API calls |
+| `verify` | (none) | Review candidates one by one, blind |
+| | `--stats` | Agreement summary, no review |
+| | `--assign-splits` | Assign dev/test to unsplit records |
+| | `--filter flex` | Only review matching candidates |
+| | `--in`, `--reviewer`, `--show-intended` | Input file, reviewer name, show intended labels |
+| `dataset:migrate` | `--force` | Rebuild `dataset.json` (overwrite with `--force`) |
+| `dataset:report` / `dataset:validate` | (none) | Coverage report / schema check |
+| `kb:embed` | (none) | Re-embed `kb/*.md` into `embeddings.json` |
+| `rag:eval` | (none) | Compare results with and without retrieval |
+| `mcp:server` | (none) | Run the MCP server on its own |
+| `learnings:pdf` | (none) | Build `LEARNINGS.pdf` from `LEARNINGS.md` |
+
+There is no flag to limit how many tickets `score` runs. Use the split flags,
+or `triage -- --id <id>` for a single ticket.
+
+### Environment variables
+
+Set these in `packages/triage/.env` (gitignored).
+
+| Variable | Used for |
+|---|---|
+| `ANTHROPIC_API_KEY` | Claude calls |
+| `OPENAI_API_KEY` | OpenAI calls |
+| `OPENAI_MODEL` | OpenAI model (default `gpt-5.5`) |
+| `TRIAGE_PROVIDER` | Default provider. `--provider` overrides it |
+| `VOYAGE_API_KEY` | KB embeddings for retrieval |
+
 ## Scored accuracy report
 
 Evaluate the (v1/v2) pipeline against the gold labels in
