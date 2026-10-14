@@ -61,12 +61,12 @@ Branch: `store/lighthouse-ci`
 
 Branch: `docker/store`
 
-- [ ] Read the Next 16 docs on `output: "standalone"` and self-hosting.
-- [ ] Turn on standalone output and confirm `next build` still works.
-- [ ] `apps/store/Dockerfile`: multi-stage build from the repo root (workspace
+- [x] Read the Next 16 docs on `output: "standalone"` and self-hosting.
+- [x] Turn on standalone output and confirm `next build` still works.
+- [x] `apps/store/Dockerfile`: multi-stage build from the repo root (workspace
       install), Contentful passed as BuildKit secrets, non-root runtime user.
-- [ ] `.dockerignore` at the repo root.
-- [ ] `docker build` and `docker run` it. The store loads on port 3001.
+- [x] `.dockerignore` at the repo root.
+- [x] `docker build` and `docker run` it. The store loads on port 3001.
 
 ## 4. API Docker image
 
@@ -223,6 +223,63 @@ the cost and risk, and write down the reasoning.
 image has no Chrome, so a matching GitLab job would need Chromium installed
 with `apt` plus root sandbox flags.
 
+### Key learnings: store Docker image
+
+**1. Standalone output**
+
+- `output: "standalone"` makes `next build` also write `.next/standalone/`:
+  a small `server.js` plus only the `node_modules` files the server loads.
+- Sizes: full `node_modules` 816 MB, standalone output 38 MB.
+- In a monorepo, set `outputFileTracingRoot` to the repo root
+  (`path.join(__dirname, "../..")`) so the trace includes the shared root
+  `node_modules` and `packages/ui`. The output mirrors the repo layout, so the
+  server lives at `.next/standalone/apps/store/server.js`.
+- Standalone is turned on only when `BUILD_STANDALONE=1` (set in the
+  Dockerfile). With it always on, `next start` still works but warns on every
+  run, and Playwright and Lighthouse CI both use `next start`.
+- The standalone server doesn't serve `.next/static` (or `public`) unless you
+  copy them next to it. The Dockerfile copies `.next/static`.
+
+**2. Multi-stage build**
+
+- The `build` stage has the full toolchain. The `runtime` stage starts fresh
+  from `node:22-slim` and copies in only the standalone output and static
+  files.
+- Image: 91.5 MB compressed ("content size"), 397 MB on disk. About 350 MB is
+  the Debian and Node base; the app adds about 40 MB.
+
+**3. Layer caching**
+
+- Copy `package.json` files and the lockfile, run `npm ci`, and only then copy
+  source code. Code changes reuse the cached install layer.
+- Copy every workspace's `package.json`, because `npm ci` checks the lockfile
+  against all workspaces, even with `--workspace apps/store`.
+
+**4. Secrets in Docker builds**
+
+- `RUN --mount=type=secret,id=...,env=NAME` exposes a secret as an env var for
+  that one `RUN` step only. It's never written into a layer.
+- `ARG` or `ENV` for secrets would bake them into the image, readable with
+  `docker history`.
+- Verified: no Contentful or Stripe values in the image's env or layer
+  history.
+- Runtime secrets (`--env-file` on `docker run`) are fine because they live in
+  the running container, not the image.
+- `.dockerignore` excludes `**/.env*` (except `.env.example`), so secret files
+  never even enter the build context.
+
+**5. Running safely**
+
+- `HOSTNAME=0.0.0.0`: inside a container, `localhost` only accepts
+  connections from the container itself, so port mapping couldn't reach it.
+- `USER node`: the server runs as the image's non-root user.
+  `--chown=node:node` lets it write ISR cache files.
+- `node:22-slim` over `alpine`: Alpine uses musl, and native packages
+  (Tailwind's compiler) sometimes need special builds for it. Slim costs about
+  70 MB more and avoids that risk.
+- `-e API_URL=` on `docker run`: inside the container, `127.0.0.1:8000` means
+  the container itself, where no API runs. Compose fixes this in section 5.
+
 ### Commands I had to look up
 
 - `API_URL= npm run build:store` and `API_URL= npm run start:store`: run a
@@ -240,6 +297,15 @@ with `apt` plus root sandbox flags.
   download a CI artifact without a browser.
 - Cmd+click a URL in macOS Terminal to open it in the browser.
 - `gh pr close <number> --delete-branch`: `close` always needs the PR number.
+
+- `BUILD_STANDALONE=1 API_URL= npm run build:store`: standalone build
+  locally. `du -sh <folder>` shows a folder's size.
+- `set -a; source apps/store/.env.local; set +a`: load and export a `.env`
+  file into the shell, so `docker build --secret ...,env=NAME` can read it.
+- `docker build -f apps/store/Dockerfile -t ninjamountain-store --secret id=contentful_space_id,env=CONTENTFUL_SPACE_ID --secret id=contentful_access_token,env=CONTENTFUL_ACCESS_TOKEN .`
+- `docker run --rm -p 3001:3001 --env-file apps/store/.env.local -e API_URL= ninjamountain-store`
+- `docker images <name>` and `docker history <name>`: image size and layers.
+- `git restore <file>`: discard uncommitted changes to one file.
 
 ### Errors I hit and what fixed them
 
@@ -278,3 +344,15 @@ with `apt` plus root sandbox flags.
   to the current branch's PR.
 - **Fix:** `gh pr close 53 --delete-branch`. Find numbers with
   `gh pr list --head <branch>`.
+
+**5. The triage README showed up on the Docker branch** (section 3)
+
+- **What happened:** after committing the README on its own branch (PR #54)
+  and switching back, `git status` on `docker/store` still listed
+  `packages/triage/README.md` as modified.
+- **Why:** the file was saved again after the commit (one blank line removed,
+  likely the on-save formatter), so an uncommitted copy came along to the new
+  branch.
+- **Fix:** `git restore packages/triage/README.md`. The real changes were safe
+  in PR #54.
+- **Lesson:** run `git status` right after switching branches.

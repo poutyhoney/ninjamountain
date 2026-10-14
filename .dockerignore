@@ -1,0 +1,11 @@
+**/node_modules
+**/.next
+**/.env*
+!**/.env.example
+.git
+**/coverage
+**/storybook-static
+**/test-results
+**/playwright-report
+**/.lighthouseci
+apps/api/.venv
