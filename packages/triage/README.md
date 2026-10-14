@@ -83,98 +83,213 @@ if (outcome.ok) {
 `runTriageAgent()` spawns the MCP server (`src/mcp-server.ts`) as a subprocess for the
 duration of the call and tears it down afterward — no separate process to manage
 yourself. `outcome.toolLog` records every tool call made (or attempted) during the run,
-which is what the CLI below prints.
+which is what `npm -w @ninjamountain/triage run agent` prints (see the
+[Command reference](#command-reference)).
 
 Requires `ANTHROPIC_API_KEY` in the environment for both entry points, plus
 `VOYAGE_API_KEY` for KB retrieval (v2+, since `search_kb` embeds the query).
 
-## Comparing providers
-
-`triageTicket()` runs on Anthropic (default) or OpenAI. Pick one with
-`--provider anthropic|openai` on the CLI scripts, or set `TRIAGE_PROVIDER`.
-OpenAI needs `OPENAI_API_KEY` in `.env`. Override the model with `OPENAI_MODEL`.
-
-```bash
-npm run score -- --provider openai
-npm run compare -- runs/<a>.json runs/<b>.json
-```
-
-`npm run score` saves each run to `runs/<timestamp>-<provider>-<model>.json`.
-Each file holds the summary metrics and the full output for every ticket.
-`compare.ts` diffs two runs: which tickets each model got right, and where they disagree.
-The same runs are browsable at `/projects/triage/runs` in `apps/web`.
-
-Query embeddings are cached in `.cache/` (gitignored), so only the first run
-calls Voyage. The two providers then retrieve the same KB articles.
-
-Note: `gpt-5.5` only supports the default temperature, so OpenAI runs are not
-deterministic. Claude runs at temperature 0.
-
-
-## CLI (fast iteration loop)
-
-Run from anywhere in the monorepo:
-
-```bash
-npm --workspace @ninjamountain/triage run triage             # v1/v2: built-in sample ticket
-npm --workspace @ninjamountain/triage run triage -- --id T02 # v1/v2: one dataset ticket by id
-npm --workspace @ninjamountain/triage run triage -- --all    # v1/v2: every ticket in the dataset
-
-npm --workspace @ninjamountain/triage run agent               # v3/v4: built-in sample ticket
-npm --workspace @ninjamountain/triage run agent -- --id T01   # v3/v4: one dataset ticket by id
-
-npm --workspace @ninjamountain/triage run mcp:server          # run the MCP server standalone
-```
-
-Tickets come from [`experiments/data/tickets.json`](./experiments/data/tickets.json).
-Both CLIs read `ANTHROPIC_API_KEY` (and `VOYAGE_API_KEY`) from `packages/triage/.env`
-(gitignored) or your shell.
-
-To inspect the MCP server directly — list its tools and call them by hand, outside the
-agent loop — run:
-
-```bash
-npx @modelcontextprotocol/inspector tsx src/mcp-server.ts
-```
-
-
 ## Command reference
 
-Run every script from the repo root:
-`npm --workspace @ninjamountain/triage run <script> -- <flags>`.
-The `--` passes the flags to the script instead of to npm.
+Run everything from the **repo root**. The pattern is:
 
-| Script | Flags | What it does |
-|---|---|---|
-| `triage` | (none) | Triage the built-in sample ticket |
-| | `--id T02` | Triage one dataset ticket |
-| | `--all` | Triage every dataset ticket |
-| | `--provider anthropic\|openai` | Pick the AI provider |
-| `agent` | (none) or `--id T01` | Run the MCP agent (Anthropic only) |
-| `score` | (none) | Score the dev split and save to `runs/` |
-| | `--test` / `--all` | Score the test split, or everything |
-| | `--provider openai` | Score on OpenAI |
-| | `--no-save` | Print only. Don't write a run file |
-| `compare` | `runs/<a>.json runs/<b>.json` | Diff two saved runs |
-| `generate` | `--cell "flex/taskrouter·bug·high"` | Make tickets for one cell |
-| | `--fill-gaps` | Make tickets for thin cells (not with `--cell`) |
-| | `-n 8` / `--count 8` | How many to make |
-| | `--twist`, `--out`, `--seed` | Twist style, output file, random seed |
-| | `--dry-run` | Show the plan and a sample prompt. No API calls |
-| `verify` | (none) | Review candidates one by one, blind |
-| | `--stats` | Agreement summary, no review |
-| | `--assign-splits` | Assign dev/test to unsplit records |
-| | `--filter flex` | Only review matching candidates |
-| | `--in`, `--reviewer`, `--show-intended` | Input file, reviewer name, show intended labels |
-| `dataset:migrate` | `--force` | Rebuild `dataset.json` (overwrite with `--force`) |
-| `dataset:report` / `dataset:validate` | (none) | Coverage report / schema check |
-| `kb:embed` | (none) | Re-embed `kb/*.md` into `embeddings.json` |
-| `rag:eval` | (none) | Compare results with and without retrieval |
-| `mcp:server` | (none) | Run the MCP server on its own |
-| `learnings:pdf` | (none) | Build `LEARNINGS.pdf` from `LEARNINGS.md` |
+```bash
+npm -w @ninjamountain/triage run <script> -- <flags>
+```
 
-There is no flag to limit how many tickets `score` runs. Use the split flags,
-or `triage -- --id <id>` for a single ticket.
+`-w` picks the triage workspace. The `--` passes the flags to the script
+instead of to npm. Scripts that call a model need API keys in
+`packages/triage/.env` (see [Environment variables](#environment-variables)).
+
+### Try a ticket
+
+**`triage`**: run the v1/v2 pipeline (with retrieval) on tickets.
+
+```bash
+npm -w @ninjamountain/triage run triage                         # the built-in sample ticket
+npm -w @ninjamountain/triage run triage -- --id T02             # one ticket by id
+npm -w @ninjamountain/triage run triage -- --all                # every ticket
+npm -w @ninjamountain/triage run triage -- --provider openai    # use OpenAI (also works with --id / --all)
+```
+
+`--id` and `--all` read the original v1 ticket set in
+[`experiments/data/tickets.json`](./experiments/data/tickets.json), not
+`dataset.json`.
+
+You'll see: `Using <provider> (<model>)`, then a block per ticket with
+`category`, `severity`, `escalate`, `summary`, `reply`, and `cites`. A ticket
+that fails validation shows `✗ FAILED (<reason>)` and the errors.
+
+**`agent`**: run the v3/v4 tool-use agent. Anthropic only. Needs
+`ANTHROPIC_API_KEY` and `VOYAGE_API_KEY`.
+
+```bash
+npm -w @ninjamountain/triage run agent                  # the built-in sample ticket
+npm -w @ninjamountain/triage run agent -- --id T01      # one ticket from tickets.json
+```
+
+You'll see: a `tool calls (<n>)` list (each tool, its input, and the start of
+its output), then the result block, ending with `(done in <n> iteration[s])`.
+
+### Measure accuracy
+
+**`score`**: run every labeled ticket in a split through the v1/v2 pipeline
+and compare with the gold labels in `dataset.json`. Use it to catch
+regressions after changing the prompt or retrieval. Defaults to the **dev**
+split, so the frozen test split stays unseen.
+
+```bash
+npm -w @ninjamountain/triage run score                          # dev split, default provider
+npm -w @ninjamountain/triage run score -- --test                # frozen test split
+npm -w @ninjamountain/triage run score -- --all                 # every labeled ticket
+npm -w @ninjamountain/triage run score -- --provider openai     # same tickets on OpenAI
+npm -w @ninjamountain/triage run score -- --no-save             # print only, no run file
+```
+
+You'll see: category accuracy, per-class precision/recall/F1, a confusion
+matrix, and severity exact / off-by-one / mean absolute error (severity is
+ordinal: `low < medium < high < critical`). Unless you pass `--no-save`, the run
+is saved to `packages/triage/runs/<timestamp>-<provider>-<model>.json`, with the
+summary metrics and the full output for every ticket. Saved runs are also
+browsable at `/projects/triage/runs` in `apps/web`.
+
+There's no flag to limit how many tickets `score` runs. For one ticket, use
+`triage -- --id <id>`.
+
+**`compare`**: diff two saved runs, ticket by ticket.
+
+```bash
+ls packages/triage/runs/                                        # find run files (sorted by time)
+npm -w @ninjamountain/triage run compare -- runs/<run-a>.json runs/<run-b>.json
+```
+
+You'll see: the two runs' metrics side by side, category results on the
+tickets both runs share, and a **DISAGREEMENTS** list (tickets where category
+or severity differ, with the gold label).
+
+**Comparing providers.** `score` and `triage` run on Anthropic (default) or
+OpenAI. Choose with `--provider anthropic|openai`, or set `TRIAGE_PROVIDER` in
+`.env`. A typical comparison:
+
+```bash
+npm -w @ninjamountain/triage run score                          # Anthropic run, saved
+npm -w @ninjamountain/triage run score -- --provider openai     # OpenAI run, saved
+ls packages/triage/runs/                                        # the two newest files
+npm -w @ninjamountain/triage run compare -- runs/<anthropic-run>.json runs/<openai-run>.json
+```
+
+Good to know:
+
+- Query embeddings are cached in `packages/triage/.cache/` (gitignored), so
+  only the first run calls Voyage, and both providers retrieve the same KB
+  articles.
+- Claude runs at temperature 0. `gpt-5.5` only supports its default
+  temperature, so OpenAI runs vary from run to run.
+
+**`rag:eval`**: the same few tickets with and without retrieval, for reading
+the suggested replies side by side. Not a score.
+
+```bash
+npm -w @ninjamountain/triage run rag:eval
+```
+
+You'll see: for each ticket, a `WITHOUT retrieval` reply and a `WITH retrieval`
+reply with its `kb_citations`. See LEARNINGS.md section 10 for how to read the
+results.
+
+### Build the dataset
+
+New tickets go through three steps: **generate** candidates, **verify** them
+blind, then **validate** the dataset.
+
+**`generate`**: create candidate tickets in a staging file
+(`candidates.json`). Never writes `dataset.json` and never sets a gold label.
+
+```bash
+npm -w @ninjamountain/triage run generate -- --fill-gaps --dry-run              # plan + sample prompt, no API calls
+npm -w @ninjamountain/triage run generate -- --fill-gaps                        # 8 candidates for the thinnest cells
+npm -w @ninjamountain/triage run generate -- --fill-gaps -n 4                   # 4 instead of 8
+npm -w @ninjamountain/triage run generate -- --cell "flex/taskrouter·bug·high"  # 3 for one cell
+npm -w @ninjamountain/triage run generate -- --cell "flex/taskrouter·bug·high" --twist question_framed
+```
+
+Other flags: `--out <file>` (default `candidates.json`), `--seed <number>` (repeat
+the same random picks). `--count` is the long form of `-n`. Use `--fill-gaps` or
+`--cell`, not both.
+
+**Start with `--dry-run`.** It shows what would be generated without spending
+API calls.
+
+**`verify`**: review pending candidates one at a time **without** seeing the
+generator's intended label. Your read becomes the gold label.
+
+```bash
+npm -w @ninjamountain/triage run verify                         # review all pending candidates
+npm -w @ninjamountain/triage run verify -- --filter flex        # only matching product, cell, or twist
+npm -w @ninjamountain/triage run verify -- --stats              # agreement summary, no review
+npm -w @ninjamountain/triage run verify -- --assign-splits      # give dev/test to records without a split
+```
+
+Other flags: `--in <file>` (default `candidates.json`), `--reviewer <name>`
+(default: your `git config user.name`), `--show-intended` (reveal the
+generator's label, which breaks the blind review).
+
+You'll see: each candidate's text and prompts for category and severity. Before
+writing, the result runs through the same checks as `dataset:validate`; if any
+fail, nothing is written. With nothing pending: `No pending candidates to review.`
+
+**`dataset:report`**: how many tickets each cell has versus its target.
+Read-only.
+
+```bash
+npm -w @ninjamountain/triage run dataset:report
+```
+
+You'll see: a `PRODUCT / SUB-SURFACE  cur  tgt  gap` table, then the category,
+severity, and real/synthetic mix.
+
+**`dataset:validate`**: check `dataset.json` against the schema rules. CI runs
+it on every PR.
+
+```bash
+npm -w @ninjamountain/triage run dataset:validate
+```
+
+You'll see: the record count, then either `✓ all invariants hold.` or a list
+of violations (and a non-zero exit).
+
+**`dataset:migrate`**: one-time conversion of the old two-file dataset into
+`dataset.json`. You shouldn't need it again.
+
+```bash
+npm -w @ninjamountain/triage run dataset:migrate                # refuses if dataset.json exists
+npm -w @ninjamountain/triage run dataset:migrate -- --force     # overwrite
+```
+
+### Knowledge base and other
+
+**`kb:embed`**: re-embed `kb/*.md` into `kb/embeddings.json`. Run it after
+editing any KB article. Needs `VOYAGE_API_KEY`.
+
+```bash
+npm -w @ninjamountain/triage run kb:embed
+```
+
+You'll see: `Embedding <n> KB articles...` then `Wrote <n> embeddings to ...`.
+
+**`mcp:server`**: run the MCP server on its own. The agent normally starts and
+stops it for you.
+
+```bash
+npm -w @ninjamountain/triage run mcp:server
+npx @modelcontextprotocol/inspector tsx packages/triage/src/mcp-server.ts   # list and call its tools by hand
+```
+
+**`learnings:pdf`**: build `LEARNINGS.pdf` from `LEARNINGS.md` (needs Python 3).
+
+```bash
+npm -w @ninjamountain/triage run learnings:pdf
+```
 
 ### Environment variables
 
@@ -187,23 +302,6 @@ Set these in `packages/triage/.env` (gitignored).
 | `OPENAI_MODEL` | OpenAI model (default `gpt-5.5`) |
 | `TRIAGE_PROVIDER` | Default provider. `--provider` overrides it |
 | `VOYAGE_API_KEY` | KB embeddings for retrieval |
-
-## Scored accuracy report
-
-Evaluate the (v1/v2) pipeline against the gold labels in
-[`experiments/data/labels.json`](./experiments/data/labels.json):
-
-```bash
-npm --workspace @ninjamountain/triage run score
-```
-
-Runs every labeled ticket and reports **category** accuracy + per-class
-precision/recall/F1 + a confusion matrix, and **severity** exact / off-by-one /
-mean-absolute-error (severity is ordinal: `low < medium < high < critical`). Use it
-to catch regressions and find weak spots as you iterate on the prompt or RAG.
-
-`scripts/rag-eval.ts` does a qualitative with/without-retrieval comparison on a handful
-of tickets — see LEARNINGS.md section 10 for the results and how to read them.
 
 ## Consumers
 
@@ -234,7 +332,7 @@ src/
 scripts/
   triage-cli.ts   Fast terminal loop for triageTicket (v1/v2)
   agent-cli.ts     Fast terminal loop for runTriageAgent (v3/v4)
-  score.ts          Scored accuracy report vs gold labels
+  score.ts          Accuracy report vs gold labels (see Command reference)
   embed.ts           Regenerate kb/embeddings.json after editing kb/*.md
   rag-eval.ts        With/without-retrieval qualitative comparison
   load-env.ts        Loads .env for the CLIs
