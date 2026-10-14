@@ -27,6 +27,7 @@
     "test:coverage:store": "npm --workspace apps/store run test:coverage",
     "e2e:store": "npm --workspace apps/store run e2e",
     "storybook:store": "npm --workspace apps/store run storybook",
-    "build-storybook:store": "npm --workspace apps/store run build-storybook"
+    "build-storybook:store": "npm --workspace apps/store run build-storybook",
+    "lighthouse:store": "npm --workspace apps/store run lighthouse"
   }
 }

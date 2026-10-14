@@ -1,125 +1,148 @@
 name: CI
 
 "on":
-    pull_request:
-    push:
-        branches: [main]
+  pull_request:
+  push:
+    branches: [main]
 jobs:
-    web:
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-            
-            - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-              with:
-                  node-version: 22
-                  cache: npm
-            
-            - run: npm ci
-            - run: npm run lint:web
-            - run: npm run typecheck:web
-            - run: npm run build:web
-    store:
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-            
-            - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-              with:
-                  node-version: 22
-                  cache: npm
-                  
-            - run: npm ci
-            - run: npm run lint:store
-            - run: npm run typecheck:store
-            - run: npm run test:coverage:store
-            - run: npm run build:store
-              env:
-                  CONTENTFUL_SPACE_ID: ${{ secrets.CONTENTFUL_SPACE_ID }}
-                  CONTENTFUL_ACCESS_TOKEN: ${{ secrets.CONTENTFUL_ACCESS_TOKEN }}
-    e2e:
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
-            - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-              with:
-                  node-version: 22
-                  cache: npm
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
 
-            - run: npm ci
-            - run: npx playwright install --with-deps chromium
-            - run: npm run build:store
-              env:
-                  CONTENTFUL_SPACE_ID: ${{ secrets.CONTENTFUL_SPACE_ID }}
-                  CONTENTFUL_ACCESS_TOKEN: ${{ secrets.CONTENTFUL_ACCESS_TOKEN }}
-            - run: npm run e2e:store
-              env:
-                  CONTENTFUL_SPACE_ID: ${{ secrets.CONTENTFUL_SPACE_ID }}
-                  CONTENTFUL_ACCESS_TOKEN: ${{ secrets.CONTENTFUL_ACCESS_TOKEN }}
-                  STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
-    packages:
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-            
-            - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-              with:
-                node-version: 22
-                cache: npm
-                    
-            - run: npm ci
-            - run: npm run typecheck:triage
-            - run: npm run dataset:validate --workspace packages/triage  
-    api:
-        runs-on: ubuntu-latest
-        defaults:
-            run:
-                working-directory: apps/api
-        steps:
-            - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-            
-            - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
-              with:
-                python-version: "3.13"
-                cache: pip
-            
-            - run: pip install -r requirements.txt
-            - run: ruff check .
-            - run: pytest
-    deploy-preview:
-        needs: [web, packages, api]
-        if: github.event_name == 'pull_request'
-        runs-on: ubuntu-latest
-        permissions: 
-            contents: read
-            pull-requests: write
-        env: 
-            VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-            VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        steps: 
-        - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        
-        - run: npm install -g vercel
-        
-        - run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
-        - run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
-        
-        - name: Deploy preview
-          id: deploy
-          run: |
-            url=$(vercel deploy --prebuilt --archive=tgz --token=${{ secrets.VERCEL_TOKEN }})
-            echo "url=$url" >> "$GITHUB_OUTPUT"
-          
-        - name: Comment preview URL on PR
-          env:
-            GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          run: 'gh pr comment ${{ github.event.pull_request.number }} --body "Actions-deployed preview: ${{ steps.deploy.outputs.url }}"'
-    semgrep:
-        runs-on: ubuntu-latest
-        container:
-            image: semgrep/semgrep
-        steps:
-        - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        - run: semgrep scan --config auto
-        
+      - run: npm ci
+      - run: npm run lint:web
+      - run: npm run typecheck:web
+      - run: npm run build:web
+  store:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run lint:store
+      - run: npm run typecheck:store
+      - run: npm run test:coverage:store
+      - run: npm run build:store
+        env:
+          CONTENTFUL_SPACE_ID: ${{ secrets.CONTENTFUL_SPACE_ID }}
+          CONTENTFUL_ACCESS_TOKEN: ${{ secrets.CONTENTFUL_ACCESS_TOKEN }}
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build:store
+        env:
+          CONTENTFUL_SPACE_ID: ${{ secrets.CONTENTFUL_SPACE_ID }}
+          CONTENTFUL_ACCESS_TOKEN: ${{ secrets.CONTENTFUL_ACCESS_TOKEN }}
+      - run: npm run e2e:store
+        env:
+          CONTENTFUL_SPACE_ID: ${{ secrets.CONTENTFUL_SPACE_ID }}
+          CONTENTFUL_ACCESS_TOKEN: ${{ secrets.CONTENTFUL_ACCESS_TOKEN }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build:store
+        env:
+          CONTENTFUL_SPACE_ID: ${{ secrets.CONTENTFUL_SPACE_ID }}
+          CONTENTFUL_ACCESS_TOKEN: ${{ secrets.CONTENTFUL_ACCESS_TOKEN }}
+      - run: npm run lighthouse:store
+        env:
+          CONTENTFUL_SPACE_ID: ${{ secrets.CONTENTFUL_SPACE_ID }}
+          CONTENTFUL_ACCESS_TOKEN: ${{ secrets.CONTENTFUL_ACCESS_TOKEN }}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: lighthouse-reports
+          path: apps/store/.lighthouseci/reports
+  packages:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run typecheck:triage
+      - run: npm run dataset:validate --workspace packages/triage
+  api:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+      - run: ruff check .
+      - run: pytest
+  deploy-preview:
+    needs: [web, packages, api]
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - run: npm install -g vercel
+
+      - run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+      - run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy preview
+        id: deploy
+        run: |
+          url=$(vercel deploy --prebuilt --archive=tgz --token=${{ secrets.VERCEL_TOKEN }})
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      - name: Comment preview URL on PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: 'gh pr comment ${{ github.event.pull_request.number }} --body "Actions-deployed preview: ${{ steps.deploy.outputs.url }}"'
+  semgrep:
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - run: semgrep scan --config auto
