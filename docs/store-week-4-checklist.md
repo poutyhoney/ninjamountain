@@ -48,14 +48,14 @@ Branch: `store/perf-baseline`
 
 Branch: `store/lighthouse-ci`
 
-- [ ] Install `@lhci/cli` in the store workspace.
-- [ ] `lighthouserc` config: production build, `/` and `/checkout/cancel`,
+- [x] Install `@lhci/cli` in the store workspace.
+- [x] `lighthouserc` config: production build, `/` and `/checkout/cancel`,
       3 runs each, mobile settings, score assertions from the decisions above.
-- [ ] Run it locally and read the report.
-- [ ] CI job `lighthouse`, with the Contentful secrets on the build step.
+- [x] Run it locally and read the report.
+- [x] CI job `lighthouse`, with the Contentful secrets on the build step.
       (CI config change: approve it.)
-- [ ] Prove the budget can fail (throwaway branch), then clean up.
-- [ ] Add `lighthouse` as a required check on `main`.
+- [x] Prove the budget can fail (throwaway branch), then clean up.
+- [x] Add `lighthouse` as a required check on `main`.
 
 ## 3. Store Docker image
 
@@ -168,6 +168,61 @@ Chrome DevTools Lighthouse, Mobile, incognito, production build with
 Lesson: a Lighthouse suggestion is not a requirement. Weigh the gain against
 the cost and risk, and write down the reasoning.
 
+### Key learnings: Lighthouse CI
+
+**1. What `lhci autorun` does**
+
+- Three steps in one command: **collect** (starts the server, runs Lighthouse
+  3 times per URL), **assert** (checks scores against the budget), **upload**
+  (saves the reports).
+- A failed assertion makes it exit with status 1. That exit code is what turns
+  the CI check red.
+
+**2. The budget**
+
+- Performance 0.9, Best Practices 0.9, SEO 0.9, Accessibility 1. Scores are
+  0 to 1 in the config, 0 to 100 in reports.
+- Accessibility is 1 (100) so the week 3 audit can't quietly slip.
+- No `settings` block means Lighthouse's default mobile simulation, the same
+  as the manual DevTools runs.
+
+**3. `median-run` and flaky performance tests**
+
+- The failing test run showed `all values: 0.89, 0.98, 0.99` for `/`. The
+  first run is usually the slowest because the server has just started.
+- `optimistic` (the default, best run) can hide a slow page.
+- `pessimistic` (worst run) fails CI randomly whenever one cold run dips.
+- `median-run` checks every category from the median run: stable and honest.
+
+**4. CI design choices**
+
+- Runs against a production build in GitHub Actions, not the Vercel preview,
+  so it doesn't depend on Vercel finishing a deploy.
+- No `API_URL` in CI, so the build is static like production.
+- No browser install step: GitHub's `ubuntu-latest` already has Chrome.
+- Reports saved with `upload-artifact` and `if: always()`, so they're
+  available even when the check fails. Not uploaded to
+  "temporary-public-storage," because those links are public.
+- The `upload-artifact` action is pinned to a commit SHA, looked up with
+  `gh api repos/actions/upload-artifact/commits/v4 --jq .sha`.
+
+**5. Proving the budget can fail**
+
+- Raised the performance budget to 1 on a throwaway branch. The check went red
+  with `expected: >=1, found: 0.99`. Raising the bar tests the mechanism
+  without breaking the app.
+
+**6. Required checks have an order**
+
+- A check can only be required after the job exists on `main`. Requiring it
+  earlier would leave every new PR waiting for a check that never runs.
+- `main` now requires 7 checks: api, packages, web, semgrep, store, e2e,
+  lighthouse.
+
+**Known gap:** Lighthouse runs in GitHub Actions only. GitLab's `node:22`
+image has no Chrome, so a matching GitLab job would need Chromium installed
+with `apt` plus root sandbox flags.
+
 ### Commands I had to look up
 
 - `API_URL= npm run build:store` and `API_URL= npm run start:store`: run a
@@ -176,6 +231,15 @@ the cost and risk, and write down the reasoning.
   Mode Navigation, Device Mobile, all four categories.
 - `curl -s http://localhost:3001/ | grep -c 'as="font"'`: counts the font
   preload tags in the page's HTML.
+
+- `API_URL= npm run lighthouse:store`: Lighthouse CI locally, matching
+  production.
+- `gh run list --branch <branch> --workflow CI --limit 1`: find a run's ID.
+- `gh run view <run-id> --log-failed`: print only the failed steps' logs.
+- `gh run download <run-id> -n lighthouse-reports -D ~/Downloads/lighthouse-reports`:
+  download a CI artifact without a browser.
+- Cmd+click a URL in macOS Terminal to open it in the browser.
+- `gh pr close <number> --delete-branch`: `close` always needs the PR number.
 
 ### Errors I hit and what fixed them
 
@@ -196,3 +260,21 @@ the cost and risk, and write down the reasoning.
 - **Why:** a code formatter (likely Prettier, on save) reformatted the file.
 - **Fix:** none needed. It doesn't change behavior. Decide whether that
   formatter should run on this repo, because it makes diffs noisier.
+
+**3. `grep` found nothing in the failed Lighthouse log** (section 2)
+
+- **What happened:** `gh run view ... --log-failed | grep 'categories:performance'`
+  printed nothing, even though the job had failed.
+- **Why:** the report writes `categories.performance` with a dot (the config
+  uses a colon), and color codes sit between the words.
+- **Fix:** search for plain words, like `grep -A3 'performance failure'`, or
+  read the tail of the log.
+
+**4. `gh pr close --delete-branch` failed** (section 2)
+
+- **What happened:** "cannot close pull request: number, url, or branch
+  required."
+- **Why:** unlike `checks`, `view`, and `merge`, `gh pr close` doesn't default
+  to the current branch's PR.
+- **Fix:** `gh pr close 53 --delete-branch`. Find numbers with
+  `gh pr list --head <branch>`.
