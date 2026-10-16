@@ -176,4 +176,4 @@ lighthouserc.json           Lighthouse CI budgets
   and `STRIPE_SECRET_KEY` set for Production and all Preview branches.
   `API_URL` is not set on Vercel. Storybook needs no environment variables.
 - Vercel skips a project's build when nothing it depends on changed. Changes
-  outside the npm workspaces (like `apps/api` or `docs/`) still build both.
+  outside the npm workspaces (like `apps/api` or `.github/`) still build both.
