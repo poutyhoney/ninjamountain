@@ -28,6 +28,8 @@
     "e2e:store": "npm --workspace apps/store run e2e",
     "storybook:store": "npm --workspace apps/store run storybook",
     "build-storybook:store": "npm --workspace apps/store run build-storybook",
-    "lighthouse:store": "npm --workspace apps/store run lighthouse"
+    "lighthouse:store": "npm --workspace apps/store run lighthouse",
+    "docker:up": "set -a && . apps/store/.env.local && set +a && docker compose up --build",
+    "docker:down": "docker compose down"
   }
 }

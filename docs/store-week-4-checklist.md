@@ -80,12 +80,12 @@ Branch: `docker/api`
 
 Branch: `docker/compose`
 
-- [ ] `compose.yaml` at the repo root with `store` and `api` services.
-- [ ] The store reaches the API by service name (`http://api:8000`), so the
+- [x] `compose.yaml` at the repo root with `store` and `api` services.
+- [x] The store reaches the API by service name (`http://api:8000`), so the
       entitlements panel works inside Docker.
-- [ ] Secrets come from `apps/store/.env.local`, never from the compose file.
-- [ ] `docker compose up --build` starts everything with one command.
-- [ ] README: how to run it with Docker.
+- [x] Secrets come from `apps/store/.env.local`, never from the compose file.
+- [x] `docker compose up --build` starts everything with one command.
+- [x] README: how to run it with Docker.
 
 ## Done when
 
@@ -316,6 +316,46 @@ with `apt` plus root sandbox flags.
   in the image. A separate `requirements-dev.txt` would fix it but changes the
   CI `api` job.
 
+### Key learnings: docker compose
+
+**1. Service names are hostnames**
+
+- Compose puts every service on a private network. Inside the store
+  container, `http://api:8000` reaches the API container.
+- That fixes the section 3 problem: inside a container, `127.0.0.1` means the
+  container itself.
+
+**2. Build-time vs runtime configuration**
+
+- `API_URL` is set twice. As a **build arg** (`args:` plus `ARG API_URL`),
+  because the page checks it at build time to decide static vs dynamic. As a
+  **runtime** `environment:` value, because that's what the server fetches
+  from.
+- In Compose, `environment:` overrides `env_file:`, so the `127.0.0.1` value
+  in `.env.local` is replaced by `http://api:8000`.
+- Non-secret values can be build args. Secrets go through BuildKit secrets.
+
+**3. Secrets stay out of `compose.yaml`**
+
+- The `secrets:` block only names environment variables.
+  `npm run docker:up` fills them by sourcing `.env.local`
+  (`set -a && . apps/store/.env.local && set +a`). The compose file has no
+  secret values, so it's safe to commit.
+- `docker compose config` prints the resolved config, including `env_file`
+  values. Use `docker compose config --quiet` to validate without printing.
+
+**4. `depends_on` is start order only**
+
+- It starts `api` before `store`, but doesn't wait for the API to be ready.
+  The store's error state covers the gap. A Compose healthcheck could make it
+  wait.
+
+**5. Verified end to end**
+
+- The entitlements panel showed "You are a Brown Belt" from inside Docker.
+- `docker compose stop api` showed the error state; `docker compose start api`
+  brought the panel back.
+
 ### Commands I had to look up
 
 - `API_URL= npm run build:store` and `API_URL= npm run start:store`: run a
@@ -350,6 +390,13 @@ with `apt` plus root sandbox flags.
 - `docker run --rm <image> sh -c 'whoami; ls -a /app'`: check the user and
   files inside an image.
 - `docker ps`: list running containers and their ports.
+
+- `npm run docker:up` / `npm run docker:down`: start everything / stop and
+  remove containers and the network.
+- `docker compose config --quiet`: validate `compose.yaml` without printing
+  secrets.
+- `docker compose stop api` / `docker compose start api`: stop or restart one
+  service.
 
 ### Errors I hit and what fixed them
 
@@ -400,3 +447,24 @@ with `apt` plus root sandbox flags.
 - **Fix:** `git restore packages/triage/README.md`. The real changes were safe
   in PR #54.
 - **Lesson:** run `git status` right after switching branches.
+
+**6. `services.store.build.context must be a string`** (section 5)
+
+- **What happened:** `docker compose up` refused to start.
+- **Why:** `context:` had no value. In YAML, an empty value is `null`, not an
+  empty string. It needed `context: .` (the repo root).
+- **Fix:** `context: .`. Validate with `docker compose config --quiet`.
+- **Also fixed:** `dockerfile: apps/store/dockerfile` was lowercase. It worked
+  on the Mac (case-insensitive file names) but would fail on Linux. Match the
+  real name: `Dockerfile`.
+
+**7. The week 3 Accessibility README section was missing** (section 5)
+
+- **What happened:** while adding the Docker section, the store README had no
+  Accessibility section.
+- **Why:** PR #35 ("accessibility notes in README") only contained the
+  checklist. The README edit was never saved or staged.
+- **Fix:** restored it in the README rewrite, along with updated Checks,
+  Storybook, Where things are, and Deploys sections.
+- **Lesson:** check a PR's file list (`gh pr view N --json files`) before
+  merging, not just its title.

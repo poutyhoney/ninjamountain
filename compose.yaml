@@ -1,0 +1,28 @@
+services:
+    api:
+        build: ./apps/api
+        ports:
+            - "8000:8000"
+    
+    store:
+        build:
+            context: .
+            dockerfile: apps/store/Dockerfile
+            args:
+                API_URL: http://api:8000
+            secrets: 
+                - contentful_space_id
+                - contentful_access_token
+        env_file: apps/store/.env.local
+        environment:
+            API_URL: http://api:8000
+        ports:
+            - "3001:3001"
+        depends_on:
+            - api
+
+secrets:
+    contentful_space_id:
+        environment: CONTENTFUL_SPACE_ID
+    contentful_access_token:
+        environment: CONTENTFUL_ACCESS_TOKEN
