@@ -1,4 +1,6 @@
-from fastapi import FastAPI
+import time
+
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from config import load_settings
@@ -9,8 +11,10 @@ from entitlements import (
 	Entitlements,
 	entitlements_for,
 )
+from logging_config import configure_logging
 
 settings = load_settings()
+logger = configure_logging(settings.log_level)
 
 app = FastAPI(title="Ninja Mountain API", version=settings.app_version)
 
@@ -21,6 +25,25 @@ app.add_middleware(
 	allow_methods=["*"],
 	allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+	start = time.perf_counter()
+	response = await call_next(request)
+	duration_ms = round((time.perf_counter() - start) * 1000, 1)
+	logger.info(
+		"request",
+		extra={
+			"fields": {
+				"method": request.method,
+				"path": request.url.path,
+				"status": response.status_code,
+				"duration_ms": duration_ms,
+			}
+		},
+	)
+	return response
 
 
 @app.get("/")
