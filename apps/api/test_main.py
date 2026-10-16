@@ -14,7 +14,7 @@ def test_read_root():
 def test_health_check():
 	response = client.get("/health")
 	assert response.status_code == 200
-	assert response.json() == {"status": "ok"}
+	assert response.json() == {"status": "ok", "version": "dev"}
 
 
 def test_list_projects():
