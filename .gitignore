@@ -17,3 +17,9 @@ Claude outputs/
 
 # Personal planning notes (kept locally, not in git)
 docs/
+
+# Terraform: local working files and state (state for real infra lives in S3)
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
