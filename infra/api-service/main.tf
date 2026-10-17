@@ -159,3 +159,35 @@ resource "aws_ecs_express_gateway_service" "api" {
 output "api_url" {
   value = aws_ecs_express_gateway_service.api.ingress_paths[0].endpoint
 }
+
+data "aws_sns_topic" "alerts" {
+  name = "ninjamountain-alerts"
+}
+
+resource "aws_cloudwatch_log_metric_filter" "api_5xx" {
+  name           = "ninjamountain-api-5xx"
+  log_group_name = aws_cloudwatch_log_group.api.name
+  pattern        = "{ $.status >= 500 }"
+
+  metric_transformation {
+    name          = "Api5xxCount"
+    namespace     = "Ninjamountain/Api"
+    value         = "1"
+    default_value = "0"
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "api_5xx" {
+  alarm_name          = "ninjamountain-api-5xx"
+  alarm_description   = "The API returned at least one 5xx response in the last minute."
+  namespace           = "Ninjamountain/Api"
+  metric_name         = "Api5xxCount"
+  statistic           = "Sum"
+  period              = 60
+  evaluation_periods  = 1
+  threshold           = 1
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  treat_missing_data  = "notBreaching"
+  alarm_actions       = [data.aws_sns_topic.alerts.arn]
+  ok_actions          = [data.aws_sns_topic.alerts.arn]
+}
