@@ -9,6 +9,7 @@ class Settings:
 	cors_origins: list[str]
 	log_level: str
 	app_version: str
+	api_token: str | None
 
 
 def load_settings() -> Settings:
@@ -17,4 +18,5 @@ def load_settings() -> Settings:
 		cors_origins=[origin.strip() for origin in origins.split(",") if origin.strip()],
 		log_level=os.environ.get("LOG_LEVEL", "INFO").upper(),
 		app_version=os.environ.get("APP_VERSION", "dev"),
+		api_token=os.environ.get("API_TOKEN") or None,
 	)

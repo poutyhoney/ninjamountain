@@ -1,8 +1,9 @@
 import time
 
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
+from auth import bearer_header, check_token
 from config import load_settings
 from entitlements import (
 	DEMO_ADDONS,
@@ -98,5 +99,6 @@ def list_projects():
 
 
 @app.get("/entitlements/me")
-def my_entitlements() -> Entitlements:
+def my_entitlements(authorization: str | None = Depends(bearer_header)) -> Entitlements:
+	check_token(settings.api_token, authorization)
 	return entitlements_for(DEMO_USER_ID, DEMO_BELT, DEMO_ADDONS)
