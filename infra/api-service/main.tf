@@ -33,8 +33,14 @@ variable "image_tag" {
   type        = string
 }
 
+data "aws_caller_identity" "current" {}
+
 data "aws_ecr_repository" "api" {
   name = "ninjamountain-api"
+}
+
+locals {
+  api_token_parameter_arn = "arn:aws:ssm:us-east-1:${data.aws_caller_identity.current.account_id}:parameter/ninjamountain/api/token"
 }
 
 resource "aws_ecs_cluster" "main" {
@@ -62,6 +68,20 @@ resource "aws_iam_role" "execution" {
 resource "aws_iam_role_policy_attachment" "execution" {
   role       = aws_iam_role.execution.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+resource "aws_iam_role_policy" "execution_read_token" {
+  name = "read-api-token"
+  role = aws_iam_role.execution.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = "ssm:GetParameters"
+      Resource = local.api_token_parameter_arn
+    }]
+  })
 }
 
 resource "aws_iam_role" "infrastructure" {
@@ -115,6 +135,11 @@ resource "aws_ecs_express_gateway_service" "api" {
       name  = "CORS_ORIGINS"
       value = "https://ninjamountain-store.vercel.app"
     }
+
+    secret {
+      name       = "API_TOKEN"
+      value_from = local.api_token_parameter_arn
+    }
   }
 
   scaling_target {
@@ -126,6 +151,7 @@ resource "aws_ecs_express_gateway_service" "api" {
 
   depends_on = [
     aws_iam_role_policy_attachment.execution,
+    aws_iam_role_policy.execution_read_token,
     aws_iam_role_policy_attachment.infrastructure,
   ]
 }
