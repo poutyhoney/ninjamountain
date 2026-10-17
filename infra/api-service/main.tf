@@ -1,0 +1,135 @@
+terraform {
+  required_version = ">= 1.10"
+
+  backend "s3" {
+    bucket       = "ninjamountain-tfstate-48781101"
+    key          = "api-service/terraform.tfstate"
+    region       = "us-east-1"
+    encrypt      = true
+    use_lockfile = true
+  }
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 6.0"
+    }
+  }
+}
+
+provider "aws" {
+  region = "us-east-1"
+
+  default_tags {
+    tags = {
+      Project   = "ninjamountain"
+      ManagedBy = "terraform"
+    }
+  }
+}
+
+variable "image_tag" {
+  description = "Tag of the API image in ECR to run (a git commit SHA)."
+  type        = string
+}
+
+data "aws_ecr_repository" "api" {
+  name = "ninjamountain-api"
+}
+
+resource "aws_ecs_cluster" "main" {
+  name = "ninjamountain"
+}
+
+resource "aws_cloudwatch_log_group" "api" {
+  name              = "/ninjamountain/api"
+  retention_in_days = 7
+}
+
+resource "aws_iam_role" "execution" {
+  name = "ninjamountain-api-execution"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "ecs-tasks.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "execution" {
+  role       = aws_iam_role.execution.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+resource "aws_iam_role" "infrastructure" {
+  name = "ninjamountain-api-infrastructure"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "ecs.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "infrastructure" {
+  role       = aws_iam_role.infrastructure.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSInfrastructureRoleforExpressGatewayServices"
+}
+
+resource "aws_ecs_express_gateway_service" "api" {
+  service_name            = "ninjamountain-api"
+  cluster                 = aws_ecs_cluster.main.name
+  execution_role_arn      = aws_iam_role.execution.arn
+  infrastructure_role_arn = aws_iam_role.infrastructure.arn
+  cpu                     = "256"
+  memory                  = "512"
+  health_check_path       = "/health"
+  wait_for_steady_state   = true
+
+  primary_container {
+    image          = "${data.aws_ecr_repository.api.repository_url}:${var.image_tag}"
+    container_port = 8000
+
+    aws_logs_configuration {
+      log_group         = aws_cloudwatch_log_group.api.name
+      log_stream_prefix = "api"
+    }
+
+    environment {
+      name  = "APP_VERSION"
+      value = var.image_tag
+    }
+
+    environment {
+      name  = "LOG_LEVEL"
+      value = "INFO"
+    }
+
+    environment {
+      name  = "CORS_ORIGINS"
+      value = "https://ninjamountain-store.vercel.app"
+    }
+  }
+
+  scaling_target {
+    auto_scaling_metric       = "AVERAGE_CPU"
+    auto_scaling_target_value = 60
+    min_task_count            = 1
+    max_task_count            = 1
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.execution,
+    aws_iam_role_policy_attachment.infrastructure,
+  ]
+}
+
+output "api_url" {
+  value = aws_ecs_express_gateway_service.api.ingress_paths[0].endpoint
+}
