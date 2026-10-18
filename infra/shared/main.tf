@@ -169,6 +169,7 @@ resource "aws_iam_role_policy" "github_deploy" {
           "cloudwatch:ListTagsForResource",
           "sns:ListTopics",
           "sns:GetTopicAttributes",
+          "sns:ListTagsForResource",
         ]
         Resource = "*"
       },
