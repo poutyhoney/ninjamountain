@@ -1,6 +1,7 @@
 import time
+from typing import Annotated
 
-from fastapi import Depends, FastAPI, Request
+from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 
 from auth import bearer_header, check_token
@@ -12,6 +13,7 @@ from entitlements import (
 	Entitlements,
 	entitlements_for,
 )
+from events import Event, EventWriter, PostgresEventWriter
 from logging_config import configure_logging
 
 settings = load_settings()
@@ -45,6 +47,15 @@ async def log_requests(request: Request, call_next):
 		},
 	)
 	return response
+
+
+def get_event_writer() -> EventWriter:
+	if settings.database_url is None:
+		raise HTTPException(
+			status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+			detail="Event storage is not configured",
+		)
+	return PostgresEventWriter(settings.database_url)
 
 
 @app.get("/")
@@ -102,3 +113,12 @@ def list_projects():
 def my_entitlements(authorization: str | None = Depends(bearer_header)) -> Entitlements:
 	check_token(settings.api_token, authorization)
 	return entitlements_for(DEMO_USER_ID, DEMO_BELT, DEMO_ADDONS)
+
+
+@app.post("/events", status_code=status.HTTP_202_ACCEPTED)
+def record_event(
+	event: Event,
+	writer: Annotated[EventWriter, Depends(get_event_writer)],
+) -> dict[str, str]:
+	writer.write(event)
+	return {"status": "accepted"}
