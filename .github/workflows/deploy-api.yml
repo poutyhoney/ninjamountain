@@ -30,11 +30,15 @@ jobs:
       - name: Set image tag
         run: echo "IMAGE_TAG=${GITHUB_SHA::7}" >> "$GITHUB_ENV"
 
-      - name: Build and push the API image
+      - name: Build and push the API image (skipped if it already exists)
         run: |
-          REPO=$(aws ecr describe-repositories --repository-names ninjamountain-api --query 'repositories[0].repositoryUri' --output text)
-          aws ecr get-login-password | docker login --username AWS --password-stdin "${REPO%/*}"
-          docker buildx build --pull --platform linux/amd64 --provenance=false --sbom=false -t "$REPO:$IMAGE_TAG" --push apps/api
+          if aws ecr describe-images --repository-name ninjamountain-api --image-ids imageTag="$IMAGE_TAG" > /dev/null 2>&1; then
+              echo "Image $IMAGE_TAG already exists in ECR. Skipping the build."
+          else
+              REPO=$(aws ecr describe-repositories --repository-names ninjamountain-api --query 'repositories[0].repositoryUri' --output text)
+              aws ecr get-login-password | docker login --username AWS --password-stdin "${REPO%/*}"
+              docker buildx build --pull --platform linux/amd64 --provenance=false --sbom=false -t "$REPO:$IMAGE_TAG" --push apps/api
+          fi
 
       - name: Check whether the API service is running
         id: service
