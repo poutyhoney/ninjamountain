@@ -8,7 +8,7 @@ client = TestClient(app)
 def test_read_root():
 	response = client.get("/")
 	assert response.status_code == 200
-	assert response.json() == {"message": "Ninja Mountain API is awake!"}
+	assert response.json() == {"message": "Ninja Mountain API is awake and deployed!"}
 
 
 def test_health_check():

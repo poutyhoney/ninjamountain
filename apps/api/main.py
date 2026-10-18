@@ -49,7 +49,7 @@ async def log_requests(request: Request, call_next):
 
 @app.get("/")
 def read_root():
-	return {"message": "Ninja Mountain API is awake!"}
+	return {"message": "Ninja Mountain API is awake and deployed!"}
 
 
 @app.get("/health")
