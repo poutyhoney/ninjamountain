@@ -191,6 +191,33 @@ resource "aws_iam_role_policy" "github_deploy" {
         Resource = "arn:aws:ecs:us-east-1:${local.account_id}:service/ninjamountain/ninjamountain-api"
       },
       {
+        Sid      = "RegisterApiTaskDefinition"
+        Effect   = "Allow"
+        Action   = "ecs:RegisterTaskDefinition"
+        Resource = "arn:aws:ecs:us-east-1:${local.account_id}:task-definition/ninjamountain-ninjamountain-api:*"
+      },
+      {
+        Sid      = "TagApiTaskDefinitionOnCreate"
+        Effect   = "Allow"
+        Action   = "ecs:TagResource"
+        Resource = "arn:aws:ecs:us-east-1:${local.account_id}:task-definition/ninjamountain-ninjamountain-api:*"
+        Condition = {
+          StringEquals = { "ecs:CreateAction" = "RegisterTaskDefinition" }
+        }
+      },
+      {
+        Sid    = "WatchApiServiceDeployments"
+        Effect = "Allow"
+        Action = [
+          "ecs:ListServiceDeployments",
+          "ecs:DescribeServiceDeployments",
+        ]
+        Resource = [
+          "arn:aws:ecs:us-east-1:${local.account_id}:service/ninjamountain/ninjamountain-api",
+          "arn:aws:ecs:us-east-1:${local.account_id}:service-deployment/ninjamountain/ninjamountain-api/*",
+        ]
+      },
+      {
         Sid      = "PassApiExecutionRole"
         Effect   = "Allow"
         Action   = "iam:PassRole"
