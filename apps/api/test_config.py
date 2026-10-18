@@ -6,6 +6,7 @@ def test_defaults(monkeypatch):
 	monkeypatch.delenv("LOG_LEVEL", raising=False)
 	monkeypatch.delenv("APP_VERSION", raising=False)
 	monkeypatch.delenv("API_TOKEN", raising=False)
+	monkeypatch.delenv("DATABASE_URL", raising=False)
 
 	settings = load_settings()
 
@@ -13,6 +14,7 @@ def test_defaults(monkeypatch):
 	assert settings.log_level == "INFO"
 	assert settings.app_version == "dev"
 	assert settings.api_token is None
+	assert settings.database_url is None
 
 
 def test_values_from_environment(monkeypatch):

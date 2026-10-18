@@ -8,7 +8,7 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY main.py entitlements.py config.py logging_config.py auth.py ./
+COPY main.py entitlements.py config.py logging_config.py auth.py events.py ./
 
 RUN useradd --create-home appuser
 USER appuser

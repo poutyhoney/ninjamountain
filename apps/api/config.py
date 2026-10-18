@@ -10,6 +10,7 @@ class Settings:
 	log_level: str
 	app_version: str
 	api_token: str | None
+	database_url: str | None
 
 
 def load_settings() -> Settings:
@@ -19,4 +20,5 @@ def load_settings() -> Settings:
 		log_level=os.environ.get("LOG_LEVEL", "INFO").upper(),
 		app_version=os.environ.get("APP_VERSION", "dev"),
 		api_token=os.environ.get("API_TOKEN") or None,
+		database_url=os.environ.get("DATABASE_URL") or None,
 	)
