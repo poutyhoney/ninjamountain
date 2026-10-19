@@ -26,6 +26,28 @@ services:
       events-db:
         condition: service_healthy
 
+  growthbook-mongo:
+    image: mongo:8.0
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: local-dev-only
+    volumes:
+      - growthbook-mongo-data:/data/db
+
+  growthbook:
+    image: growthbook/growthbook:latest
+    environment:
+      MONGODB_URI: mongodb://root:local-dev-only@growthbook-mongo:27017/growthbook?authSource=admin
+      APP_ORIGIN: http://localhost:3200
+      API_HOST: http://localhost:3300
+      JWT_SECRET: ${GROWTHBOOK_JWT_SECRET:?Set GROWTHBOOK_JWT_SECRET in the root .env file}
+      ENCRYPTION_KEY: ${GROWTHBOOK_ENCRYPTION_KEY:?Set GROWTHBOOK_ENCRYPTION_KEY in the root .env file}
+    ports:
+      - "127.0.0.1:3200:3000"
+      - "127.0.0.1:3300:3100"
+    depends_on:
+      - growthbook-mongo
+
   store:
     build:
       context: .
@@ -45,6 +67,7 @@ services:
 
 volumes:
   events-data:
+  growthbook-mongo-data:
 
 secrets:
   contentful_space_id:
