@@ -1,3 +1,5 @@
+import { headers } from "next/headers";
+import { after } from "next/server";
 import { Suspense } from "react";
 
 import CheckoutButton from "@/app/components/CheckoutButton";
@@ -5,10 +7,37 @@ import EntitlementsPanel from "@/app/components/EntitlementsPanel";
 import { EntitlementsSkeleton } from "@/app/components/EntitlementsSummary";
 import OfferCard from "@/app/components/OfferCard";
 import { getTierOffers } from "@/lib/contentful";
+import { recordEvent } from "@/lib/events";
+import {
+  getOfferCardLayout,
+  isExperimentEnabled,
+  type OfferCardLayout,
+} from "@/lib/growthbook";
+import { VISITOR_HEADER } from "@/lib/visitor";
+
+async function chooseLayout(): Promise<OfferCardLayout> {
+  if (!isExperimentEnabled()) {
+    return "control";
+  }
+
+  const visitorId = (await headers()).get(VISITOR_HEADER);
+  if (!visitorId) {
+    return "control";
+  }
+
+  return getOfferCardLayout(visitorId, (experimentKey, variationId) => {
+    after(() =>
+      recordEvent("experiment_viewed", visitorId, {
+        experiment_id: experimentKey,
+        variation_id: variationId,
+      }),
+    );
+  });
+}
 
 export default async function Home() {
   const apiUrl = process.env.API_URL;
-  const offers = await getTierOffers();
+  const [offers, layout] = await Promise.all([getTierOffers(), chooseLayout()]);
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-12 px-4 py-16 sm:px-6 lg:py-24">
@@ -37,6 +66,7 @@ export default async function Home() {
           <OfferCard
             key={offer.id}
             offer={offer}
+            layout={layout}
             action={<CheckoutButton offer={offer} />}
           />
         ))}

@@ -1,10 +1,13 @@
 "use server";
 
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 
 import { getTierOffers } from "@/lib/contentful";
+import { recordEvent } from "@/lib/events";
 import { getStripe } from "@/lib/stripe";
+import { VISITOR_COOKIE } from "@/lib/visitor";
 
 export async function startCheckout(formData: FormData) {
   const slug = formData.get("slug");
@@ -13,6 +16,16 @@ export async function startCheckout(formData: FormData) {
 
   if (!offer || offer.priceCents === 0) {
     throw new Error("That offer can't be purchased.");
+  }
+
+  const visitorId = (await cookies()).get(VISITOR_COOKIE)?.value;
+  if (visitorId) {
+    after(() =>
+      recordEvent("checkout_started", visitorId, {
+        offer_id: offer.id,
+        price_cents: String(offer.priceCents),
+      }),
+    );
   }
 
   const origin = (await headers()).get("origin");
