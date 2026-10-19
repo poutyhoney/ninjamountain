@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@growthbook/growthbook": "^1.8.0",
+    "@next/third-parties": "^16.2.6",
     "@ninjamountain/ui": "*",
     "next": "16.2.6",
     "react": "19.2.4",
