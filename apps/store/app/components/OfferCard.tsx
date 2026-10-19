@@ -25,6 +25,7 @@ export default function OfferCard({
 
   return (
     <article
+      data-layout={layout}
       className={`relative flex flex-col gap-6 rounded-2xl border bg-nm-charcoal p-8 ${
         premium ? "border-nm-honey" : "border-nm-slate"
       }`}
