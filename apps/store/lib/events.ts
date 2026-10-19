@@ -1,7 +1,7 @@
 import "server-only";
 
 export type StoreEventName = "experiment_viewed" | "checkout_started";
-export async function name(
+export async function recordEvent(
   eventName: StoreEventName,
   visitorId: string,
   properties: Record<string, string> = {},

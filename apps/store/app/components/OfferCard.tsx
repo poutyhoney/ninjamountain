@@ -1,3 +1,4 @@
+import type { OfferCardLayout } from "@/lib/growthbook";
 import type { Offer } from "@/lib/offers";
 
 import Badge from "./Badge";
@@ -7,10 +8,20 @@ import PriceTag from "./PriceTag";
 type OfferCardProps = {
   offer: Offer;
   action?: React.ReactNode;
+  layout?: OfferCardLayout;
 };
 
-export default function OfferCard({ offer, action }: OfferCardProps) {
+export default function OfferCard({
+  offer,
+  action,
+  layout = "control",
+}: OfferCardProps) {
   const { name, priceCents, billingPeriod, perks, badge, premium } = offer;
+  const ctaFirst = layout === "cta-first";
+
+  const actionBlock = action && (
+    <div className={ctaFirst ? "" : "mt-auto pt-2"}>{action}</div>
+  );
 
   return (
     <article
@@ -30,9 +41,11 @@ export default function OfferCard({ offer, action }: OfferCardProps) {
 
       <PriceTag priceCents={priceCents} billingPeriod={billingPeriod} />
 
+      {ctaFirst && actionBlock}
+
       <PerkList perks={perks} premium={premium} />
 
-      {action && <div className="mt-auto pt-2">{action}</div>}
+      {!ctaFirst && actionBlock}
     </article>
   );
 }
