@@ -60,10 +60,12 @@ services:
     env_file: apps/store/.env.local
     environment:
       API_URL: http://api:8000
+      GROWTHBOOK_API_HOST: http://growthbook:3100
     ports:
       - "3001:3001"
     depends_on:
       - api
+      - growthbook
 
 volumes:
   events-data:
