@@ -157,7 +157,7 @@ don't set them, so production always shows the control layout.
 | `api` | `localhost:8000` | FastAPI; `POST /events` writes to Postgres |
 | `growthbook` | UI `localhost:3200`, API `localhost:3300` | Feature flags, experiments, analysis |
 | `growthbook-mongo` | Compose network only | GrowthBook's own settings |
-| Store | `localhost:3001` | Run with npm (see below), not the `store` container |
+| `store` | `localhost:3001` | The store; reaches GrowthBook at `http://growthbook:3100` |
 
 ### One-time setup
 
@@ -194,27 +194,38 @@ don't set them, so production always shows the control layout.
 
 ### Each session
 
-From the repo root, in one terminal tab:
+From the repo root:
 
 ```bash
-docker compose up -d events-db api growthbook-mongo growthbook
+npm run docker:up -- -d
+docker compose ps
 ```
 
-In a second tab, also from the repo root:
+The `-- -d` passes `-d` to `docker compose up`, so the containers keep
+running in the background. All five services should show `running`.
+
+Inside Compose, the store reaches GrowthBook by service name
+(`http://growthbook:3100`), which overrides the `localhost` value in
+`.env.local`. Port `3100` is GrowthBook's port inside its container; `3300`
+is the same port mapped onto your machine.
+
+Check that both layouts are served:
 
 ```bash
-npm run build:store
-npm run start:store
+for i in 1 2 3 4 5 6; do curl -s -H "Cookie: nm_vid=compose-check-$i" http://localhost:3001/ | grep -o 'data-layout="[a-z-]*"' | head -1; done
 ```
 
-`start:store` serves the last build. Rebuild after every code change.
-
-Check that it works: open http://localhost:3001 in a private window, then
-look for the visitor's exposure:
+You should see a mix of `control` and `cta-first`, and the same visitor
+always gets the same one. Each request records an exposure:
 
 ```bash
 docker compose exec events-db psql -U events -d events -c "SELECT event_name, visitor_id, properties FROM events ORDER BY id DESC LIMIT 5;"
 ```
+
+To work on the store code with the experiment on, run only the backing
+services in Compose and the store with npm (`npm run build:store`, then
+`npm run start:store`). `start:store` serves the last build, so rebuild
+after every code change.
 
 ### Simulated traffic
 
@@ -310,12 +321,6 @@ EXPERIMENTS.md              A/B test readouts
   Pin a version tag for anything long-lived.
 - **Experiments are local only.** GrowthBook and the events database aren't
   deployed to AWS or Vercel, so live visitors never enter the experiment.
-- **The `store` container can't reach GrowthBook.** It reads
-  `GROWTHBOOK_API_HOST` from `.env.local`, which points to `localhost`.
-  Inside the container, `localhost` is the container itself. The store waits
-  2 seconds, then shows control to everyone. Run the store with npm for
-  experiments, or set `GROWTHBOOK_API_HOST: http://growthbook:3100` on the
-  `store` service.
 - **Exposure timing.** Exposures are recorded with `after()`, so a very fast
   follow-up event can land first. See the caveats in
   [EXPERIMENTS.md](EXPERIMENTS.md).
