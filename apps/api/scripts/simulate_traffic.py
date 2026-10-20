@@ -1,6 +1,7 @@
 import argparse
 import random
 import re
+import time
 import uuid
 
 import httpx
@@ -17,6 +18,7 @@ def parse_args() -> argparse.Namespace:
 	parser.add_argument("--visitors", type=int, default=5000)
 	parser.add_argument("--control-rate", type=float, default=0.08)
 	parser.add_argument("--treatment-rate", type=float, default=0.10)
+	parser.add_argument("--think-seconds", type=float, default=0.5)
 	parser.add_argument("--seed", type=int, default=42)
 	return parser.parse_args()
 
@@ -41,6 +43,7 @@ def main() -> None:
 
 			rate = args.treatment_rate if layout == "cta-first" else args.control_rate
 			if rng.random() < rate:
+				time.sleep(args.think_seconds)
 				offer_id, price_cents = rng.choices(PAID_OFFERS, weights=OFFER_WEIGHTS)[0]
 				response = client.post(
 					EVENTS_URL,
