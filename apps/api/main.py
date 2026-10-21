@@ -20,6 +20,7 @@ from entitlements import (
 from events import Event, EventWriter, PostgresEventWriter
 from logging_config import configure_logging
 from sensei import AnthropicHintStreamer, HintStreamer, hint_lines
+from usage import UsageTracker
 
 settings = load_settings()
 logger = configure_logging(settings.log_level)
@@ -29,6 +30,8 @@ anthropic_client = (
 	if settings.anthropic_api_key
 	else None
 )
+
+usage_tracker = UsageTracker()
 
 app = FastAPI(title="Ninja Mountain API", version=settings.app_version)
 
@@ -69,11 +72,13 @@ def get_event_writer() -> EventWriter:
 	return PostgresEventWriter(settings.database_url)
 
 
-
 def get_hint_streamer() -> HintStreamer | None:
 	if anthropic_client is None:
 		return None
 	return AnthropicHintStreamer(anthropic_client, settings.sensei_model)
+
+def get_usage_tracker() -> UsageTracker:
+	return usage_tracker
 
 class HintRequest(BaseModel):
 	challenge_id: str = Field(min_length=1, max_length=64)
@@ -159,6 +164,7 @@ def sensei_hint(
 	body: HintRequest,
 	authorization: Annotated[str | None, Depends(bearer_header)],
 	streamer: Annotated[HintStreamer | None, Depends(get_hint_streamer)],
+	tracker: Annotated[UsageTracker, Depends(get_usage_tracker)],
 ) -> StreamingResponse:
 	check_token(settings.api_token, authorization)
 	if streamer is None:
@@ -174,8 +180,21 @@ def sensei_hint(
 			status_code=status.HTTP_403_FORBIDDEN,
 			detail="Upgrade your belt to unlock this training ground",
 		)
+	remaining = tracker.try_use(DEMO_USER_ID, DEMO_BELT)
+	if remaining is None:
+		raise HTTPException(
+			status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+			detail="Daily hint limit reached",
+			headers={"Retry-After": str(tracker.seconds_until_reset())},
+		)
 	return StreamingResponse(
-		hint_lines(streamer, challenge, body.question),
+		hint_lines(
+			streamer,
+			challenge,
+			body.question,
+			remaining,
+			on_error=lambda: tracker.refund(DEMO_USER_ID),
+		),
 		media_type="application/x-ndjson",
 		headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
 	)
