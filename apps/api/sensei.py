@@ -1,5 +1,5 @@
 import json
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from typing import Protocol
 
 import anthropic
@@ -63,11 +63,18 @@ def ndjson(line: dict) -> str:
 	return json.dumps(line) + "\n"
 
 
-def hint_lines(streamer: HintStreamer, challenge: Challenge, question: str) -> Iterator[str]:
+def hint_lines(
+	streamer: HintStreamer,
+	challenge: Challenge,
+	question: str,
+	remaining: int,
+	on_error: Callable[[], None],
+) -> Iterator[str]:
 	try:
 		for text in streamer.stream_hint(challenge, question):
 			yield ndjson({"type": "text", "text": text})
 	except SenseiError as error:
+		on_error()
 		yield ndjson({"type": "error", "message": str(error)})
 		return
-	yield ndjson({"type": "done"})
+	yield ndjson({"type": "done", "remaining": remaining})

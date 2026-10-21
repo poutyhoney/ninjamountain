@@ -31,24 +31,28 @@ def test_system_prompt_includes_challenge_and_solution():
 
 
 def test_text_lines_then_done():
-	lines = parse(hint_lines(FakeStreamer(["Think ", "about ", "yesterday."]), CHALLENGE, "help"))
+	lines = parse(hint_lines(FakeStreamer(["Think ", "about ", "yesterday."]), CHALLENGE, "help", 7, lambda: None))
 	assert lines == [
 		{"type": "text", "text": "Think "},
 		{"type": "text", "text": "about "},
 		{"type": "text", "text": "yesterday."},
-		{"type": "done"},
+		{"type": "done", "remaining": 7},
 	]
 
 
-def test_error_mid_stream_becomes_error_line():
-	lines = parse(hint_lines(FakeStreamer(["Think ", "about "], fail_after=1), CHALLENGE, "help"))
+def test_error_mid_stream_becomes_error_line_and_calls_on_error():
+	errors = []
+	lines = parse(
+		hint_lines(FakeStreamer(["Think ", "about "], fail_after=1), CHALLENGE, "help", 7, lambda: errors.append(1))
+	)
 	assert lines == [
 		{"type": "text", "text": "Think "},
 		{"type": "error", "message": "The Sensei is busy. Try again in a moment."},
 	]
+	assert errors == [1]
 
 
 def test_every_line_ends_with_newline():
-	for line in hint_lines(FakeStreamer(["a", "b"]), CHALLENGE, "help"):
+	for line in hint_lines(FakeStreamer(["a", "b"]), CHALLENGE, "help", 7, lambda: None):
 		assert line.endswith("\n")
 		assert "\n" not in line[:-1]
