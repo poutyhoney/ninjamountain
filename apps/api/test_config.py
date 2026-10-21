@@ -7,6 +7,8 @@ def test_defaults(monkeypatch):
 	monkeypatch.delenv("APP_VERSION", raising=False)
 	monkeypatch.delenv("API_TOKEN", raising=False)
 	monkeypatch.delenv("DATABASE_URL", raising=False)
+	monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+	monkeypatch.delenv("SENSEI_MODEL", raising=False)
 
 	settings = load_settings()
 
@@ -15,6 +17,8 @@ def test_defaults(monkeypatch):
 	assert settings.app_version == "dev"
 	assert settings.api_token is None
 	assert settings.database_url is None
+	assert settings.anthropic_api_key is None
+	assert settings.sensei_model == "claude-opus-5-5"
 
 
 def test_values_from_environment(monkeypatch):
