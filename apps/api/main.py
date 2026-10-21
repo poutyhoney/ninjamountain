@@ -1,10 +1,14 @@
 import time
 from typing import Annotated
 
+import anthropic
 from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel, Field
 
 from auth import bearer_header, check_token
+from challenges import PublicChallenge, challenges_for_belt, get_challenge, is_unlocked
 from config import load_settings
 from entitlements import (
 	DEMO_ADDONS,
@@ -15,9 +19,16 @@ from entitlements import (
 )
 from events import Event, EventWriter, PostgresEventWriter
 from logging_config import configure_logging
+from sensei import AnthropicHintStreamer, HintStreamer, hint_lines
 
 settings = load_settings()
 logger = configure_logging(settings.log_level)
+
+anthropic_client = (
+	anthropic.Anthropic(api_key=settings.anthropic_api_key, timeout=30.0)
+	if settings.anthropic_api_key
+	else None
+)
 
 app = FastAPI(title="Ninja Mountain API", version=settings.app_version)
 
@@ -57,6 +68,16 @@ def get_event_writer() -> EventWriter:
 		)
 	return PostgresEventWriter(settings.database_url)
 
+
+
+def get_hint_streamer() -> HintStreamer | None:
+	if anthropic_client is None:
+		return None
+	return AnthropicHintStreamer(anthropic_client, settings.sensei_model)
+
+class HintRequest(BaseModel):
+	challenge_id: str = Field(min_length=1, max_length=64)
+	question: str = Field(min_length=1, max_length=500)
 
 @app.get("/")
 def read_root():
@@ -122,3 +143,39 @@ def record_event(
 ) -> dict[str, str]:
 	writer.write(event)
 	return {"status": "accepted"}
+
+
+
+@app.get("/sensei/challenges")
+def sensei_challenges(
+	authorization: Annotated[str | None, Depends(bearer_header)],
+) -> list[PublicChallenge]:
+	check_token(settings.api_token, authorization)
+	return challenges_for_belt(DEMO_BELT)
+
+
+@app.post("/sensei/hint")
+def sensei_hint(
+	body: HintRequest,
+	authorization: Annotated[str | None, Depends(bearer_header)],
+	streamer: Annotated[HintStreamer | None, Depends(get_hint_streamer)],
+) -> StreamingResponse:
+	check_token(settings.api_token, authorization)
+	if streamer is None:
+		raise HTTPException(
+			status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+			detail="The Sensei is not configured",
+		)
+	challenge = get_challenge(body.challenge_id)
+	if challenge is None:
+		raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Unknown challenge")
+	if not is_unlocked(challenge, DEMO_BELT):
+		raise HTTPException(
+			status_code=status.HTTP_403_FORBIDDEN,
+			detail="Upgrade your belt to unlock this training ground",
+		)
+	return StreamingResponse(
+		hint_lines(streamer, challenge, body.question),
+		media_type="application/x-ndjson",
+		headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+	)

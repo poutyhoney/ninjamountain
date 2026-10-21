@@ -20,6 +20,8 @@ services:
     build: ./apps/api
     environment:
       DATABASE_URL: postgresql://events:local-dev-only@events-db:5432/events
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      SENSEI_MODEL: ${SENSEI_MODEL:-}
     ports:
       - "8000:8000"
     depends_on:
