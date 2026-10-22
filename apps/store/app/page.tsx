@@ -1,5 +1,6 @@
 import { headers } from "next/headers";
 import { after } from "next/server";
+import Link from "next/link";
 import { Suspense } from "react";
 
 import CheckoutButton from "@/app/components/CheckoutButton";
@@ -50,6 +51,11 @@ export default async function Home() {
           Train across the training grounds of the mountain. Start free and
           level up when you are ready.
         </p>
+        {apiUrl && (
+          <Link href="/sensei" className="font-semibold text-nm-violet">
+            Stuck on a challenge? Ask the Sensei
+          </Link>
+        )}
       </header>
 
       {apiUrl && (
