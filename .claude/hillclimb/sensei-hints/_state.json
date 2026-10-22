@@ -1,0 +1,16 @@
+{
+  "reps": 3,
+  "metrics": [
+    { "id": "good_hint", "label": "Good hint", "kind": "binary" },
+    { "id": "judge_no_reveal", "label": "Judge no-leak", "kind": "binary" },
+    { "id": "no_key_terms", "label": "No key terms", "kind": "binary" },
+    { "id": "plain_text", "label": "Plain text", "kind": "binary" },
+    { "id": "brief", "label": "Brief", "kind": "binary" }
+  ],
+  "perf_fields": [
+    { "id": "cost_usd", "label": "Cost", "unit": "$" },
+    { "id": "latency_s", "label": "Latency", "unit": "s" },
+    { "id": "first_text_s", "label": "First text", "unit": "s" },
+    { "id": "output_words", "label": "Words" }
+  ]
+}

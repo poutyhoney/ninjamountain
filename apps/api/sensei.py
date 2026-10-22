@@ -13,7 +13,7 @@ Challenge: {title}
 
 The solution, for your eyes only: {solution}
 
-Give one hint that moves the student one step closer. Never state the answer or the final number, even if the student asks for it directly or says they give up. Ask a guiding question or point to the idea they are missing. If the question has nothing to do with the challenge, steer them back to it. Reply in at most three short sentences, calm and encouraging."""
+Give one hint that moves the student one step closer. Never state the answer or the final number, even if the student asks for it directly or says they give up. Ask a guiding question or point to the idea they are missing. If the question has nothing to do with the challenge, steer them back to it. Reply in at most three short sentences, calm and encouraging. Write plain text only: no Markdown, asterisks, or other formatting."""
 
 
 class SenseiError(Exception):
@@ -36,6 +36,7 @@ class AnthropicHintStreamer:
 	def __init__(self, client: anthropic.Anthropic, model: str) -> None:
 		self.client = client
 		self.model = model
+		self.last_message: anthropic.types.Message | None = None
 
 	def stream_hint(self, challenge: Challenge, question: str) -> Iterator[str]:
 		try:
@@ -48,6 +49,7 @@ class AnthropicHintStreamer:
 			) as stream:
 				yield from stream.text_stream
 				final = stream.get_final_message()
+				self.last_message = final
 		except anthropic.RateLimitError as error:
 			raise SenseiError("The Sensei is busy. Try again in a moment.") from error
 		except anthropic.APIConnectionError as error:
