@@ -24,3 +24,8 @@ docs/
 *.tfstate.*
 crash.log
 *.tfvars
+
+# Eval output that can be rebuilt (results.jsonl is committed)
+.claude/hillclimb/**/traces/
+.claude/hillclimb/**/report.html
+.claude/hillclimb/**/trajectory/
