@@ -1,15 +1,74 @@
 # Ninja Mountain Arcade
 
-A subscription storefront for Ninja Mountain Arcade: training challenges
-grouped into training grounds, sold as belt tiers. This is the web UI
-ramp-up project in the Ninja Mountain monorepo.
+A subscription storefront that sells training challenges as belt tiers
+(White, Brown, Black). Offers come from a headless CMS, checkout runs on
+Stripe, and the Sensei streams hints from Claude without ever giving the
+answer. It's the web UI ramp-up project in the Ninja Mountain monorepo,
+built and shipped over eight weeks with tests, accessibility checks, an A/B
+test, and an eval on every change that matters.
 
-Live:
+- **Live store:** https://ninjamountain-store.vercel.app/
+- **Storybook:** https://ninjamountain-storybook.vercel.app/
 
-- Store: https://ninjamountain-store.vercel.app/
-- Storybook: https://ninjamountain-storybook.vercel.app/
+**Stack:** Next.js 16 (React 19, TypeScript, Tailwind), Contentful, Stripe,
+FastAPI on AWS ECS, Postgres, Claude (Anthropic API), GrowthBook, GA4,
+Vitest, Playwright, Storybook, Terraform, Kubernetes (kind).
+
+### What to look at
+
+- **Streaming UI with Stop:** [SenseiPanel.tsx](app/components/SenseiPanel.tsx)
+  and the proxy [route.ts](app/api/sensei/route.ts). One abort signal stops
+  every hop. See [The Sensei](#the-sensei-streaming-hints).
+- **The A/B test readout:** [EXPERIMENTS.md](EXPERIMENTS.md). Hypothesis,
+  design, results, and the decision.
+- **The hint eval:** [apps/api/evals](../api/evals/README.md). A prompt fix
+  took plain-text hints from 42/60 to 60/60.
+- **Accessibility:** axe in CI on every PR
+  ([a11y.spec.ts](e2e/a11y.spec.ts)), plus keyboard and VoiceOver passes.
+  See [Accessibility](#accessibility).
+- **CI and deploys:** [ci.yml](../../.github/workflows/ci.yml) runs lint,
+  types, tests, build, e2e, and Lighthouse on every PR; the API ships to ECS
+  through OIDC ([infra/](../../infra/README.md)).
 
 ## How it fits together
+
+```mermaid
+flowchart LR
+  browser["Browser"]
+
+  subgraph prod["Production"]
+    store["Store<br/>Next.js 16 on Vercel"]
+    contentful["Contentful<br/>offers"]
+    stripe["Stripe<br/>checkout, test mode"]
+    ga4["Google Analytics 4"]
+  end
+
+  subgraph aws["AWS, work sessions only"]
+    api["FastAPI<br/>ECS Express"]
+  end
+
+  anthropic["Anthropic API<br/>Claude"]
+
+  subgraph local["Local only: Docker Compose or kind"]
+    growthbook["GrowthBook"]
+    postgres[("Postgres<br/>events")]
+  end
+
+  browser -->|pages| store
+  browser -->|page views, select_belt| ga4
+  browser -->|hosted checkout page| stripe
+  store -->|offers, ISR every 60 s| contentful
+  store -->|create Checkout Session| stripe
+  store -.->|entitlements, Sensei hints| api
+  api -.->|streamed hints| anthropic
+  store -.->|which layout?| growthbook
+  api -.->|exposures, checkout starts| postgres
+  growthbook -.->|reads events| postgres
+```
+
+Solid lines run in production. Dashed lines run only when `API_URL` is set:
+on your machine, or against the ECS API during a work session. GrowthBook
+and Postgres never leave your machine.
 
 - **Contentful** holds the offers (names, prices, perks, badges). The pricing
   page reads them at build time and refreshes them every 60 seconds (ISR).
@@ -28,6 +87,56 @@ Live:
   (Anthropic API). The browser calls the store, the store calls FastAPI, and
   FastAPI calls Anthropic, so the API key and token never reach the browser.
   Shown only when `API_URL` is set.
+
+## Results
+
+Measured on 2026-10-23. Each number comes from the command or report
+listed with it.
+
+### Performance and best practices (live store, mobile)
+
+From [PageSpeed Insights](https://pagespeed.web.dev/analysis/https-ninjamountain-store-vercel-app/5kedn17ydx?form_factor=mobile):
+
+| Performance | Accessibility | Best Practices | SEO |
+| ----------- | ------------- | -------------- | --- |
+| 78          | 100           | 100            | 100 |
+
+LCP 4.3 s, CLS 0, TBT 180 ms.
+
+Performance is under the CI budget of 90. CI runs Lighthouse on a local
+build; PageSpeed Insights tests the live site on a throttled phone network,
+with GA4 loaded. GA4 is the likely main cost (see "Reduce the impact of
+third-party code" in the report).
+
+### Tests and coverage
+
+| Suite               | Result                                  | Command                       |
+| ------------------- | --------------------------------------- | ----------------------------- |
+| Store unit (Vitest) | 40 tests in 10 files, 64% line coverage | `npm run test:coverage:store` |
+| API (pytest)        | 59 tests                                | `cd apps/api && pytest -q`    |
+| E2E (Playwright)    | 6 tests, checkout flow and axe scans    | `npm run e2e:store`           |
+
+The 64% is across the whole store. Tested components and libs are at 87 to
+100%; most of the gap is pages and server-only glue covered by e2e instead.
+
+### Accessibility checks
+
+0 WCAG 2.2 A and AA violations from axe on the pricing and cancel pages, in
+CI on every PR. Lighthouse Accessibility is 100. See
+[Accessibility](#accessibility) for the manual passes.
+
+### Experiment
+
+CTA first raised checkout starts from 7.41% to 9.72% (+31% relative, 99.4%
+chance to beat control) on 5,000 simulated visitors. Shipped. The traffic is
+simulated, so this tests the pipeline and the analysis, not real users.
+Full readout: [EXPERIMENTS.md](EXPERIMENTS.md).
+
+### Sensei eval
+
+60 of 60 hints judged good on `claude-opus-5-5`, with no answers revealed.
+Adding one plain-text rule to the prompt took hints with no Markdown from
+42/60 to 60/60. Details: [apps/api/evals](../api/evals/README.md).
 
 ## Run it locally
 
@@ -136,16 +245,7 @@ Target: WCAG 2.2 AA.
 - The default 1px focus ring was hard to see on the dark background. All
   focusable elements now get a 2px lavender ring with an offset.
 
-### Known gaps
-
-- The success page isn't scanned by axe in CI, because it needs a completed
-  Stripe session. It was checked by hand.
-- When the entitlements panel finishes loading or fails, the result isn't
-  announced to screen readers (WCAG 4.1.3). Only the loading state is.
-- Offer cards are `article` elements without names, so they appear unnamed in
-  a screen reader's landmark list.
-- Stripe's hosted checkout page is Stripe's responsibility and isn't covered
-  by these tests.
+Known gaps are listed in [Known gaps](#known-gaps).
 
 ## Experiments (GrowthBook)
 
@@ -274,6 +374,35 @@ is written. The Sensei nudges; it never gives the answer.
 
 ### How a hint travels
 
+```mermaid
+sequenceDiagram
+  actor Student
+  participant Panel as SenseiPanel (browser)
+  participant Route as /api/sensei (store)
+  participant API as FastAPI /sensei/hint
+  participant Claude as Anthropic API
+
+  Student->>Panel: Ask a question
+  Panel->>Route: POST challenge + question
+  Route->>API: POST, adds API token
+  API->>API: Check token, challenge, belt, daily limit
+  API->>Claude: Start streaming request
+  alt Hint finishes
+    loop While Claude writes
+      Claude-->>API: Text chunk
+      API-->>Route: NDJSON text line
+      Route-->>Panel: Same bytes, passed through
+    end
+    API-->>Panel: done line, hints remaining
+  else Student presses Stop
+    Student->>Panel: Stop
+    Panel-xRoute: Abort
+    Route-xAPI: Abort (forwarded signal)
+    API-xClaude: Close stream
+    Note over Panel: Partial hint stays on screen
+  end
+```
+
 1. `SenseiPanel` (client component) POSTs to `/api/sensei`.
 2. The route handler (`app/api/sensei/route.ts`) adds the API token and
    passes the request to FastAPI's `POST /sensei/hint`. It streams the
@@ -371,7 +500,20 @@ EXPERIMENTS.md              A/B test readouts
 - Vercel skips a project's build when nothing it depends on changed. Changes
   outside the npm workspaces (like `apps/api` or `.github/`) still build both.
 
-## Known gaps: experiments and analytics
+## Known gaps
+
+### Accessibility
+
+- The success page isn't scanned by axe in CI, because it needs a completed
+  Stripe session. It was checked by hand.
+- When the entitlements panel finishes loading or fails, the result isn't
+  announced to screen readers (WCAG 4.1.3). Only the loading state is.
+- Offer cards are `article` elements without names, so they appear unnamed in
+  a screen reader's landmark list.
+- Stripe's hosted checkout page is Stripe's responsibility and isn't covered
+  by these tests.
+
+### Experiments and analytics
 
 - **No cookie consent.** GA4 loads for every visitor with no consent banner.
   That's fine for a demo store but not for real EU traffic, which needs
@@ -385,7 +527,7 @@ EXPERIMENTS.md              A/B test readouts
   follow-up event can land first. See the caveats in
   [EXPERIMENTS.md](EXPERIMENTS.md).
 
-## Known gaps: the Sensei
+### The Sensei
 
 - **The daily limit lives in memory.** It resets when the API restarts, and
   with several API pods (see `k8s/`) each pod counts separately. A shared
