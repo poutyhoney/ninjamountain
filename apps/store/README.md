@@ -24,6 +24,10 @@ Live:
   GrowthBook reads them for analysis. See [EXPERIMENTS.md](EXPERIMENTS.md).
 - **Google Analytics 4** records page views and a `select_belt` event on the
   live store.
+- **The Sensei** gives streaming hints on training challenges from Claude
+  (Anthropic API). The browser calls the store, the store calls FastAPI, and
+  FastAPI calls Anthropic, so the API key and token never reach the browser.
+  Shown only when `API_URL` is set.
 
 ## Run it locally
 
@@ -151,13 +155,13 @@ don't set them, so production always shows the control layout.
 
 ### What runs where
 
-| Service | Where | What it is |
-| --- | --- | --- |
-| `events-db` | `localhost:5433` | Postgres with the `events` table |
-| `api` | `localhost:8000` | FastAPI; `POST /events` writes to Postgres |
-| `growthbook` | UI `localhost:3200`, API `localhost:3300` | Feature flags, experiments, analysis |
-| `growthbook-mongo` | Compose network only | GrowthBook's own settings |
-| `store` | `localhost:3001` | The store; reaches GrowthBook at `http://growthbook:3100` |
+| Service            | Where                                     | What it is                                                |
+| ------------------ | ----------------------------------------- | --------------------------------------------------------- |
+| `events-db`        | `localhost:5433`                          | Postgres with the `events` table                          |
+| `api`              | `localhost:8000`                          | FastAPI; `POST /events` writes to Postgres                |
+| `growthbook`       | UI `localhost:3200`, API `localhost:3300` | Feature flags, experiments, analysis                      |
+| `growthbook-mongo` | Compose network only                      | GrowthBook's own settings                                 |
+| `store`            | `localhost:3001`                          | The store; reaches GrowthBook at `http://growthbook:3100` |
 
 ### One-time setup
 
@@ -263,6 +267,56 @@ ships in the page), so it's config, not a secret.
 Because it's a `NEXT_PUBLIC_` variable, it's baked in at build time. After
 changing it on Vercel, redeploy.
 
+## The Sensei (streaming hints)
+
+A student picks a challenge, asks a question, and the hint streams in as it
+is written. The Sensei nudges; it never gives the answer.
+
+### How a hint travels
+
+1. `SenseiPanel` (client component) POSTs to `/api/sensei`.
+2. The route handler (`app/api/sensei/route.ts`) adds the API token and
+   passes the request to FastAPI's `POST /sensei/hint`. It streams the
+   response body straight back and forwards the browser's abort signal.
+3. FastAPI checks the token, the challenge, the belt, and the daily limit,
+   then streams Claude's answer.
+
+The stream is NDJSON, one JSON object per line:
+
+```
+{"type": "text", "text": "Start at the end"}
+{"type": "done", "remaining": 7}
+```
+
+Errors after the stream starts arrive as `{"type": "error", "message": ...}`.
+A stream that ends without `done` is treated as cut off.
+
+### What the panel handles
+
+- **Stop** aborts the request through every hop (browser, route handler,
+  FastAPI, Anthropic). The partial hint stays on screen.
+- **Retry** after an error sends the same question again.
+- **Daily limit:** White Belt 3, Brown Belt 10, Black Belt 30. Over the
+  limit, the API returns 429 with `Retry-After`, and the panel says when
+  more hints arrive. A failed stream gives the hint back; Stop does not,
+  because the tokens were already used.
+- **Accessibility:** the answer area is `aria-live="polite"` with
+  `aria-busy` while streaming, so screen readers read the finished hint
+  once. Errors use `role="alert"`. Focus moves to Stop when a hint starts
+  and back to the question box when it ends.
+
+### Quality
+
+A 20-question eval scores the hints (see
+[apps/api/evals/README.md](../api/evals/README.md)). With the current prompt,
+60 of 60 hints were judged good, with no answers revealed and no Markdown.
+
+### Try it locally
+
+Run the API (`docker compose up -d api`) with `ANTHROPIC_API_KEY` in the
+root `.env`, and the store with `API_URL` set. Then open
+http://localhost:3001/sensei.
+
 ## Where things are
 
 ```
@@ -273,12 +327,15 @@ app/
   checkout/
     actions.ts              Server action: creates the Stripe Checkout Session
     success/, cancel/       Pages Stripe returns to
+  sensei/page.tsx           The Sensei page (challenge list from the API)
+  api/sensei/route.ts       Route handler: proxies the hint stream to FastAPI
   components/
     OfferCard.tsx           One offer (uses Badge, PriceTag, PerkList)
     CheckoutButton.tsx      "Choose" form, or "Free forever" for White Belt
     ChooseButton.tsx        The "Choose" button; sends the GA4 event
     EntitlementsPanel.tsx   Fetches entitlements (async server component)
     EntitlementsSummary.tsx Renders them, plus the loading skeleton
+    SenseiPanel.tsx         Ask, Stop, Retry; reads the NDJSON stream
     *.stories.tsx           Storybook stories
     *.test.tsx              Unit tests
 lib/
@@ -289,6 +346,9 @@ lib/
   growthbook.ts             Server-only GrowthBook client; picks the layout
   events.ts                 Sends experiment events to the API
   visitor.ts                Visitor ID cookie and header names
+  sensei.ts                 Server-only: challenge list and API token header
+  sensei-types.ts           Challenge and stream line types (shared)
+  ndjson.ts                 Turns a byte stream into parsed lines
 proxy.ts                    Gives each visitor an ID (experiments only)
 e2e/                        Playwright tests (checkout flow, axe scans)
 Dockerfile                  Multi-stage image (standalone output)
@@ -324,3 +384,16 @@ EXPERIMENTS.md              A/B test readouts
 - **Exposure timing.** Exposures are recorded with `after()`, so a very fast
   follow-up event can land first. See the caveats in
   [EXPERIMENTS.md](EXPERIMENTS.md).
+
+## Known gaps: the Sensei
+
+- **The daily limit lives in memory.** It resets when the API restarts, and
+  with several API pods (see `k8s/`) each pod counts separately. A shared
+  store (Redis or Postgres) would fix both.
+- **The entitlements fetch doesn't send the API token.** Against the ECS
+  API, the entitlements panel shows a 401. The Sensei sends the token.
+- **Production doesn't show the Sensei.** The API only runs on AWS during
+  work sessions, and Vercel doesn't set `API_URL`.
+- **The eval's judge isn't checked against human labels yet,** and its
+  headline score is at 100%, so it catches regressions better than small
+  improvements.
