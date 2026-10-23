@@ -40,7 +40,8 @@ data "aws_ecr_repository" "api" {
 }
 
 locals {
-  api_token_parameter_arn = "arn:aws:ssm:us-east-1:${data.aws_caller_identity.current.account_id}:parameter/ninjamountain/api/token"
+  api_token_parameter_arn     = "arn:aws:ssm:us-east-1:${data.aws_caller_identity.current.account_id}:parameter/ninjamountain/api/token"
+  anthropic_key_parameter_arn = "arn:aws:ssm:us-east-1:${data.aws_caller_identity.current.account_id}:parameter/ninjamountain/api/anthropic-key"
 }
 
 resource "aws_ecs_cluster" "main" {
@@ -77,9 +78,12 @@ resource "aws_iam_role_policy" "execution_read_token" {
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Effect   = "Allow"
-      Action   = "ssm:GetParameters"
-      Resource = local.api_token_parameter_arn
+      Effect = "Allow"
+      Action = "ssm:GetParameters"
+      Resource = [
+        local.api_token_parameter_arn,
+        local.anthropic_key_parameter_arn,
+      ]
     }]
   })
 }
@@ -139,6 +143,11 @@ resource "aws_ecs_express_gateway_service" "api" {
     secret {
       name       = "API_TOKEN"
       value_from = local.api_token_parameter_arn
+    }
+
+    secret {
+      name       = "ANTHROPIC_API_KEY"
+      value_from = local.anthropic_key_parameter_arn
     }
   }
 
