@@ -1,15 +1,74 @@
 # Ninja Mountain Arcade
 
-A subscription storefront for Ninja Mountain Arcade: training challenges
-grouped into training grounds, sold as belt tiers. This is the web UI
-ramp-up project in the Ninja Mountain monorepo.
+A subscription storefront that sells training challenges as belt tiers
+(White, Brown, Black). Offers come from a headless CMS, checkout runs on
+Stripe, and the Sensei streams hints from Claude without ever giving the
+answer. It's the web UI ramp-up project in the Ninja Mountain monorepo,
+built and shipped over eight weeks with tests, accessibility checks, an A/B
+test, and an eval on every change that matters.
 
-Live:
+- **Live store:** https://ninjamountain-store.vercel.app/
+- **Storybook:** https://ninjamountain-storybook.vercel.app/
 
-- Store: https://ninjamountain-store.vercel.app/
-- Storybook: https://ninjamountain-storybook.vercel.app/
+**Stack:** Next.js 16 (React 19, TypeScript, Tailwind), Contentful, Stripe,
+FastAPI on AWS ECS, Postgres, Claude (Anthropic API), GrowthBook, GA4,
+Vitest, Playwright, Storybook, Terraform, Kubernetes (kind).
+
+### What to look at
+
+- **Streaming UI with Stop:** [SenseiPanel.tsx](app/components/SenseiPanel.tsx)
+  and the proxy [route.ts](app/api/sensei/route.ts). One abort signal stops
+  every hop. See [The Sensei](#the-sensei-streaming-hints).
+- **The A/B test readout:** [EXPERIMENTS.md](EXPERIMENTS.md). Hypothesis,
+  design, results, and the decision.
+- **The hint eval:** [apps/api/evals](../api/evals/README.md). A prompt fix
+  took plain-text hints from 42/60 to 60/60.
+- **Accessibility:** axe in CI on every PR
+  ([a11y.spec.ts](e2e/a11y.spec.ts)), plus keyboard and VoiceOver passes.
+  See [Accessibility](#accessibility).
+- **CI and deploys:** [ci.yml](../../.github/workflows/ci.yml) runs lint,
+  types, tests, build, e2e, and Lighthouse on every PR; the API ships to ECS
+  through OIDC ([infra/](../../infra/README.md)).
 
 ## How it fits together
+
+```mermaid
+flowchart LR
+  browser["Browser"]
+
+  subgraph prod["Production"]
+    store["Store<br/>Next.js 16 on Vercel"]
+    contentful["Contentful<br/>offers"]
+    stripe["Stripe<br/>checkout, test mode"]
+    ga4["Google Analytics 4"]
+  end
+
+  subgraph aws["AWS, work sessions only"]
+    api["FastAPI<br/>ECS Express"]
+  end
+
+  anthropic["Anthropic API<br/>Claude"]
+
+  subgraph local["Local only: Docker Compose or kind"]
+    growthbook["GrowthBook"]
+    postgres[("Postgres<br/>events")]
+  end
+
+  browser -->|pages| store
+  browser -->|page views, select_belt| ga4
+  browser -->|hosted checkout page| stripe
+  store -->|offers, ISR every 60 s| contentful
+  store -->|create Checkout Session| stripe
+  store -.->|entitlements, Sensei hints| api
+  api -.->|streamed hints| anthropic
+  store -.->|which layout?| growthbook
+  api -.->|exposures, checkout starts| postgres
+  growthbook -.->|reads events| postgres
+```
+
+Solid lines run in production. Dashed lines run only when `API_URL` is set:
+on your machine, or against the ECS API during a work session. GrowthBook
+and Postgres never leave your machine.
 
 - **Contentful** holds the offers (names, prices, perks, badges). The pricing
   page reads them at build time and refreshes them every 60 seconds (ISR).
@@ -273,6 +332,35 @@ A student picks a challenge, asks a question, and the hint streams in as it
 is written. The Sensei nudges; it never gives the answer.
 
 ### How a hint travels
+
+```mermaid
+sequenceDiagram
+  actor Student
+  participant Panel as SenseiPanel (browser)
+  participant Route as /api/sensei (store)
+  participant API as FastAPI /sensei/hint
+  participant Claude as Anthropic API
+
+  Student->>Panel: Ask a question
+  Panel->>Route: POST challenge + question
+  Route->>API: POST, adds API token
+  API->>API: Check token, challenge, belt, daily limit
+  API->>Claude: Start streaming request
+  alt Hint finishes
+    loop While Claude writes
+      Claude-->>API: Text chunk
+      API-->>Route: NDJSON text line
+      Route-->>Panel: Same bytes, passed through
+    end
+    API-->>Panel: done line, hints remaining
+  else Student presses Stop
+    Student->>Panel: Stop
+    Panel-xRoute: Abort
+    Route-xAPI: Abort (forwarded signal)
+    API-xClaude: Close stream
+    Note over Panel: Partial hint stays on screen
+  end
+```
 
 1. `SenseiPanel` (client component) POSTs to `/api/sensei`.
 2. The route handler (`app/api/sensei/route.ts`) adds the API token and
