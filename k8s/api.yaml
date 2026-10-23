@@ -1,0 +1,74 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-config
+  namespace: ninjamountain
+data:
+  APP_VERSION: k1
+  LOG_LEVEL: INFO
+  SENSEI_MODEL: claude-opus-5-5
+  CORS_ORIGINS: http://localhost:8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  namespace: ninjamountain
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      containers:
+        - name: api
+          image: ninjamountain-api:k1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: api-config
+            - secretRef:
+                name: api-secrets
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: events-db
+                  key: password
+            - name: DATABASE_URL
+              value: postgresql://events:$(DB_PASSWORD)@events-db:5432/events
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api
+  namespace: ninjamountain
+spec:
+  selector:
+    app: api
+  ports:
+    - port: 8000
+      targetPort: 8000

@@ -1,0 +1,11 @@
+apiVersion: v1
+data:
+  init.sql: "CREATE TABLE IF NOT EXISTS events (\n    id  BIGSERIAL   PRIMARY KEY,\n
+    \   event_name  TEXT    NOT NULL,\n    visitor_id  TEXT    NOT NULL,\n    occurred_at
+    \ TIMESTAMPTZ NOT NULL DEFAULT    now(),\n    properties  JSONB   NOT NULL DEFAULT
+    \  '{}'::jsonb \n);\n\nCREATE INDEX IF NOT EXISTS events_name_time ON events (event_name,
+    occurred_at);"
+kind: ConfigMap
+metadata:
+  name: events-db-init
+  namespace: ninjamountain
