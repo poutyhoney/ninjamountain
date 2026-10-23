@@ -88,6 +88,56 @@ and Postgres never leave your machine.
   FastAPI calls Anthropic, so the API key and token never reach the browser.
   Shown only when `API_URL` is set.
 
+## Results
+
+Measured on 2026-10-23. Each number comes from the command or report
+listed with it.
+
+### Performance and best practices (live store, mobile)
+
+From [PageSpeed Insights](https://pagespeed.web.dev/analysis/https-ninjamountain-store-vercel-app/5kedn17ydx?form_factor=mobile):
+
+| Performance | Accessibility | Best Practices | SEO |
+| ----------- | ------------- | -------------- | --- |
+| 78          | 100           | 100            | 100 |
+
+LCP 4.3 s, CLS 0, TBT 180 ms.
+
+Performance is under the CI budget of 90. CI runs Lighthouse on a local
+build; PageSpeed Insights tests the live site on a throttled phone network,
+with GA4 loaded. GA4 is the likely main cost (see "Reduce the impact of
+third-party code" in the report).
+
+### Tests and coverage
+
+| Suite               | Result                                  | Command                       |
+| ------------------- | --------------------------------------- | ----------------------------- |
+| Store unit (Vitest) | 40 tests in 10 files, 64% line coverage | `npm run test:coverage:store` |
+| API (pytest)        | 59 tests                                | `cd apps/api && pytest -q`    |
+| E2E (Playwright)    | 6 tests, checkout flow and axe scans    | `npm run e2e:store`           |
+
+The 64% is across the whole store. Tested components and libs are at 87 to
+100%; most of the gap is pages and server-only glue covered by e2e instead.
+
+### Accessibility checks
+
+0 WCAG 2.2 A and AA violations from axe on the pricing and cancel pages, in
+CI on every PR. Lighthouse Accessibility is 100. See
+[Accessibility](#accessibility) for the manual passes.
+
+### Experiment
+
+CTA first raised checkout starts from 7.41% to 9.72% (+31% relative, 99.4%
+chance to beat control) on 5,000 simulated visitors. Shipped. The traffic is
+simulated, so this tests the pipeline and the analysis, not real users.
+Full readout: [EXPERIMENTS.md](EXPERIMENTS.md).
+
+### Sensei eval
+
+60 of 60 hints judged good on `claude-opus-5-5`, with no answers revealed.
+Adding one plain-text rule to the prompt took hints with no Markdown from
+42/60 to 60/60. Details: [apps/api/evals](../api/evals/README.md).
+
 ## Run it locally
 
 From the repo root, not this folder:
@@ -195,16 +245,7 @@ Target: WCAG 2.2 AA.
 - The default 1px focus ring was hard to see on the dark background. All
   focusable elements now get a 2px lavender ring with an offset.
 
-### Known gaps
-
-- The success page isn't scanned by axe in CI, because it needs a completed
-  Stripe session. It was checked by hand.
-- When the entitlements panel finishes loading or fails, the result isn't
-  announced to screen readers (WCAG 4.1.3). Only the loading state is.
-- Offer cards are `article` elements without names, so they appear unnamed in
-  a screen reader's landmark list.
-- Stripe's hosted checkout page is Stripe's responsibility and isn't covered
-  by these tests.
+Known gaps are listed in [Known gaps](#known-gaps).
 
 ## Experiments (GrowthBook)
 
@@ -459,7 +500,20 @@ EXPERIMENTS.md              A/B test readouts
 - Vercel skips a project's build when nothing it depends on changed. Changes
   outside the npm workspaces (like `apps/api` or `.github/`) still build both.
 
-## Known gaps: experiments and analytics
+## Known gaps
+
+### Accessibility
+
+- The success page isn't scanned by axe in CI, because it needs a completed
+  Stripe session. It was checked by hand.
+- When the entitlements panel finishes loading or fails, the result isn't
+  announced to screen readers (WCAG 4.1.3). Only the loading state is.
+- Offer cards are `article` elements without names, so they appear unnamed in
+  a screen reader's landmark list.
+- Stripe's hosted checkout page is Stripe's responsibility and isn't covered
+  by these tests.
+
+### Experiments and analytics
 
 - **No cookie consent.** GA4 loads for every visitor with no consent banner.
   That's fine for a demo store but not for real EU traffic, which needs
@@ -473,7 +527,7 @@ EXPERIMENTS.md              A/B test readouts
   follow-up event can land first. See the caveats in
   [EXPERIMENTS.md](EXPERIMENTS.md).
 
-## Known gaps: the Sensei
+### The Sensei
 
 - **The daily limit lives in memory.** It resets when the API restarts, and
   with several API pods (see `k8s/`) each pod counts separately. A shared
