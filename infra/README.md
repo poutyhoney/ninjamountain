@@ -9,10 +9,10 @@ during work sessions, so production shows offers only.
 
 ## What lives where
 
-| Folder | Holds | Lifetime | State |
-| --- | --- | --- | --- |
-| `bootstrap/` | The S3 bucket for Terraform state | Permanent, `prevent_destroy` | Local, gitignored |
-| `shared/` | ECR repository, SNS alerts topic, GitHub OIDC provider and deploy role | Permanent, costs pennies | S3, `shared/terraform.tfstate` |
+| Folder         | Holds                                                                           | Lifetime                             | State                               |
+| -------------- | ------------------------------------------------------------------------------- | ------------------------------------ | ----------------------------------- |
+| `bootstrap/`   | The S3 bucket for Terraform state                                               | Permanent, `prevent_destroy`         | Local, gitignored                   |
+| `shared/`      | ECR repository, SNS alerts topic, GitHub OIDC provider and deploy role          | Permanent, costs pennies             | S3, `shared/terraform.tfstate`      |
 | `api-service/` | ECS cluster, Express service, IAM roles, log group, 5xx metric filter and alarm | Created per session, destroyed after | S3, `api-service/terraform.tfstate` |
 
 Outside Terraform, on purpose:
@@ -20,14 +20,18 @@ Outside Terraform, on purpose:
 - **The API token** lives in SSM Parameter Store as `/ninjamountain/api/token`
   (`SecureString`). It was created once with the CLI so its value never lands
   in Terraform state. ECS injects it into the container as `API_TOKEN`.
+- **The Anthropic key** lives in SSM as `/ninjamountain/api/anthropic-key`
+  (`SecureString`), also created once with the CLI. ECS injects it as
+  `ANTHROPIC_API_KEY`. The execution role may read only these two
+  parameters.
 - **Your alert email** is in `shared/terraform.tfvars`, which is gitignored.
 
 ## Cost
 
-| While | Roughly |
-| --- | --- |
-| `api-service` is up | 4 cents an hour (mostly the load balancer). About $25 to $30 if left up all month. |
-| `api-service` is destroyed | Pennies a month (ECR image storage, S3 state) |
+| While                      | Roughly                                                                            |
+| -------------------------- | ---------------------------------------------------------------------------------- |
+| `api-service` is up        | 4 cents an hour (mostly the load balancer). About $25 to $30 if left up all month. |
+| `api-service` is destroyed | Pennies a month (ECR image storage, S3 state)                                      |
 
 These are estimates; check AWS pricing for exact numbers. A $10 monthly
 budget alert emails you at 85% of actual spend and when the forecast goes
@@ -69,6 +73,7 @@ URL=$(terraform output -raw api_url)
 TOKEN=$(aws ssm get-parameter --name /ninjamountain/api/token --with-decryption --query Parameter.Value --output text)
 curl -s "$URL/health"
 curl -s -H "Authorization: Bearer $TOKEN" "$URL/entitlements/me"
+curl -N -X POST "$URL/sensei/hint" -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d '{"challenge_id":"bamboo-grove-growth","question":"Where do I start?"}'
 aws logs tail /ninjamountain/api --since 15m
 ```
 
