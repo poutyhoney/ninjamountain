@@ -1,9 +1,9 @@
-import Link from 'next/link';
-import SiteHeader from '../../../components/SiteHeader';
-import SiteFooter from '../../../components/SiteFooter';
-import TrainingNotes from '../../../components/TrainingNotes';
-import ProdBarConceptCheck from './ProdBarConceptCheck';
-import ProdBarScenarioChecklist from './ProdBarScenarioChecklist';
+import Link from "next/link";
+import SiteHeader from "../../../components/SiteHeader";
+import SiteFooter from "../../../components/SiteFooter";
+import TrainingNotes from "../../../components/TrainingNotes";
+import ProdBarConceptCheck from "./ProdBarConceptCheck";
+import ProdBarScenarioChecklist from "./ProdBarScenarioChecklist";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -11,37 +11,50 @@ type Practice = { name: string; body: string };
 type Resource = { href: string; title: string; desc: string };
 
 const PRACTICES: Practice[] = [
-  { name: 'Code review',          body: 'Every change gets read critically by someone else before merging — catching what the author could not see in their own diff.' },
-  { name: 'Testing',               body: "Enough automated coverage that a change's blast radius is caught before a human notices it in production." },
-  { name: 'Safe deploys',          body: 'Rolling out gradually — canary, feature flag, staged rollout — so a bad change affects a fraction of traffic, not everyone at once.' },
-  { name: 'Observability hooks',   body: 'New code ships with enough logging and metrics to answer "is this working" without needing a follow-up deploy just to add visibility.' },
+  {
+    name: "Code review",
+    body: "Every change gets read critically by someone else before merging — catching what the author could not see in their own diff.",
+  },
+  {
+    name: "Testing",
+    body: "Enough automated coverage that a change's blast radius is caught before a human notices it in production.",
+  },
+  {
+    name: "Safe deploys",
+    body: "Rolling out gradually — canary, feature flag, staged rollout — so a bad change affects a fraction of traffic, not everyone at once.",
+  },
+  {
+    name: "Observability hooks",
+    body: 'New code ships with enough logging and metrics to answer "is this working" without needing a follow-up deploy just to add visibility.',
+  },
 ];
 
 const RESOURCES: Resource[] = [
   {
-    href: 'https://go.dev/doc/effective_go',
-    title: 'Go Docs: Effective Go',
-    desc: 'Idiomatic Go, for picking up the language\'s conventions fast',
+    href: "https://go.dev/doc/effective_go",
+    title: "Go Docs: Effective Go",
+    desc: "Idiomatic Go, for picking up the language's conventions fast",
   },
   {
-    href: 'https://www.ruby-lang.org/en/documentation/quickstart/',
-    title: 'Ruby Docs: Getting started',
-    desc: 'The official quickstart for a language you may only touch occasionally',
+    href: "https://www.ruby-lang.org/en/documentation/quickstart/",
+    title: "Ruby Docs: Getting started",
+    desc: "The official quickstart for a language you may only touch occasionally",
   },
   {
-    href: 'https://launchdarkly.com/docs/home/releases/progressive-rollouts',
-    title: 'LaunchDarkly Docs: Progressive rollouts',
-    desc: 'What a staged rollout actually looks like in practice',
+    href: "https://launchdarkly.com/docs/home/releases/progressive-rollouts",
+    title: "LaunchDarkly Docs: Progressive rollouts",
+    desc: "What a staged rollout actually looks like in practice",
   },
 ];
 
 const TRAINING_NOTES = [
   {
-    title: 'This is a flagged gap-priority module',
-    body: "Full-Stack Production Bar was Tom's #10 self-identified gap across a scan of 30+ job descriptions — the ask, in company language, was usually \"comfortable across the stack, not just one language.\"",
+    title: "This is a flagged gap-priority module",
+    body: 'Full-Stack Production Bar was Tom\'s #10 self-identified gap across a scan of 30+ job descriptions — the ask, in company language, was usually "comfortable across the stack, not just one language."',
   },
   {
-    title: 'The Go/Ruby comparison is about pattern recognition, not translation',
+    title:
+      "The Go/Ruby comparison is about pattern recognition, not translation",
     body: "The goal isn't memorizing syntax mappings between languages — it's recognizing the same conceptual shape (lookup, error handling, response) regardless of which language it's written in.",
   },
 ];
@@ -67,12 +80,15 @@ end`;
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-const card = 'rounded-[18px] border border-[#202431] bg-[#151821] p-6 shadow-[0_18px_55px_rgba(0,0,0,0.23)]';
+const card =
+  "rounded-[18px] border border-[#202431] bg-[#151821] p-6 shadow-[0_18px_55px_rgba(0,0,0,0.23)]";
 
 function SectionHeader({ title, intro }: { title: string; intro: string }) {
   return (
     <>
-      <h2 className="mb-3 text-3xl font-bold tracking-tight sm:text-4xl">{title}</h2>
+      <h2 className="mb-3 text-3xl font-bold tracking-tight sm:text-4xl">
+        {title}
+      </h2>
       <p className="mb-8 max-w-2xl text-[#6F7684]">{intro}</p>
     </>
   );
@@ -81,8 +97,9 @@ function SectionHeader({ title, intro }: { title: string; intro: string }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export const metadata = {
-  title: 'Full-Stack Production Bar — Modern Web Foundations — Ninja Mountain',
-  description: 'A primer on reading fluency across languages and the production practices that make a change production-grade, with exercises.',
+  title: "Full-Stack Production Bar — Modern Web Foundations — Ninja Mountain",
+  description:
+    "A primer on reading fluency across languages and the production practices that make a change production-grade, with exercises.",
 };
 
 export default function ProdBarLessonPage() {
@@ -92,26 +109,39 @@ export default function ProdBarLessonPage() {
 
       <main className="mx-auto max-w-[1180px] px-5 py-20">
         {/* Breadcrumb */}
-        <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-[#6F7684]">
-          <Link href="/" className="hover:text-[#E9ECF2]">Home</Link>
+        <nav
+          aria-label="Breadcrumb"
+          className="flex items-center gap-2 text-xs text-[#6F7684]"
+        >
+          <Link href="/" className="hover:text-[#E9ECF2]">
+            Home
+          </Link>
           <span>›</span>
-          <Link href="/trails" className="hover:text-[#E9ECF2]">Trails</Link>
+          <Link href="/trails" className="hover:text-[#E9ECF2]">
+            Trails
+          </Link>
           <span>›</span>
-          <Link href="/trails/modern-web-foundations" className="hover:text-[#E9ECF2]">Modern Web Foundations</Link>
+          <Link
+            href="/trails/modern-web-foundations"
+            className="hover:text-[#E9ECF2]"
+          >
+            Modern Web Foundations
+          </Link>
           <span>›</span>
           <span className="text-[#C8CCD4]">Full-Stack Production Bar</span>
         </nav>
 
         {/* Hero */}
         <p className="mb-3 mt-8 text-xs font-bold uppercase tracking-[.2em] text-[#8B6CFF]">
-          Lesson 2 of 2 · ⭐ Gap priority
+          Lesson 2 of 3 · ⭐ Gap priority
         </p>
         <h1 className="mb-5 max-w-3xl text-4xl font-bold leading-tight tracking-tight sm:text-5xl">
           Full-Stack Production Bar
         </h1>
         <p className="max-w-xl text-lg leading-relaxed text-[#6F7684]">
-          Picking up a legacy service outside your comfort language is a lot less daunting once
-          you know what to look for first — and what &quot;production-grade&quot; actually requires.
+          Picking up a legacy service outside your comfort language is a lot
+          less daunting once you know what to look for first — and what
+          &quot;production-grade&quot; actually requires.
         </p>
 
         {/* Definitions: reading fluency */}
@@ -122,14 +152,19 @@ export default function ProdBarLessonPage() {
           />
           <div className={card}>
             <p className="text-sm leading-relaxed text-[#6F7684]">
-              Reading fluency means being able to navigate an unfamiliar codebase, recognize
-              common idioms and structure, and make a safe, pattern-matching change — not writing
-              idiomatic code from scratch without reference. Before touching anything, find the{' '}
-              <strong className="text-[#E9ECF2]">test suite</strong> (it documents intended
-              behavior), the <strong className="text-[#E9ECF2]">dependency manifest</strong>{' '}
-              (Gemfile, composer.json, go.mod — what&apos;s actually available), and an{' '}
-              <strong className="text-[#E9ECF2]">existing similar pattern</strong> to follow
-              instead of inventing a new one.
+              Reading fluency means being able to navigate an unfamiliar
+              codebase, recognize common idioms and structure, and make a safe,
+              pattern-matching change — not writing idiomatic code from scratch
+              without reference. Before touching anything, find the{" "}
+              <strong className="text-[#E9ECF2]">test suite</strong> (it
+              documents intended behavior), the{" "}
+              <strong className="text-[#E9ECF2]">dependency manifest</strong>{" "}
+              (Gemfile, composer.json, go.mod — what&apos;s actually available),
+              and an{" "}
+              <strong className="text-[#E9ECF2]">
+                existing similar pattern
+              </strong>{" "}
+              to follow instead of inventing a new one.
             </p>
           </div>
         </section>

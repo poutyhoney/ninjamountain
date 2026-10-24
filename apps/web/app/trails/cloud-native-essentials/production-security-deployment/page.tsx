@@ -1,9 +1,9 @@
-import Link from 'next/link';
-import SiteHeader from '../../../components/SiteHeader';
-import SiteFooter from '../../../components/SiteFooter';
-import TrainingNotes from '../../../components/TrainingNotes';
-import SecurityConceptCheck from './SecurityConceptCheck';
-import SecurityScenarioChecklist from './SecurityScenarioChecklist';
+import Link from "next/link";
+import SiteHeader from "../../../components/SiteHeader";
+import SiteFooter from "../../../components/SiteFooter";
+import TrainingNotes from "../../../components/TrainingNotes";
+import SecurityConceptCheck from "./SecurityConceptCheck";
+import SecurityScenarioChecklist from "./SecurityScenarioChecklist";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -12,48 +12,66 @@ type DeployModel = { name: string; body: string };
 type Resource = { href: string; title: string; desc: string };
 
 const DOMAINS: Domain[] = [
-  { name: 'Secrets management',   body: 'API keys, DB credentials, and certs belong in a secrets manager (Vault, AWS Secrets Manager, Doppler) — never in source control or a plaintext env file.' },
-  { name: 'Least-privilege IAM',  body: "A role should have exactly the permissions its job requires, no more. The most common production incident isn't a sophisticated exploit — it's an overly broad policy." },
-  { name: 'Network segmentation', body: 'Not every service needs to talk to every other service. VPCs, subnets, and security groups make "if this is compromised, what can it reach?" an answerable question.' },
+  {
+    name: "Secrets management",
+    body: "API keys, DB credentials, and certs belong in a secrets manager (Vault, AWS Secrets Manager, Doppler) — never in source control or a plaintext env file.",
+  },
+  {
+    name: "Least-privilege IAM",
+    body: "A role should have exactly the permissions its job requires, no more. The most common production incident isn't a sophisticated exploit — it's an overly broad policy.",
+  },
+  {
+    name: "Network segmentation",
+    body: 'Not every service needs to talk to every other service. VPCs, subnets, and security groups make "if this is compromised, what can it reach?" an answerable question.',
+  },
 ];
 
 const DEPLOY_MODELS: DeployModel[] = [
-  { name: 'Cloud-hosted', body: "Standard SaaS deployment — the provider's infra, your code, internet-reachable by default and gated behind auth." },
-  { name: 'On-prem',      body: "Runs inside the customer's own data center. You lose managed services (their DB, their load balancer) and gain their change-control process." },
-  { name: 'Air-gapped',   body: 'No path to the public internet, ever. Every dependency — images, packages, even license checks — has to be mirrored in and updated by hand.' },
+  {
+    name: "Cloud-hosted",
+    body: "Standard SaaS deployment — the provider's infra, your code, internet-reachable by default and gated behind auth.",
+  },
+  {
+    name: "On-prem",
+    body: "Runs inside the customer's own data center. You lose managed services (their DB, their load balancer) and gain their change-control process.",
+  },
+  {
+    name: "Air-gapped",
+    body: "No path to the public internet, ever. Every dependency — images, packages, even license checks — has to be mirrored in and updated by hand.",
+  },
 ];
 
 const RESOURCES: Resource[] = [
   {
-    href: 'https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html',
-    title: 'AWS: IAM best practices',
-    desc: 'Least privilege, straight from the source that defines the permission model',
+    href: "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html",
+    title: "AWS: IAM best practices",
+    desc: "Least privilege, straight from the source that defines the permission model",
   },
   {
-    href: 'https://www.vaultproject.io/docs/what-is-vault',
-    title: 'HashiCorp: What is Vault?',
+    href: "https://www.vaultproject.io/docs/what-is-vault",
+    title: "HashiCorp: What is Vault?",
     desc: 'The problem a dedicated secrets manager solves, and why "just use env vars" stops scaling',
   },
   {
-    href: 'https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html',
-    title: 'OWASP: Secrets Management Cheat Sheet',
-    desc: 'Concrete anti-patterns and what to do instead, vendor-neutral',
+    href: "https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html",
+    title: "OWASP: Secrets Management Cheat Sheet",
+    desc: "Concrete anti-patterns and what to do instead, vendor-neutral",
   },
   {
-    href: 'https://kubernetes.io/docs/concepts/security/overview/',
-    title: 'Kubernetes docs: Overview of Cloud Native Security',
-    desc: 'How segmentation and least privilege show up specifically in a cluster',
+    href: "https://kubernetes.io/docs/concepts/security/overview/",
+    title: "Kubernetes docs: Overview of Cloud Native Security",
+    desc: "How segmentation and least privilege show up specifically in a cluster",
   },
 ];
 
 const TRAINING_NOTES = [
   {
-    title: 'This is a flagged gap-priority module',
+    title: "This is a flagged gap-priority module",
     body: "This lesson covers two related gaps from the same job-hunting scan: security-domain production experience, and on-prem/air-gapped deployment. They're grouped here because most job descriptions raised them together, not separately.",
   },
   {
-    title: 'Broad on purpose, not deep on any one model',
-    body: 'Air-gapped installs alone could fill their own trail. The goal here is recognizing the vocabulary and trade-offs when a customer or job description raises them — not having shipped one yourself yet.',
+    title: "Broad on purpose, not deep on any one model",
+    body: "Air-gapped installs alone could fill their own trail. The goal here is recognizing the vocabulary and trade-offs when a customer or job description raises them — not having shipped one yourself yet.",
   },
 ];
 
@@ -74,12 +92,15 @@ const CODE_EXAMPLE = `// Flagged in a security review
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-const card = 'rounded-[18px] border border-[#202431] bg-[#151821] p-6 shadow-[0_18px_55px_rgba(0,0,0,0.23)]';
+const card =
+  "rounded-[18px] border border-[#202431] bg-[#151821] p-6 shadow-[0_18px_55px_rgba(0,0,0,0.23)]";
 
 function SectionHeader({ title, intro }: { title: string; intro: string }) {
   return (
     <>
-      <h2 className="mb-3 text-3xl font-bold tracking-tight sm:text-4xl">{title}</h2>
+      <h2 className="mb-3 text-3xl font-bold tracking-tight sm:text-4xl">
+        {title}
+      </h2>
       <p className="mb-8 max-w-2xl text-[#6F7684]">{intro}</p>
     </>
   );
@@ -88,8 +109,10 @@ function SectionHeader({ title, intro }: { title: string; intro: string }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export const metadata = {
-  title: 'Production Security & Deployment Models — Cloud Native Essentials — Ninja Mountain',
-  description: 'A primer on secrets management, least-privilege IAM, network segmentation, and deployment models, with exercises.',
+  title:
+    "Production Security & Deployment Models — Cloud Native Essentials — Ninja Mountain",
+  description:
+    "A primer on secrets management, least-privilege IAM, network segmentation, and deployment models, with exercises.",
 };
 
 export default function SecurityLessonPage() {
@@ -99,26 +122,41 @@ export default function SecurityLessonPage() {
 
       <main className="mx-auto max-w-[1180px] px-5 py-20">
         {/* Breadcrumb */}
-        <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-[#6F7684]">
-          <Link href="/" className="hover:text-[#E9ECF2]">Home</Link>
+        <nav
+          aria-label="Breadcrumb"
+          className="flex items-center gap-2 text-xs text-[#6F7684]"
+        >
+          <Link href="/" className="hover:text-[#E9ECF2]">
+            Home
+          </Link>
           <span>›</span>
-          <Link href="/trails" className="hover:text-[#E9ECF2]">Trails</Link>
+          <Link href="/trails" className="hover:text-[#E9ECF2]">
+            Trails
+          </Link>
           <span>›</span>
-          <Link href="/trails/cloud-native-essentials" className="hover:text-[#E9ECF2]">Cloud Native Essentials</Link>
+          <Link
+            href="/trails/cloud-native-essentials"
+            className="hover:text-[#E9ECF2]"
+          >
+            Cloud Native Essentials
+          </Link>
           <span>›</span>
-          <span className="text-[#C8CCD4]">Production Security &amp; Deployment Models</span>
+          <span className="text-[#C8CCD4]">
+            Production Security &amp; Deployment Models
+          </span>
         </nav>
 
         {/* Hero */}
         <p className="mb-3 mt-8 text-xs font-bold uppercase tracking-[.2em] text-[#8B6CFF]">
-          Lesson 4 of 4 · ⭐ Gap priority
+          Lesson 4 of 5 · ⭐ Gap priority
         </p>
         <h1 className="mb-5 max-w-3xl text-4xl font-bold leading-tight tracking-tight sm:text-5xl">
           Production Security &amp; Deployment Models
         </h1>
         <p className="max-w-xl text-lg leading-relaxed text-[#6F7684]">
-          A customer requires an air-gapped install, or a security review flags a policy that&apos;s
-          far too broad. Neither should be the first time you&apos;ve thought about either.
+          A customer requires an air-gapped install, or a security review flags
+          a policy that&apos;s far too broad. Neither should be the first time
+          you&apos;ve thought about either.
         </p>
 
         {/* Definitions: security domains */}

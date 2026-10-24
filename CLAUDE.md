@@ -15,6 +15,11 @@ learn by typing the code himself. Optimize for his understanding, not for speed.
   typecheck, and builds to check his work. Point out mistakes and explain them,
   but let him make the fix.
 - When something fails, explain what the error means before giving the fix.
+- This is a build-along, not a live course. Claude does the research on its own
+  (docs, existing pages, config) and then shows the finished code to type and
+  where it goes. No "let's read this together" steps before the code.
+- Once the build is done, Tom will ask for a fully commented version for study
+  and for a few ways to demo the whole site (solutions engineering practice).
 
 ## Environment setup: always spell it out
 

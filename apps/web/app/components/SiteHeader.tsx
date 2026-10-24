@@ -51,7 +51,7 @@ export default function SiteHeader({
 
           <Link
             href="/projects/onboard"
-            className="rounded-full bg-[#8B6CFF] px-4 py-2 text-sm font-semibold text-[#0A0B0F] transition hover:-translate-y-px hover:bg-[#B7A7FF]"
+            className="hidden whitespace-nowrap rounded-full bg-[#8B6CFF] px-4 py-2 text-sm font-semibold text-[#0A0B0F] transition hover:-translate-y-px hover:bg-[#B7A7FF] sm:inline-flex"
           >
             Start the Climb
           </Link>
@@ -108,6 +108,13 @@ export default function SiteHeader({
                 {label}
               </Link>
             ))}
+            <Link
+              href="/projects/onboard"
+              className="mt-2 rounded-full bg-[#8B6CFF] px-4 py-2.5 text-center text-sm font-semibold text-[#0A0B0F] transition hover:bg-[#B7A7FF] sm:hidden"
+              onClick={() => setOpen(false)}
+            >
+              Start the Climb
+            </Link>
           </nav>
         </div>
       )}
