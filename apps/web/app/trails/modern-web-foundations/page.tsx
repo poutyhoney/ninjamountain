@@ -1,7 +1,7 @@
-import Link from 'next/link';
-import SiteHeader from '../../components/SiteHeader';
-import SiteFooter from '../../components/SiteFooter';
-import TrainingNotes from '../../components/TrainingNotes';
+import Link from "next/link";
+import SiteHeader from "../../components/SiteHeader";
+import SiteFooter from "../../components/SiteFooter";
+import TrainingNotes from "../../components/TrainingNotes";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -13,33 +13,43 @@ type Topic = {
 
 const TOPICS: Topic[] = [
   {
-    title: 'Scripting Fluency',
-    body: 'Python, JavaScript/Node.js, TypeScript, and Bash — picking the right tool for a one-off script.',
-    href: '/trails/modern-web-foundations/scripting-fluency',
+    title: "Scripting Fluency",
+    body: "Python, JavaScript/Node.js, TypeScript, and Bash — picking the right tool for a one-off script.",
+    href: "/trails/modern-web-foundations/scripting-fluency",
   },
   {
-    title: 'Full-Stack Production Bar',
-    body: 'Reading fluency in an unfamiliar language, plus the review, testing, and rollout practices that make a change production-grade.',
-    href: '/trails/modern-web-foundations/full-stack-production-bar',
+    title: "Full-Stack Production Bar",
+    body: "Reading fluency in an unfamiliar language, plus the review, testing, and rollout practices that make a change production-grade.",
+    href: "/trails/modern-web-foundations/full-stack-production-bar",
+  },
+  {
+    title: "Building the Arcade",
+    body: "A project case study: server components, typed data from Contentful, testing and accessibility, and a streaming UI, with links to the code.",
+    href: "/trails/modern-web-foundations/building-the-arcade",
   },
 ];
 
 const TRAINING_NOTES = [
   {
-    title: 'This trail is narrower than its original placeholder scope',
-    body: 'The original placeholder described HTML/CSS/JS foundations broadly. These two lessons are the job-market-driven subset built so far — general scripting fluency and the production practices around any language — not a full HTML/CSS/JS curriculum.',
+    title: "This trail is narrower than its original placeholder scope",
+    body: "The original placeholder described HTML/CSS/JS foundations broadly. These lessons are the job-market-driven subset built so far: general scripting fluency, the production practices around any language, and one real project that puts both to work. Not a full HTML/CSS/JS curriculum.",
   },
   {
-    title: 'One module here is a flagged gap-priority',
+    title: "One module here is a flagged gap-priority",
     body: "Full-Stack Production Bar was Tom's #10 self-identified gap from the job-hunting skills scan — sequenced second, after Scripting Fluency, since it builds on that lesson's language vocabulary.",
+  },
+  {
+    title: "The case study comes last on purpose",
+    body: "Building the Arcade has no exercises. It shows the first two lessons applied to an eight-week build, so it reads best after them.",
   },
 ];
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export const metadata = {
-  title: 'Modern Web Foundations — Ninja Mountain',
-  description: 'Structured lessons for scripting fluency and the full-stack production bar.',
+  title: "Modern Web Foundations — Ninja Mountain",
+  description:
+    "Structured lessons for scripting fluency and the full-stack production bar, plus a project case study.",
 };
 
 export default function ModernWebFoundationsPage() {
@@ -49,10 +59,17 @@ export default function ModernWebFoundationsPage() {
 
       <main className="mx-auto max-w-[1180px] px-5 py-20">
         {/* Breadcrumb */}
-        <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-[#6F7684]">
-          <Link href="/" className="hover:text-[#E9ECF2]">Home</Link>
+        <nav
+          aria-label="Breadcrumb"
+          className="flex items-center gap-2 text-xs text-[#6F7684]"
+        >
+          <Link href="/" className="hover:text-[#E9ECF2]">
+            Home
+          </Link>
           <span>›</span>
-          <Link href="/trails" className="hover:text-[#E9ECF2]">Trails</Link>
+          <Link href="/trails" className="hover:text-[#E9ECF2]">
+            Trails
+          </Link>
           <span>›</span>
           <span className="text-[#C8CCD4]">Modern Web Foundations</span>
         </nav>
@@ -65,8 +82,9 @@ export default function ModernWebFoundationsPage() {
           Modern Web Foundations
         </h1>
         <p className="max-w-xl text-lg leading-relaxed text-[#6F7684]">
-          Two topics, one lesson each: a short primer, links to primary documentation, and
-          exercises to prove the concept has stuck. Start with Scripting Fluency.
+          Two lessons with a short primer, links to primary documentation, and
+          exercises to prove the concept has stuck, then a case study that
+          applies them. Start with Scripting Fluency.
         </p>
 
         {/* Topics */}
@@ -92,8 +110,8 @@ export default function ModernWebFoundationsPage() {
             );
 
             const cardClassName =
-              'block rounded-[18px] border border-[#202431] bg-[#151821] p-6 shadow-[0_18px_55px_rgba(0,0,0,0.23)] transition' +
-              (href ? ' hover:border-[#8B6CFF]/40' : ' opacity-80');
+              "block rounded-[18px] border border-[#202431] bg-[#151821] p-6 shadow-[0_18px_55px_rgba(0,0,0,0.23)] transition" +
+              (href ? " hover:border-[#8B6CFF]/40" : " opacity-80");
 
             return href ? (
               <Link key={title} href={href} className={cardClassName}>

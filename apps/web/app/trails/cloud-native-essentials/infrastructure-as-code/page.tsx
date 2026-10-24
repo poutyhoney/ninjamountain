@@ -1,9 +1,9 @@
-import Link from 'next/link';
-import SiteHeader from '../../../components/SiteHeader';
-import SiteFooter from '../../../components/SiteFooter';
-import TrainingNotes from '../../../components/TrainingNotes';
-import IacConceptCheck from './IacConceptCheck';
-import IacScenarioChecklist from './IacScenarioChecklist';
+import Link from "next/link";
+import SiteHeader from "../../../components/SiteHeader";
+import SiteFooter from "../../../components/SiteFooter";
+import TrainingNotes from "../../../components/TrainingNotes";
+import IacConceptCheck from "./IacConceptCheck";
+import IacScenarioChecklist from "./IacScenarioChecklist";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -12,49 +12,70 @@ type Tool = { name: string; body: string };
 type Resource = { href: string; title: string; desc: string };
 
 const CONCEPTS: Concept[] = [
-  { name: 'Provider', body: 'A plugin that knows how to talk to a specific API — AWS, GCP, Azure, Datadog, GitHub. Every resource block belongs to one.' },
-  { name: 'Resource',  body: 'A single piece of managed infrastructure — an EC2 instance, an S3 bucket, a DNS record — declared, not scripted.' },
-  { name: 'State',     body: "Terraform's record of what it last created, mapping your config to real-world resource IDs. Losing or corrupting it is one of the most common ways teams get hurt." },
-  { name: 'Plan / Apply', body: "`plan` shows what would change without touching anything; `apply` actually makes the change. Never skip reading a plan you didn't write yourself." },
+  {
+    name: "Provider",
+    body: "A plugin that knows how to talk to a specific API — AWS, GCP, Azure, Datadog, GitHub. Every resource block belongs to one.",
+  },
+  {
+    name: "Resource",
+    body: "A single piece of managed infrastructure — an EC2 instance, an S3 bucket, a DNS record — declared, not scripted.",
+  },
+  {
+    name: "State",
+    body: "Terraform's record of what it last created, mapping your config to real-world resource IDs. Losing or corrupting it is one of the most common ways teams get hurt.",
+  },
+  {
+    name: "Plan / Apply",
+    body: "`plan` shows what would change without touching anything; `apply` actually makes the change. Never skip reading a plan you didn't write yourself.",
+  },
 ];
 
 const TOOLS: Tool[] = [
-  { name: 'Terraform',      body: "Cloud-agnostic, HCL syntax, the most widely adopted — the safe default when a job description just says \"IaC.\"" },
-  { name: 'Pulumi',         body: 'The same declarative model, but written in a real programming language (TypeScript, Python, Go) instead of HCL.' },
-  { name: 'CloudFormation', body: "AWS-native, JSON/YAML — no separate state file to manage since AWS tracks it, but locked to one provider." },
+  {
+    name: "Terraform",
+    body: 'Cloud-agnostic, HCL syntax, the most widely adopted — the safe default when a job description just says "IaC."',
+  },
+  {
+    name: "Pulumi",
+    body: "The same declarative model, but written in a real programming language (TypeScript, Python, Go) instead of HCL.",
+  },
+  {
+    name: "CloudFormation",
+    body: "AWS-native, JSON/YAML — no separate state file to manage since AWS tracks it, but locked to one provider.",
+  },
 ];
 
 const RESOURCES: Resource[] = [
   {
-    href: 'https://developer.hashicorp.com/terraform/intro',
-    title: 'HashiCorp: Terraform intro',
-    desc: 'What problem Terraform solves and the core workflow, from the source',
+    href: "https://developer.hashicorp.com/terraform/intro",
+    title: "HashiCorp: Terraform intro",
+    desc: "What problem Terraform solves and the core workflow, from the source",
   },
   {
-    href: 'https://developer.hashicorp.com/terraform/language/state',
-    title: 'HashiCorp: Terraform state',
-    desc: 'Why state exists and what actually breaks when it drifts or gets lost',
+    href: "https://developer.hashicorp.com/terraform/language/state",
+    title: "HashiCorp: Terraform state",
+    desc: "Why state exists and what actually breaks when it drifts or gets lost",
   },
   {
-    href: 'https://www.pulumi.com/docs/iac/concepts/vs/terraform/',
-    title: 'Pulumi: Pulumi vs. Terraform',
+    href: "https://www.pulumi.com/docs/iac/concepts/vs/terraform/",
+    title: "Pulumi: Pulumi vs. Terraform",
     desc: "A vendor's comparison, but a fair one on the actual authoring-experience trade-off",
   },
   {
-    href: 'https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/Welcome.html',
-    title: 'AWS: CloudFormation User Guide',
-    desc: 'The AWS-native alternative, for when a team is fully committed to one cloud',
+    href: "https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/Welcome.html",
+    title: "AWS: CloudFormation User Guide",
+    desc: "The AWS-native alternative, for when a team is fully committed to one cloud",
   },
 ];
 
 const TRAINING_NOTES = [
   {
-    title: 'This module builds directly on the last one',
+    title: "This module builds directly on the last one",
     body: "Infrastructure as Code isn't a separately flagged gap, but it's the natural follow-on to Cloud Platforms & Core Ops — reading a plan diff assumes the vocabulary (compute, DNS, networking) from that lesson.",
   },
   {
-    title: 'The example output is trimmed for readability',
-    body: 'Real Terraform plan output includes far more noise — provider metadata, computed fields — that is rarely relevant to the actual question of what is changing and why.',
+    title: "The example output is trimmed for readability",
+    body: "Real Terraform plan output includes far more noise — provider metadata, computed fields — that is rarely relevant to the actual question of what is changing and why.",
   },
 ];
 
@@ -74,12 +95,15 @@ Plan: 1 to add, 0 to change, 1 to destroy.`;
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-const card = 'rounded-[18px] border border-[#202431] bg-[#151821] p-6 shadow-[0_18px_55px_rgba(0,0,0,0.23)]';
+const card =
+  "rounded-[18px] border border-[#202431] bg-[#151821] p-6 shadow-[0_18px_55px_rgba(0,0,0,0.23)]";
 
 function SectionHeader({ title, intro }: { title: string; intro: string }) {
   return (
     <>
-      <h2 className="mb-3 text-3xl font-bold tracking-tight sm:text-4xl">{title}</h2>
+      <h2 className="mb-3 text-3xl font-bold tracking-tight sm:text-4xl">
+        {title}
+      </h2>
       <p className="mb-8 max-w-2xl text-[#6F7684]">{intro}</p>
     </>
   );
@@ -88,8 +112,9 @@ function SectionHeader({ title, intro }: { title: string; intro: string }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export const metadata = {
-  title: 'Infrastructure as Code — Cloud Native Essentials — Ninja Mountain',
-  description: 'A primer on Terraform core concepts, alternatives, and diagnosing drift, with exercises.',
+  title: "Infrastructure as Code — Cloud Native Essentials — Ninja Mountain",
+  description:
+    "A primer on Terraform core concepts, alternatives, and diagnosing drift, with exercises.",
 };
 
 export default function IacLessonPage() {
@@ -99,26 +124,39 @@ export default function IacLessonPage() {
 
       <main className="mx-auto max-w-[1180px] px-5 py-20">
         {/* Breadcrumb */}
-        <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-[#6F7684]">
-          <Link href="/" className="hover:text-[#E9ECF2]">Home</Link>
+        <nav
+          aria-label="Breadcrumb"
+          className="flex items-center gap-2 text-xs text-[#6F7684]"
+        >
+          <Link href="/" className="hover:text-[#E9ECF2]">
+            Home
+          </Link>
           <span>›</span>
-          <Link href="/trails" className="hover:text-[#E9ECF2]">Trails</Link>
+          <Link href="/trails" className="hover:text-[#E9ECF2]">
+            Trails
+          </Link>
           <span>›</span>
-          <Link href="/trails/cloud-native-essentials" className="hover:text-[#E9ECF2]">Cloud Native Essentials</Link>
+          <Link
+            href="/trails/cloud-native-essentials"
+            className="hover:text-[#E9ECF2]"
+          >
+            Cloud Native Essentials
+          </Link>
           <span>›</span>
           <span className="text-[#C8CCD4]">Infrastructure as Code</span>
         </nav>
 
         {/* Hero */}
         <p className="mb-3 mt-8 text-xs font-bold uppercase tracking-[.2em] text-[#8B6CFF]">
-          Lesson 3 of 4
+          Lesson 3 of 5
         </p>
         <h1 className="mb-5 max-w-3xl text-4xl font-bold leading-tight tracking-tight sm:text-5xl">
           Infrastructure as Code
         </h1>
         <p className="max-w-xl text-lg leading-relaxed text-[#6F7684]">
-          Someone hand-edited a resource in the console, and now the next plan wants to destroy it.
-          Knowing why that happens is most of what IaC fluency actually is.
+          Someone hand-edited a resource in the console, and now the next plan
+          wants to destroy it. Knowing why that happens is most of what IaC
+          fluency actually is.
         </p>
 
         {/* Definitions: why IaC */}
@@ -129,13 +167,15 @@ export default function IacLessonPage() {
           />
           <div className={card}>
             <p className="text-sm leading-relaxed text-[#6F7684]">
-              An imperative script (&quot;create this, then attach that&quot;) has to account for every
-              possible starting state to stay correct. A declarative tool like Terraform instead
-              compares your config against its <strong className="text-[#E9ECF2]">state</strong> —
-              its record of what it last created — and computes only the changes needed to close
-              the gap. When reality (the actual cloud resources) no longer matches either the config
-              or the state, that mismatch is called <strong className="text-[#E9ECF2]">drift</strong>,
-              and it&apos;s the single most common source of Terraform surprises.
+              An imperative script (&quot;create this, then attach that&quot;)
+              has to account for every possible starting state to stay correct.
+              A declarative tool like Terraform instead compares your config
+              against its <strong className="text-[#E9ECF2]">state</strong> —
+              its record of what it last created — and computes only the changes
+              needed to close the gap. When reality (the actual cloud resources)
+              no longer matches either the config or the state, that mismatch is
+              called <strong className="text-[#E9ECF2]">drift</strong>, and
+              it&apos;s the single most common source of Terraform surprises.
             </p>
           </div>
         </section>
@@ -149,7 +189,9 @@ export default function IacLessonPage() {
           <div className="grid gap-4 sm:grid-cols-2">
             {CONCEPTS.map(({ name, body }) => (
               <article key={name} className={card}>
-                <h3 className="mb-2 font-mono font-semibold text-[#8B6CFF]">{name}</h3>
+                <h3 className="mb-2 font-mono font-semibold text-[#8B6CFF]">
+                  {name}
+                </h3>
                 <p className="text-sm text-[#6F7684]">{body}</p>
               </article>
             ))}
