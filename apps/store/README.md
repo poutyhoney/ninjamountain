@@ -9,6 +9,7 @@ test, and an eval on every change that matters.
 
 - **Live store:** https://ninjamountain-store.vercel.app/
 - **Storybook:** https://ninjamountain-storybook.vercel.app/
+- **Demo video (3 min):** https://youtu.be/uUhHOkLDlnM
 
 **Stack:** Next.js 16 (React 19, TypeScript, Tailwind), Contentful, Stripe,
 FastAPI on AWS ECS, Postgres, Claude (Anthropic API), GrowthBook, GA4,
