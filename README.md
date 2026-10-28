@@ -7,6 +7,7 @@ infrastructure that ships them.
 - **Store (Ninja Mountain Arcade):** https://ninjamountain-store.vercel.app/
   ([README](apps/store/README.md))
 - **Storybook:** https://ninjamountain-storybook.vercel.app/
+- **Arcade demo video (3 min):** https://youtu.be/uUhHOkLDlnM
 - **Dojo site:** https://www.ninjamountain.black/ (start with the
   [TSE onboarding plan](https://www.ninjamountain.black/projects/onboard))
 
