@@ -57,3 +57,22 @@ requires them to pass.
 - **API:** `deploy-api.yml` builds the image, pushes it to ECR, and deploys
   to ECS through GitHub OIDC (no stored AWS keys). The API only runs during
   work sessions; see [infra/](infra/README.md).
+
+## What this costs
+
+Measured on 2026-10-27, covering the eight weeks of the store build.
+
+| Service        | Cost  | Notes                                                                                                              |
+| -------------- | ----- | ------------------------------------------------------------------------------------------------------------------ |
+| AWS            | $0.58 | Load balancer, public IPv4, ECS, ECR. The API runs only during work sessions, then `terraform destroy`.            |
+| Anthropic API  | $1.96 | All of October, one key shared across projects. The hint eval was about $0.97 of it. Org spend limit $100 a month. |
+| GitHub Actions | $0    | $7.37 of runner minutes in October at list price, free for a public repo.                                          |
+| Vercel         | $0    | Hobby plan, usage near zero.                                                                                       |
+
+What keeps it low:
+
+- Nothing runs on AWS between sessions. ECS, the load balancer, and the
+  Terraform state for `api-service` are empty when I'm not working.
+- An ECR lifecycle policy keeps only the 10 newest images.
+- A graded eval hint costs about $0.0065, so a full 60-hint eval run is
+  under $0.40.
