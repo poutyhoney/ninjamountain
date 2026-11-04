@@ -19,6 +19,7 @@ infrastructure that ships them.
 | [`apps/web`](apps/web)                         | Next.js 16 dojo site: learning trails (TSE onboarding first), concepts, and project write-ups |
 | [`apps/api`](apps/api)                         | FastAPI: entitlements, experiment events, Sensei hints from Claude                            |
 | [`apps/api/evals`](apps/api/evals/README.md)   | The Sensei hint eval                                                                          |
+| [`agentmail`](apps/api/AGENTMAIL.md)           | Email the Sensei: an AgentMail inbox that replies with hints from Claude                      |
 | [`infra/`](infra/README.md)                    | Terraform for AWS: ECR, ECS Express, OIDC deploy role, SSM secrets                            |
 | [`k8s/`](k8s/README.md)                        | The whole stack on a local kind cluster, with Traefik                                         |
 | [`packages/triage`](packages/triage/README.md) | Support ticket triage pipeline powered by Claude                                              |
