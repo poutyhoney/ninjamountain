@@ -5,3 +5,5 @@ pytest==9.1.1
 ruff==0.16.0
 psycopg[binary]==3.3.6
 anthropic==1.16.0
+agentmail==2.0.22
+python-dotenv==1.2.2
