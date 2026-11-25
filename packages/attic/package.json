@@ -6,6 +6,7 @@
   "description": "Read-only auditor for legacy leftovers in a Twilio account.",
   "scripts": {
     "scan": "tsx src/cli.ts",
+    "ping": "tsx scripts/ping.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
