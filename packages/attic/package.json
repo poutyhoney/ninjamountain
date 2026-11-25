@@ -7,6 +7,7 @@
   "scripts": {
     "scan": "tsx src/cli.ts",
     "ping": "tsx scripts/ping.ts",
+    "probe": "tsx scripts/probe.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
