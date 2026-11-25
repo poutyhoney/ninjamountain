@@ -23,6 +23,8 @@
     "typecheck:web": "npm run typecheck --workspace apps/web",
     "typecheck:store": "npm run typecheck --workspace apps/store",
     "typecheck:triage": "npm run typecheck --workspace packages/triage",
+    "typecheck:attic": "npm run typecheck --workspace packages/attic",
+    "test:attic": "npm run test --workspace packages/attic",
     "test:store": "npm --workspace apps/store run test",
     "test:coverage:store": "npm --workspace apps/store run test:coverage",
     "e2e:store": "npm --workspace apps/store run e2e",
