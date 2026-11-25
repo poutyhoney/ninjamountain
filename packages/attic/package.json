@@ -1,0 +1,18 @@
+{
+  "name": "@ninjamountain/attic",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Read-only auditor for legacy leftovers in a Twilio account.",
+  "scripts": {
+    "scan": "tsx src/cli.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "tsx": "^4.22.3",
+    "typescript": "^5",
+    "vitest": "^5.0.3"
+  }
+}
