@@ -8,6 +8,7 @@
     "scan": "tsx src/cli.ts",
     "ping": "tsx scripts/ping.ts",
     "probe": "tsx scripts/probe.ts",
+    "collect-summary": "tsx scripts/collect-summary.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
