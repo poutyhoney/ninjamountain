@@ -33,7 +33,29 @@
       }
     ]
   },
-  "flexFlows": { "available": true, "data": [] },
+  "flexFlows": {
+    "available": true,
+    "data": [
+      {
+        "sid": "FO00000000000000000000000000000099",
+        "friendlyName": "Legacy SMS Flex Flow",
+        "enabled": true,
+        "channelType": "sms",
+        "contactIdentity": "+12025550197",
+        "integrationType": "studio",
+        "studioFlowSid": "FW00000000000000000000000000000097"
+      },
+      {
+        "sid": "FO00000000000000000000000000000098",
+        "friendlyName": "Old Facebook Flex Flow",
+        "enabled": false,
+        "channelType": "facebook",
+        "contactIdentity": "messenger:000000000000000",
+        "integrationType": "task",
+        "studioFlowSid": null
+      }
+    ]
+  },
   "addresses": {
     "available": true,
     "data": [
