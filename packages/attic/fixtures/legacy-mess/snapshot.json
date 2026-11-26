@@ -30,6 +30,22 @@
         "smsUrl": null,
         "smsApplicationSid": null,
         "voiceUrl": "https://example-0000.twil.io/forward-call"
+      },
+      {
+        "sid": "PN00000000000000000000000000000098",
+        "phoneNumber": "+12025550196",
+        "friendlyName": "Old Proxy SMS",
+        "smsUrl": "https://webhooks.twilio.com/v1/Accounts/AC00000000000000000000000000000000/Proxy/KS00000000000000000000000000000099/Webhooks/Message",
+        "smsApplicationSid": null,
+        "voiceUrl": null
+      },
+      {
+        "sid": "PN00000000000000000000000000000097",
+        "phoneNumber": "+12025550195",
+        "friendlyName": "Detached Proxy number",
+        "smsUrl": null,
+        "smsApplicationSid": null,
+        "voiceUrl": null
       }
     ]
   },
@@ -471,6 +487,15 @@
   },
   "proxyServices": {
     "available": true,
-    "data": []
+    "data": [
+      {
+        "sid": "KS00000000000000000000000000000099",
+        "uniqueName": "Flex Proxy Service",
+        "phoneNumberSids": [
+          "PN00000000000000000000000000000098",
+          "PN00000000000000000000000000000097"
+        ]
+      }
+    ]
   }
 }
