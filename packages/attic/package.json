@@ -9,6 +9,7 @@
     "ping": "tsx scripts/ping.ts",
     "probe": "tsx scripts/probe.ts",
     "collect-summary": "tsx scripts/collect-summary.ts",
+    "fake-sids": "tsx scripts/fake-sids.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },

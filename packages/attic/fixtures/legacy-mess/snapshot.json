@@ -3,77 +3,71 @@
   "collectedAt": "2026-11-26T05:48:46.100Z",
   "accountSid": "AC00000000000000000000000000000000",
   "keySid": "SK00000000000000000000000000000000",
-  "flexConfiguration": {
-    "available": true,
-    "data": { "uiVersion": "2.18.0" }
-  },
+  "flexConfiguration": { "available": true, "data": { "uiVersion": "2.18.0" } },
   "phoneNumbers": {
     "available": true,
     "data": [
       {
-        "sid": "PN00000000000000000000000000000000",
+        "sid": "PN00000000000000000000000000000001",
         "phoneNumber": "+12025550100",
         "friendlyName": "(202) 555-0100",
         "smsUrl": null,
         "smsApplicationSid": null,
-        "voiceUrl": "https://webhooks.twilio.com/v1/Accounts/AC00000000000000000000000000000000/Flows/FW00000000000000000000000000000000"
+        "voiceUrl": "https://webhooks.twilio.com/v1/Accounts/AC00000000000000000000000000000000/Flows/FW00000000000000000000000000000001"
       },
       {
-        "sid": "PN00000000000000000000000000000000",
+        "sid": "PN00000000000000000000000000000002",
         "phoneNumber": "+12025550101",
         "friendlyName": "Willoughby Van Fells",
         "smsUrl": null,
         "smsApplicationSid": null,
-        "voiceUrl": "https://webhooks.twilio.com/v1/Accounts/AC00000000000000000000000000000000/Flows/FW00000000000000000000000000000000"
+        "voiceUrl": "https://webhooks.twilio.com/v1/Accounts/AC00000000000000000000000000000000/Flows/FW00000000000000000000000000000001"
       },
       {
-        "sid": "PN00000000000000000000000000000000",
+        "sid": "PN00000000000000000000000000000003",
         "phoneNumber": "+12025550102",
         "friendlyName": "Local Party",
         "smsUrl": null,
         "smsApplicationSid": null,
-        "voiceUrl": "https://forward-call-3946-3xrubz.twil.io/forward-call"
+        "voiceUrl": "https://example-0000.twil.io/forward-call"
       }
     ]
   },
-  "flexFlows": {
-    "available": true,
-    "data": []
-  },
+  "flexFlows": { "available": true, "data": [] },
   "addresses": {
     "available": true,
     "data": [
       {
-        "sid": "IG00000000000000000000000000000000",
+        "sid": "IG00000000000000000000000000000001",
         "friendlyName": "ShutTheFlexUp",
         "type": "chat",
-        "address": "CV00000000000000000000000000000000",
+        "address": "CV00000000000000000000000000000001",
         "autoCreation": {
           "enabled": true,
           "type": "studio",
-          "studioFlowSid": "FW00000000000000000000000000000000"
+          "studioFlowSid": "FW00000000000000000000000000000002"
         }
       },
       {
-        "sid": "IG00000000000000000000000000000000",
+        "sid": "IG00000000000000000000000000000002",
         "friendlyName": "Local SMS",
         "type": "sms",
         "address": "+12025550102",
         "autoCreation": {
           "enabled": true,
           "type": "studio",
-          "studioFlowSid": "FW00000000000000000000000000000000"
+          "studioFlowSid": "FW00000000000000000000000000000003"
         }
       },
       {
-        "sid": "IG00000000000000000000000000000000",
+        "sid": "IG00000000000000000000000000000003",
         "friendlyName": "Toll-free SMS",
         "type": "sms",
         "address": "+12025550100",
         "autoCreation": {
           "enabled": true,
           "type": "studio",
-          "studioFlowSid": "FW00000000000000000000000000000000"
+          "studioFlowSid": "FW00000000000000000000000000000003"
         }
       },
       {
@@ -86,6 +80,17 @@
           "type": "studio",
           "studioFlowSid": "FW00000000000000000000000000000098"
         }
+      },
+      {
+        "sid": "IG00000000000000000000000000000098",
+        "friendlyName": "Legacy SMS",
+        "type": "sms",
+        "address": "+12025550197",
+        "autoCreation": {
+          "enabled": true,
+          "type": "studio",
+          "studioFlowSid": "FW00000000000000000000000000000097"
+        }
       }
     ]
   },
@@ -93,55 +98,7 @@
     "available": true,
     "data": [
       {
-        "sid": "FW00000000000000000000000000000000",
-        "friendlyName": "Queued CallBack Voice IVR",
-        "status": "draft",
-        "revision": 10,
-        "states": [
-          {
-            "name": "Trigger",
-            "type": "trigger",
-            "transitions": [
-              {
-                "event": "incomingMessage",
-                "next": null
-              },
-              {
-                "event": "incomingCall",
-                "next": "function_1"
-              },
-              {
-                "event": "incomingConversationMessage",
-                "next": null
-              },
-              {
-                "event": "incomingRequest",
-                "next": null
-              },
-              {
-                "event": "incomingParent",
-                "next": null
-              }
-            ]
-          },
-          {
-            "name": "function_1",
-            "type": "run-function",
-            "transitions": [
-              {
-                "event": "success",
-                "next": null
-              },
-              {
-                "event": "fail",
-                "next": null
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "sid": "FW00000000000000000000000000000000",
+        "sid": "FW00000000000000000000000000000002",
         "friendlyName": "Copy of Webchat Flow",
         "status": "published",
         "revision": 8,
@@ -193,7 +150,7 @@
         ]
       },
       {
-        "sid": "FW00000000000000000000000000000000",
+        "sid": "FW00000000000000000000000000000005",
         "friendlyName": "Conversations Flow",
         "status": "published",
         "revision": 69,
@@ -245,7 +202,7 @@
         ]
       },
       {
-        "sid": "FW00000000000000000000000000000000",
+        "sid": "FW00000000000000000000000000000006",
         "friendlyName": "Copy of Voice IVR",
         "status": "published",
         "revision": 72,
@@ -297,7 +254,7 @@
         ]
       },
       {
-        "sid": "FW00000000000000000000000000000000",
+        "sid": "FW00000000000000000000000000000003",
         "friendlyName": "Messaging Flow",
         "status": "published",
         "revision": 429,
@@ -349,7 +306,7 @@
         ]
       },
       {
-        "sid": "FW00000000000000000000000000000000",
+        "sid": "FW00000000000000000000000000000001",
         "friendlyName": "Voice IVR",
         "status": "published",
         "revision": 246,
@@ -444,6 +401,30 @@
         "status": "draft",
         "revision": 3,
         "states": null
+      },
+      {
+        "sid": "FW00000000000000000000000000000097",
+        "friendlyName": "Legacy Messaging Flow",
+        "status": "published",
+        "revision": 12,
+        "states": [
+          {
+            "name": "Trigger",
+            "type": "trigger",
+            "transitions": [
+              { "event": "incomingMessage", "next": "send_to_flex_1" },
+              { "event": "incomingCall", "next": null },
+              { "event": "incomingConversationMessage", "next": null },
+              { "event": "incomingRequest", "next": null },
+              { "event": "incomingParent", "next": null }
+            ]
+          },
+          {
+            "name": "send_to_flex_1",
+            "type": "send-to-flex",
+            "transitions": []
+          }
+        ]
       }
     ]
   },
@@ -451,7 +432,7 @@
     "available": true,
     "data": [
       {
-        "sid": "AP00000000000000000000000000000000",
+        "sid": "AP00000000000000000000000000000001",
         "friendlyName": "Flex TwiML App",
         "voiceUrl": "http://voice-orchestrator-controller.callback.prod.twilio.com:11617/v1/TwiML",
         "smsUrl": null,
