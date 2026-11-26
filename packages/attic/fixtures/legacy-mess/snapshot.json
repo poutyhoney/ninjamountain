@@ -426,6 +426,13 @@
             ]
           }
         ]
+      },
+      {
+        "sid": "FW00000000000000000000000000000099",
+        "friendlyName": "Copy of Messaging Flow",
+        "status": "draft",
+        "revision": 3,
+        "states": null
       }
     ]
   },
