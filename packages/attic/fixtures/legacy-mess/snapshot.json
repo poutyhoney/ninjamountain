@@ -75,6 +75,17 @@
           "type": "studio",
           "studioFlowSid": "FW00000000000000000000000000000000"
         }
+      },
+      {
+        "sid": "IG00000000000000000000000000000099",
+        "friendlyName": "Old WhatsApp sandbox",
+        "type": "whatsapp",
+        "address": "whatsapp:+12025550198",
+        "autoCreation": {
+          "enabled": true,
+          "type": "studio",
+          "studioFlowSid": "FW00000000000000000000000000000098"
+        }
       }
     ]
   },
