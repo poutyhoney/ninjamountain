@@ -5,6 +5,8 @@ import { createClient } from "./client";
 import { collect } from "./collect";
 import { loadCredentials } from "./config";
 import { redact } from "./redact";
+import { jsonReport } from "./report/json";
+import { isSeverity, meetsThreshold, summarize } from "./report/summary";
 import { textReport } from "./report/text";
 import { runRules } from "./rules";
 import type { Snapshot } from "./snapshot";
@@ -14,8 +16,22 @@ const { values } = parseArgs({
     "from-snapshot": { type: "string" },
     "save-snapshot": { type: "string" },
     redact: { type: "boolean", default: false },
+    format: { type: "string", default: "text" },
+    "fail-on": { type: "string" },
   },
 });
+
+function usage(message: string): never {
+  console.error(message);
+  process.exit(2);
+}
+
+const { format } = values;
+if (format !== "text" && format !== "json")
+  usage(`--format must be text or json, not "${format}".`);
+const failOn = values["fail-on"];
+if (failOn !== undefined && !isSeverity(failOn))
+  usage(`--fail-on must be critical, warning, or info, not "${failOn}".`);
 
 function fromInvocationDir(path: string): string {
   return resolve(process.env.INIT_CWD ?? process.cwd(), path);
@@ -31,8 +47,7 @@ async function loadSnapshot(path: string): Promise<Snapshot> {
     !("schemaVersion" in parsed) ||
     parsed.schemaVersion !== 1
   ) {
-    console.error(`${path} is not a version 1 snapshot.`);
-    process.exit(1);
+    usage(`${path} is not a version 1 snapshot.`);
   }
   return parsed as Snapshot;
 }
@@ -61,4 +76,12 @@ if (savePath) {
     );
 }
 
-console.log(textReport(snapshot, runRules(snapshot)));
+const outcomes = runRules(snapshot);
+console.log(
+  format === "json"
+    ? JSON.stringify(jsonReport(snapshot, outcomes), null, 2)
+    : textReport(snapshot, outcomes),
+);
+
+if (failOn && meetsThreshold(summarize(outcomes).findings, failOn))
+  process.exitCode = 1;
