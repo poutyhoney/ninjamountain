@@ -1,3 +1,5 @@
+// Tests for flex-version.ts: parsing ui_version, and the --flex-ui override
+// (fills a missing version, never replaces a real one, never mutates input).
 import { describe, expect, it } from "vitest";
 import { majorVersion, readUiVersion, withFlexUi } from "../src/flex-version";
 import { runRules } from "../src/rules";

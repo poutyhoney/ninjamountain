@@ -1,3 +1,5 @@
+// R2 tests: overlap with an Address is critical, other Flex Flows are
+// warnings, 1.x is quiet, and the skip cases.
 import { describe, expect, it } from "vitest";
 import { flexFlowsOn2x } from "../../src/rules/flex-flows-on-2x";
 import { loadFixture } from "../helpers";

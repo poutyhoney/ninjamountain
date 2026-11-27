@@ -1,3 +1,6 @@
+// Guard test over every folder in fixtures/. Fails on any SID or phone number
+// that isn't in the fake formats, and on duplicate SIDs within a section.
+// It reports counts only, so a failure never prints a real value.
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";

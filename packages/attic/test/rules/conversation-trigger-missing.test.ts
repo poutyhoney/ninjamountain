@@ -1,3 +1,5 @@
+// R4 tests: the 1.x-only Trigger wiring in legacy-mess, a shared flow giving
+// one finding, unreadable definitions, and the skip cases.
 import { describe, expect, it } from "vitest";
 import { conversationTriggerMissing } from "../../src/rules/conversation-trigger-missing";
 import type { Snapshot } from "../../src/snapshot";

@@ -1,3 +1,5 @@
+// Tests for redact.ts: SIDs and phone numbers are replaced, and the same real
+// number always gets the same fake in both E.164 and (202) 555-01NN form.
 import { describe, expect, it } from "vitest";
 import { createRedactor, FAKE_ACCOUNT_SID, FAKE_KEY_SID } from "../src/redact";
 

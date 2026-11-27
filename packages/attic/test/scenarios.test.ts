@@ -1,3 +1,6 @@
+// Runs every registered rule on every fixture and compares the whole table of
+// finding counts at once. Checks rules/index.ts too: a rule left out of the
+// registry would fail here.
 import { describe, expect, it } from "vitest";
 import type { RuleResult } from "../src/findings";
 import { rules } from "../src/rules";

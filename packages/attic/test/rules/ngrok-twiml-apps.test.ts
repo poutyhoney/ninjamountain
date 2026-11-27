@@ -1,3 +1,4 @@
+// R7 tests: the simplest rule, with one fires, one quiet, and one skipped case.
 import { describe, expect, it } from "vitest";
 import { ngrokTwimlApps } from "../../src/rules/ngrok-twiml-apps";
 import { loadFixture } from "../helpers";

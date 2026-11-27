@@ -1,3 +1,5 @@
+// The first test in the package. Checks Vitest runs and Node is 22 or newer,
+// since the code uses Node 22 built-ins such as process.loadEnvFile.
 import { describe, expect, it } from "vitest";
 
 describe("environment", () => {

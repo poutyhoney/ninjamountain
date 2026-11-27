@@ -1,3 +1,6 @@
+// Shared test helper. loadFixture() reads fixtures/<name>/snapshot.json and
+// returns a fresh Snapshot each call, so a test can change it freely without
+// affecting other tests.
 import { readFileSync } from "node:fs";
 import type { Snapshot } from "../src/snapshot";
 

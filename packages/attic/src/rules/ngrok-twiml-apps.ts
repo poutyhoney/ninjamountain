@@ -1,5 +1,13 @@
+// R7 (warning): TwiML Apps whose URLs point at an ngrok tunnel.
+//
+// ngrok URLs are for local development. They stop answering when the laptop
+// running ngrok closes, so any app still pointing at one is either broken or
+// an old quickstart left behind. The simplest rule, and the template the
+// others follow: guard clause, loop, push a Finding. Reads twimlApps.
 import type { Finding, Rule } from "../findings";
 
+// Matches ngrok.io, ngrok.app, ngrok.dev, and the free-tier ngrok-free.app.
+// (-free)? makes that part optional. The i flag ignores case.
 const NGROK = /ngrok(-free)?\.(io|app|dev)/i;
 
 export const ngrokTwimlApps: Rule = {
@@ -12,11 +20,15 @@ export const ngrokTwimlApps: Rule = {
 
     const findings: Finding[] = [];
     for (const app of snapshot.twimlApps.data) {
+      // The filter callback is a type predicate (`url is string`). It drops
+      // nulls and non-ngrok URLs, and TypeScript then types the result as
+      // string[], not (string | null)[].
       const urls = [app.voiceUrl, app.smsUrl, app.statusCallback].filter(
         (url): url is string => url !== null && NGROK.test(url),
       );
       if (urls.length === 0) continue;
 
+      // One finding per app, listing every ngrok URL it has.
       findings.push({
         ruleId: "R7",
         severity: "warning",

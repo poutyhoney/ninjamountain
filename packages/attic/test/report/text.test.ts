@@ -1,3 +1,5 @@
+// Tests for report/text.ts against real rule output from the fixtures: header,
+// counts, severity order, skipped rules, manual checks, and the footer.
 import { describe, expect, it } from "vitest";
 import { textReport } from "../../src/report/text";
 import { runRules } from "../../src/rules";
