@@ -1,7 +1,7 @@
 import type { Finding, RuleOutcome } from "../findings";
 import { readUiVersion } from "../flex-version";
 import type { Snapshot } from "../snapshot";
-import { SEVERITIES, summarize } from "./summary";
+import { MANUAL_CHECKS, SEVERITIES, summarize } from "./summary";
 
 const FOOTER = "Nothing was changed. Review each command before you run it.";
 
@@ -33,6 +33,11 @@ export function textReport(
     );
   }
 
+  lines.push(
+    "",
+    "MANUAL CHECKS",
+    ...MANUAL_CHECKS.map((check) => `  - ${check}`),
+  );
   lines.push("", FOOTER);
   return lines.join("\n");
 }

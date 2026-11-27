@@ -10,3 +10,11 @@ export function readUiVersion(snapshot: Snapshot): string | null {
   const config = snapshot.flexConfiguration;
   return config.available ? config.data.uiVersion : null;
 }
+
+export function withFlexUi(snapshot: Snapshot, major: string): Snapshot {
+  if (snapshot.flexConfiguration.available) return snapshot;
+  return {
+    ...snapshot,
+    flexConfiguration: { available: true, data: { uiVersion: major } },
+  };
+}

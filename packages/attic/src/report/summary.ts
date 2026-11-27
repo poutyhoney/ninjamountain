@@ -2,6 +2,11 @@ import type { Finding, RuleOutcome, Severity } from "../findings";
 
 export const SEVERITIES: Severity[] = ["critical", "warning", "info"];
 
+export const MANUAL_CHECKS = [
+  "API keys: this tool can't list them (error 70004). In the Console, open API keys & tokens and delete keys you don't recognize.",
+  "Subaccounts: this tool can't list them either. In the Console, look for suspended or closed subaccounts you no longer need.",
+];
+
 export interface Skipped {
   ruleId: string;
   title: string;

@@ -44,4 +44,12 @@ describe("text report", () => {
       ),
     ).toBe(true);
   });
+
+  it("lists the manual checks before the footer", () => {
+    const report = reportFor("healthy-2x");
+    expect(report).toContain("MANUAL CHECKS\n  - API keys:");
+    expect(report.indexOf("MANUAL CHECKS")).toBeLessThan(
+      report.indexOf("Nothing was changed"),
+    );
+  });
 });

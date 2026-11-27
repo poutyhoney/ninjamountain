@@ -30,4 +30,8 @@ describe("JSON report", () => {
     const report = reportFor("legacy-mess");
     expect(JSON.parse(JSON.stringify(report))).toEqual(report);
   });
+
+  it("includes the manual checks", () => {
+    expect(reportFor("healthy-2x").manualChecks).toHaveLength(2);
+  });
 });
