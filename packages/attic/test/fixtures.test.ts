@@ -31,4 +31,28 @@ describe("fixtures", () => {
     expect(realSids.length, "real-looking SIDs").toBe(0);
     expect(realNumbers.length, "real-looking phone numbers").toBe(0);
   });
+
+  it.each(names)("%s has unique SIDs in each section", (name) => {
+    const snapshot = JSON.parse(
+      readFileSync(join(fixturesDir, name), "utf8"),
+    ) as Record<string, unknown>;
+    for (const [section, value] of Object.entries(snapshot)) {
+      if (!isAvailableList(value)) continue;
+      const sids = value.data.map((item) => item.sid);
+      expect(new Set(sids).size, `duplicate SIDs in ${section}`).toBe(
+        sids.length,
+      );
+    }
+  });
 });
+
+function isAvailableList(
+  value: unknown,
+): value is { data: Array<{ sid: unknown }> } {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "data" in value &&
+    Array.isArray(value.data)
+  );
+}

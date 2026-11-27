@@ -20,3 +20,9 @@ export interface Rule {
   title: string;
   run(snapshot: Snapshot): RuleResult;
 }
+
+export interface RuleOutcome {
+  ruleId: string;
+  title: string;
+  result: RuleResult;
+}

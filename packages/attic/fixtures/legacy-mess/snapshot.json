@@ -1,0 +1,501 @@
+{
+  "schemaVersion": 1,
+  "collectedAt": "2026-11-26T05:48:46.100Z",
+  "accountSid": "AC00000000000000000000000000000000",
+  "keySid": "SK00000000000000000000000000000000",
+  "flexConfiguration": { "available": true, "data": { "uiVersion": "2.18.0" } },
+  "phoneNumbers": {
+    "available": true,
+    "data": [
+      {
+        "sid": "PN00000000000000000000000000000001",
+        "phoneNumber": "+12025550100",
+        "friendlyName": "(202) 555-0100",
+        "smsUrl": null,
+        "smsApplicationSid": null,
+        "voiceUrl": "https://webhooks.twilio.com/v1/Accounts/AC00000000000000000000000000000000/Flows/FW00000000000000000000000000000001"
+      },
+      {
+        "sid": "PN00000000000000000000000000000002",
+        "phoneNumber": "+12025550101",
+        "friendlyName": "Willoughby Van Fells",
+        "smsUrl": null,
+        "smsApplicationSid": null,
+        "voiceUrl": "https://webhooks.twilio.com/v1/Accounts/AC00000000000000000000000000000000/Flows/FW00000000000000000000000000000001"
+      },
+      {
+        "sid": "PN00000000000000000000000000000003",
+        "phoneNumber": "+12025550102",
+        "friendlyName": "Local Party",
+        "smsUrl": null,
+        "smsApplicationSid": null,
+        "voiceUrl": "https://example-0000.twil.io/forward-call"
+      },
+      {
+        "sid": "PN00000000000000000000000000000098",
+        "phoneNumber": "+12025550196",
+        "friendlyName": "Old Proxy SMS",
+        "smsUrl": "https://webhooks.twilio.com/v1/Accounts/AC00000000000000000000000000000000/Proxy/KS00000000000000000000000000000099/Webhooks/Message",
+        "smsApplicationSid": null,
+        "voiceUrl": null
+      },
+      {
+        "sid": "PN00000000000000000000000000000097",
+        "phoneNumber": "+12025550195",
+        "friendlyName": "Detached Proxy number",
+        "smsUrl": null,
+        "smsApplicationSid": null,
+        "voiceUrl": null
+      }
+    ]
+  },
+  "flexFlows": {
+    "available": true,
+    "data": [
+      {
+        "sid": "FO00000000000000000000000000000099",
+        "friendlyName": "Legacy SMS Flex Flow",
+        "enabled": true,
+        "channelType": "sms",
+        "contactIdentity": "+12025550197",
+        "integrationType": "studio",
+        "studioFlowSid": "FW00000000000000000000000000000097"
+      },
+      {
+        "sid": "FO00000000000000000000000000000098",
+        "friendlyName": "Old Facebook Flex Flow",
+        "enabled": false,
+        "channelType": "facebook",
+        "contactIdentity": "messenger:000000000000000",
+        "integrationType": "task",
+        "studioFlowSid": null
+      }
+    ]
+  },
+  "addresses": {
+    "available": true,
+    "data": [
+      {
+        "sid": "IG00000000000000000000000000000001",
+        "friendlyName": "ShutTheFlexUp",
+        "type": "chat",
+        "address": "CV00000000000000000000000000000001",
+        "autoCreation": {
+          "enabled": true,
+          "type": "studio",
+          "studioFlowSid": "FW00000000000000000000000000000002"
+        }
+      },
+      {
+        "sid": "IG00000000000000000000000000000002",
+        "friendlyName": "Local SMS",
+        "type": "sms",
+        "address": "+12025550102",
+        "autoCreation": {
+          "enabled": true,
+          "type": "studio",
+          "studioFlowSid": "FW00000000000000000000000000000003"
+        }
+      },
+      {
+        "sid": "IG00000000000000000000000000000003",
+        "friendlyName": "Toll-free SMS",
+        "type": "sms",
+        "address": "+12025550100",
+        "autoCreation": {
+          "enabled": true,
+          "type": "studio",
+          "studioFlowSid": "FW00000000000000000000000000000003"
+        }
+      },
+      {
+        "sid": "IG00000000000000000000000000000099",
+        "friendlyName": "Old WhatsApp sandbox",
+        "type": "whatsapp",
+        "address": "whatsapp:+12025550198",
+        "autoCreation": {
+          "enabled": true,
+          "type": "studio",
+          "studioFlowSid": "FW00000000000000000000000000000098"
+        }
+      },
+      {
+        "sid": "IG00000000000000000000000000000098",
+        "friendlyName": "Legacy SMS",
+        "type": "sms",
+        "address": "+12025550197",
+        "autoCreation": {
+          "enabled": true,
+          "type": "studio",
+          "studioFlowSid": "FW00000000000000000000000000000097"
+        }
+      }
+    ]
+  },
+  "studioFlows": {
+    "available": true,
+    "data": [
+      {
+        "sid": "FW00000000000000000000000000000002",
+        "friendlyName": "Copy of Webchat Flow",
+        "status": "published",
+        "revision": 8,
+        "states": [
+          {
+            "name": "Trigger",
+            "type": "trigger",
+            "transitions": [
+              {
+                "event": "incomingMessage",
+                "next": null
+              },
+              {
+                "event": "incomingCall",
+                "next": null
+              },
+              {
+                "event": "incomingConversationMessage",
+                "next": "SendMessageToAgent"
+              },
+              {
+                "event": "incomingRequest",
+                "next": null
+              },
+              {
+                "event": "incomingParent",
+                "next": null
+              }
+            ]
+          },
+          {
+            "name": "SendMessageToAgent",
+            "type": "send-to-flex",
+            "transitions": [
+              {
+                "event": "callComplete",
+                "next": null
+              },
+              {
+                "event": "failedToEnqueue",
+                "next": null
+              },
+              {
+                "event": "callFailure",
+                "next": null
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "sid": "FW00000000000000000000000000000005",
+        "friendlyName": "Conversations Flow",
+        "status": "published",
+        "revision": 69,
+        "states": [
+          {
+            "name": "Trigger",
+            "type": "trigger",
+            "transitions": [
+              {
+                "event": "incomingMessage",
+                "next": null
+              },
+              {
+                "event": "incomingCall",
+                "next": null
+              },
+              {
+                "event": "incomingConversationMessage",
+                "next": "SendMessageToAgent"
+              },
+              {
+                "event": "incomingRequest",
+                "next": null
+              },
+              {
+                "event": "incomingParent",
+                "next": null
+              }
+            ]
+          },
+          {
+            "name": "SendMessageToAgent",
+            "type": "send-to-flex",
+            "transitions": [
+              {
+                "event": "callComplete",
+                "next": null
+              },
+              {
+                "event": "failedToEnqueue",
+                "next": null
+              },
+              {
+                "event": "callFailure",
+                "next": null
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "sid": "FW00000000000000000000000000000006",
+        "friendlyName": "Copy of Voice IVR",
+        "status": "published",
+        "revision": 72,
+        "states": [
+          {
+            "name": "Trigger",
+            "type": "trigger",
+            "transitions": [
+              {
+                "event": "incomingMessage",
+                "next": null
+              },
+              {
+                "event": "incomingCall",
+                "next": "SendCallToAgent"
+              },
+              {
+                "event": "incomingConversationMessage",
+                "next": null
+              },
+              {
+                "event": "incomingRequest",
+                "next": null
+              },
+              {
+                "event": "incomingParent",
+                "next": null
+              }
+            ]
+          },
+          {
+            "name": "SendCallToAgent",
+            "type": "send-to-flex",
+            "transitions": [
+              {
+                "event": "callComplete",
+                "next": null
+              },
+              {
+                "event": "failedToEnqueue",
+                "next": null
+              },
+              {
+                "event": "callFailure",
+                "next": null
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "sid": "FW00000000000000000000000000000003",
+        "friendlyName": "Messaging Flow",
+        "status": "published",
+        "revision": 429,
+        "states": [
+          {
+            "name": "Trigger",
+            "type": "trigger",
+            "transitions": [
+              {
+                "event": "incomingMessage",
+                "next": null
+              },
+              {
+                "event": "incomingCall",
+                "next": null
+              },
+              {
+                "event": "incomingConversationMessage",
+                "next": "SendMessageToAgent"
+              },
+              {
+                "event": "incomingRequest",
+                "next": null
+              },
+              {
+                "event": "incomingParent",
+                "next": null
+              }
+            ]
+          },
+          {
+            "name": "SendMessageToAgent",
+            "type": "send-to-flex",
+            "transitions": [
+              {
+                "event": "callComplete",
+                "next": null
+              },
+              {
+                "event": "failedToEnqueue",
+                "next": null
+              },
+              {
+                "event": "callFailure",
+                "next": null
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "sid": "FW00000000000000000000000000000001",
+        "friendlyName": "Voice IVR",
+        "status": "published",
+        "revision": 246,
+        "states": [
+          {
+            "name": "Trigger",
+            "type": "trigger",
+            "transitions": [
+              {
+                "event": "incomingMessage",
+                "next": null
+              },
+              {
+                "event": "incomingCall",
+                "next": null
+              },
+              {
+                "event": "incomingConversationMessage",
+                "next": null
+              },
+              {
+                "event": "incomingRequest",
+                "next": null
+              },
+              {
+                "event": "incomingParent",
+                "next": null
+              }
+            ]
+          },
+          {
+            "name": "SendCallToAgent",
+            "type": "send-to-flex",
+            "transitions": [
+              {
+                "event": "callComplete",
+                "next": null
+              },
+              {
+                "event": "failedToEnqueue",
+                "next": null
+              },
+              {
+                "event": "callFailure",
+                "next": null
+              }
+            ]
+          },
+          {
+            "name": "send_message_1",
+            "type": "send-message",
+            "transitions": [
+              {
+                "event": "sent",
+                "next": null
+              },
+              {
+                "event": "failed",
+                "next": null
+              }
+            ]
+          },
+          {
+            "name": "call_recording_1",
+            "type": "record-call",
+            "transitions": [
+              {
+                "event": "success",
+                "next": null
+              },
+              {
+                "event": "failed",
+                "next": null
+              }
+            ]
+          },
+          {
+            "name": "split_2",
+            "type": "split-based-on",
+            "transitions": [
+              {
+                "event": "noMatch",
+                "next": null
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "sid": "FW00000000000000000000000000000099",
+        "friendlyName": "Copy of Messaging Flow",
+        "status": "draft",
+        "revision": 3,
+        "states": null
+      },
+      {
+        "sid": "FW00000000000000000000000000000097",
+        "friendlyName": "Legacy Messaging Flow",
+        "status": "published",
+        "revision": 12,
+        "states": [
+          {
+            "name": "Trigger",
+            "type": "trigger",
+            "transitions": [
+              { "event": "incomingMessage", "next": "send_to_flex_1" },
+              { "event": "incomingCall", "next": null },
+              { "event": "incomingConversationMessage", "next": null },
+              { "event": "incomingRequest", "next": null },
+              { "event": "incomingParent", "next": null }
+            ]
+          },
+          {
+            "name": "send_to_flex_1",
+            "type": "send-to-flex",
+            "transitions": []
+          }
+        ]
+      }
+    ]
+  },
+  "twimlApps": {
+    "available": true,
+    "data": [
+      {
+        "sid": "AP00000000000000000000000000000001",
+        "friendlyName": "Flex TwiML App",
+        "voiceUrl": "http://voice-orchestrator-controller.callback.prod.twilio.com:11617/v1/TwiML",
+        "smsUrl": null,
+        "statusCallback": null
+      },
+      {
+        "sid": "AP00000000000000000000000000000099",
+        "friendlyName": "Voice JS Quickstart",
+        "voiceUrl": "https://a1b2c3d4.ngrok.io/voice",
+        "smsUrl": null,
+        "statusCallback": null
+      }
+    ]
+  },
+  "proxyServices": {
+    "available": true,
+    "data": [
+      {
+        "sid": "KS00000000000000000000000000000099",
+        "uniqueName": "Flex Proxy Service",
+        "phoneNumberSids": [
+          "PN00000000000000000000000000000098",
+          "PN00000000000000000000000000000097"
+        ]
+      }
+    ]
+  }
+}
