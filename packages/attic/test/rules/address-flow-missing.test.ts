@@ -1,3 +1,5 @@
+// R3 tests. Each case loads a fixture and changes one field to set up the
+// situation, including how R3 and R10 split the work on draft flows.
 import { describe, expect, it } from "vitest";
 import { addressFlowMissing } from "../../src/rules/address-flow-missing";
 import { draftStudioFlows } from "../../src/rules/draft-studio-flows";

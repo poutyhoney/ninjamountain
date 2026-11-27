@@ -1,3 +1,6 @@
+// Tests for client.ts and paginate.ts with a fake fetch (vi.stubGlobal), so no
+// network is used. Covers both paging styles, the typed TwilioApiError, and
+// that the client exposes get and nothing else (the read-only guarantee).
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createClient, TwilioApiError } from "../src/client";
 import { listAll } from "../src/paginate";

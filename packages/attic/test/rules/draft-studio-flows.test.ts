@@ -1,3 +1,5 @@
+// R10 tests: unreferenced drafts, drafts kept alive by a number's webhook,
+// and the note listing sections that couldn't be checked.
 import { describe, expect, it } from "vitest";
 import { draftStudioFlows } from "../../src/rules/draft-studio-flows";
 import { loadFixture } from "../helpers";

@@ -1,3 +1,5 @@
+// Tests for report/summary.ts: the --fail-on threshold ranking and the
+// isSeverity type predicate.
 import { describe, expect, it } from "vitest";
 import {
   isSeverity,

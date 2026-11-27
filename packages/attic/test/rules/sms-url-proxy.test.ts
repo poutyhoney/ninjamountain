@@ -1,3 +1,5 @@
+// R1 tests: Proxy SMS URLs, pool-only numbers, 1.x, missing Proxy data, and
+// the --flex-ui hint in the skip reason.
 import { describe, expect, it } from "vitest";
 import { smsUrlProxy } from "../../src/rules/sms-url-proxy";
 import { loadFixture } from "../helpers";

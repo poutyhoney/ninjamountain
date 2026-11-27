@@ -1,3 +1,5 @@
+// Tests for report/json.ts: counts, skipped rules, and a JSON round trip that
+// catches values JSON.stringify would drop or change.
 import { describe, expect, it } from "vitest";
 import { jsonReport } from "../../src/report/json";
 import { runRules } from "../../src/rules";
